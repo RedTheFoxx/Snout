@@ -162,7 +162,9 @@ namespace SnoutBot
                 
             }
 
-            await command.RespondAsync(answer);
+            Console.WriteLine(answer);
+
+            // await command.RespondAsync(answer);
 
         }
     }
