@@ -110,6 +110,11 @@ namespace SnoutBot
         private async Task HandleFetchCommand(SocketSlashCommand command)
         {
 
+            await command.RespondAsync("Requête envoyée");
+
+            // Placer un traitement en tâche de fond et envoyer le résultat plus tard
+
+            /*
             // Créer un tableau pour stocker les URL
             string[] tableauURL = new string[5];
 
@@ -163,9 +168,7 @@ namespace SnoutBot
             }
 
             Console.WriteLine(answer);
-
-            // await command.RespondAsync(answer);
-
+            */ // Traitement à déléguer
         }
     }
 }
