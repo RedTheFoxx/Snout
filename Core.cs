@@ -1,9 +1,12 @@
 ﻿using Discord;
+using Discord.Commands;
 using Discord.Net;
 using Discord.WebSocket;
 using HtmlAgilityPack;
 using Newtonsoft.Json;
 using System.Net.NetworkInformation;
+using System.Net.Sockets;
+using System.Threading.Channels;
 using System.Xml.Linq;
 
 namespace SnoutBot
@@ -112,9 +115,7 @@ namespace SnoutBot
 
             await command.RespondAsync("Requête envoyée");
 
-            // Placer un traitement en tâche de fond et envoyer le résultat plus tard
-
-            /*
+            
             // Créer un tableau pour stocker les URL
             string[] tableauURL = new string[5];
 
@@ -166,9 +167,12 @@ namespace SnoutBot
                 }
                 
             }
-
+           
             Console.WriteLine(answer);
-            */ // Traitement à déléguer
+
+            var chnl = _client.GetChannel(command.Channel.Id) as IMessageChannel;
+            await chnl.SendMessageAsync(answer);
         }
+        
     }
 }
