@@ -4,7 +4,6 @@ using Discord.WebSocket;
 using HtmlAgilityPack;
 using Newtonsoft.Json;
 using System.Net.NetworkInformation;
-using System.Xml.Linq;
 
 namespace Snout
 {
@@ -35,13 +34,11 @@ namespace Snout
             await Task.Delay(-1);
         }
 
-        // Module de log
         private Task Log(LogMessage msg)
         {
             Console.WriteLine(msg.ToString());
             return Task.CompletedTask;
         }
-
 
         public async Task ClientReady()
         {
@@ -110,11 +107,11 @@ namespace Snout
         private async Task HandleFetchCommand(SocketSlashCommand command)
         {
 
-            await command.RespondAsync("Requête envoyée");
+            await command.RespondAsync("*Recherche ...*");
 
             
             // Créer un tableau pour stocker les URL
-            string[] tableauURL = new string[5];
+            string[] tableauURL = new string[6];
 
             // Ajouter chaque URL au tableau
             tableauURL[0] = "https://www.battlemetrics.com/servers/hll/17380658"; // La Jungle
@@ -122,6 +119,7 @@ namespace Snout
             tableauURL[2] = "https://www.battlemetrics.com/servers/hll/15169632"; // LpF
             tableauURL[3] = "https://www.battlemetrics.com/servers/hll/13799070"; // CfR
             tableauURL[4] = "https://www.battlemetrics.com/servers/hll/14971018"; // ARES
+            tableauURL[5] = "https://www.battlemetrics.com/servers/hll/14245343"; // ARC Team
 
             string endAnswer = "";
 
@@ -177,7 +175,7 @@ namespace Snout
             var embed = new EmbedBuilder()
                 .WithTitle("🇫🇷 Statut des serveurs FR HLL")
                 .WithThumbnailUrl("https://static.wixstatic.com/media/da3421_111b24ae66f64f73aa94efeb80b08f58~mv2.png/v1/fit/w_2500,h_1330,al_c/da3421_111b24ae66f64f73aa94efeb80b08f58~mv2.png")
-                .WithColor(new Color(0, 255, 0))
+                .WithColor(new Color(0, 0, 255))
                 .WithFooter("Donnnées fournies par Battlemetrics")
                 .WithTimestamp(DateTimeOffset.UtcNow);
 
