@@ -1,15 +1,11 @@
 ﻿using Discord;
-using Discord.Commands;
 using Discord.Net;
 using Discord.WebSocket;
 using HtmlAgilityPack;
 using Newtonsoft.Json;
 using System.Net.NetworkInformation;
-using System.Net.Sockets;
-using System.Threading.Channels;
-using System.Xml.Linq;
 
-namespace SnoutBot
+namespace Snout
 {
     public class Program
     {
