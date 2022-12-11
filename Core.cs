@@ -4,6 +4,7 @@ using Discord.WebSocket;
 using HtmlAgilityPack;
 using Newtonsoft.Json;
 using System.Net.NetworkInformation;
+using System.Xml.Linq;
 
 namespace Snout
 {
@@ -143,14 +144,14 @@ namespace Snout
                             var web = new HtmlWeb();
                             var doc = web.Load(url);
 
-                            var title = doc.DocumentNode.SelectSingleNode("/html/body/div/div/div[2]/div[2]/div/div/h2");
+                            var title = doc.DocumentNode.SelectSingleNode("/html/body/div/div/div[2]/div[2]/ol/li[3]/a/span");
                             var playerCount = doc.DocumentNode.SelectSingleNode("/html/body/div/div/div[2]/div[2]/div/div/div[1]/div[1]/dl/dd[2]");
                             var status = doc.DocumentNode.SelectSingleNode("/html/body/div/div/div[2]/div[2]/div/div/div[1]/div[1]/dl/dd[4]");
 
                             if (title != null)
                             {
                                 var answer = "";
-                                answer = title.InnerText + " | " + playerCount.InnerText + " | " + status.InnerText;
+                                answer = title.InnerText + "_" + playerCount.InnerText + "_" + status.InnerText;
                                 endAnswer += " ~ " + answer;
                             }
 
@@ -169,25 +170,27 @@ namespace Snout
                 
             }
 
-            var chnl = _client.GetChannel(command.Channel.Id) as IMessageChannel;
-
             var splitted = endAnswer.Split('~');
             var listed = splitted.ToList();
             listed.RemoveAt(0);
 
+            var embed = new EmbedBuilder()
+                .WithTitle("🇫🇷 Statut des serveurs FR HLL")
+                .WithThumbnailUrl("https://static.wixstatic.com/media/da3421_111b24ae66f64f73aa94efeb80b08f58~mv2.png/v1/fit/w_2500,h_1330,al_c/da3421_111b24ae66f64f73aa94efeb80b08f58~mv2.png")
+                .WithColor(new Color(0, 255, 0))
+                .WithFooter("Donnnées fournies par Battlemetrics")
+                .WithTimestamp(DateTimeOffset.UtcNow);
+
             foreach (var element in listed)
             {
-                await chnl.SendMessageAsync(element);
+                var trimmedElement = element.Split('_', 3, StringSplitOptions.RemoveEmptyEntries);
+                embed.AddField(trimmedElement[0], " Joueurs : " + trimmedElement[1] + " ● Statut : " + trimmedElement[2]);
             }
+            
+            var endResult = embed.Build();
 
-            /*var embed = new EmbedBuilder()
-                .WithTitle("Serveurs FR HLL")
-                .WithColor(new Color(255, 0, 0))
-                .WithFooter("Provided by Snout")
-                .WithTimestamp(DateTimeOffset.UtcNow)
-                .AddField("Serveur 1", "DATA");
-
-            var endResult = embed.Build();*/
+            var chnl = _client.GetChannel(command.Channel.Id) as IMessageChannel;
+            await chnl.SendMessageAsync(null, false, endResult);
         }
 
     }
