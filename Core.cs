@@ -3,7 +3,10 @@ using Discord.Net;
 using Discord.WebSocket;
 using HtmlAgilityPack;
 using Newtonsoft.Json;
+using System.Diagnostics.Metrics;
 using System.Net.NetworkInformation;
+using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace Snout
 {
@@ -122,12 +125,13 @@ namespace Snout
             tableauURL[3] = "https://www.battlemetrics.com/servers/hll/13799070"; // CfR
             tableauURL[4] = "https://www.battlemetrics.com/servers/hll/14971018"; // ARES
 
-            string answer = "";
+            string endAnswer = "";
 
             using (var client = new HttpClient())
             {
                 
-                foreach ( string extractedUrl in tableauURL ) {
+                foreach ( string extractedUrl in tableauURL )
+                {
 
                     try
                     {
@@ -142,11 +146,15 @@ namespace Snout
                             var web = new HtmlWeb();
                             var doc = web.Load(url);
 
-                            var element = doc.DocumentNode.SelectSingleNode("/html/body/div/div/div[2]/div[2]/div/div/div[1]/div[1]/dl");
+                            var title = doc.DocumentNode.SelectSingleNode("/html/body/div/div/div[2]/div[2]/div/div/h2");
+                            var playerCount = doc.DocumentNode.SelectSingleNode("/html/body/div/div/div[2]/div[2]/div/div/div[1]/div[1]/dl/dd[2]");
+                            var status = doc.DocumentNode.SelectSingleNode("/html/body/div/div/div[2]/div[2]/div/div/div[1]/div[1]/dl/dd[4]");
 
-                            if (element != null)
+                            if (title != null)
                             {
-                                answer+= element.InnerText;
+                                var answer = "";
+                                answer = title.InnerText + " | " + playerCount.InnerText + " | " + status.InnerText;
+                                endAnswer += " ~ " + answer;
                             }
 
                         }
@@ -163,12 +171,27 @@ namespace Snout
                 }
                 
             }
-           
-            Console.WriteLine(answer);
 
             var chnl = _client.GetChannel(command.Channel.Id) as IMessageChannel;
-            await chnl.SendMessageAsync(answer);
+
+            var splitted = endAnswer.Split('~');
+            var listed = splitted.ToList();
+            listed.RemoveAt(0);
+
+            foreach (var element in listed)
+            {
+                await chnl.SendMessageAsync(element);
+            }
+
+            /*var embed = new EmbedBuilder()
+                .WithTitle("Serveurs FR HLL")
+                .WithColor(new Color(255, 0, 0))
+                .WithFooter("Provided by Snout")
+                .WithTimestamp(DateTimeOffset.UtcNow)
+                .AddField("Serveur 1", "DATA");
+
+            var endResult = embed.Build();*/
         }
-        
+
     }
 }
