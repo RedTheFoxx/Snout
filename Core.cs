@@ -3,10 +3,7 @@ using Discord.Net;
 using Discord.WebSocket;
 using HtmlAgilityPack;
 using Newtonsoft.Json;
-using System.Diagnostics.Metrics;
 using System.Net.NetworkInformation;
-using System.Reflection;
-using System.Text.RegularExpressions;
 
 namespace Snout
 {
