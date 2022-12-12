@@ -25,7 +25,7 @@ namespace Snout
             _client.Ready += ClientReady;
             _client.SlashCommandExecuted += SlashCommandHandler;
 
-            string token = "MTA1MDU4NTA4ODI2MzQ2Mjk2NA.Gmj3b4.n7hff11tYVXfyncyGrR4tQm1J1ek2gauxPNASA";
+            string token = "MTA1MTYwNjQzOTc3NDM5NjQxNg.GLMSon.cJPfdTsJp3Orzc5VPi4PGwI4nyGuPewHhr1aok";
 
             await _client.LoginAsync(TokenType.Bot, token);
             await _client.StartAsync();
@@ -176,7 +176,7 @@ namespace Snout
                 .WithTitle("🇫🇷 Statut des serveurs FR HLL")
                 .WithThumbnailUrl("https://static.wixstatic.com/media/da3421_111b24ae66f64f73aa94efeb80b08f58~mv2.png/v1/fit/w_2500,h_1330,al_c/da3421_111b24ae66f64f73aa94efeb80b08f58~mv2.png")
                 .WithColor(new Color(0, 0, 255))
-                .WithFooter("Donnnées fournies par Battlemetrics")
+                .WithFooter("Données fournies par Battlemetrics")
                 .WithTimestamp(DateTimeOffset.UtcNow);
 
             foreach (var element in listed)
