@@ -7,7 +7,7 @@ Actuellement centré sur un usage pratique pour le jeu Hell Let Loose.
 
 #### FONCTIONNALITES
 Snout répond principalement aux commandes "/" nouvellement recommandées par Discord.
-Il sera très bientôt capable de mettre à jour des données en continu dans un canal donné tout en répondant aux commandes usuelles. Basé sur des requêtes différées, ses services ne bloquent pas la gateway de Discord.
+Basé sur des requêtes différées, ses services ne bloquent pas la gateway de Discord.
 
 #### COMMANDES
 - /ping 
