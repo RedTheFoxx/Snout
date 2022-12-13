@@ -1,7 +1,6 @@
-﻿using Discord;
+using Discord;
 using Discord.Net;
 using Discord.WebSocket;
-using HtmlAgilityPack;
 using Newtonsoft.Json;
 using System.Net.NetworkInformation;
 
@@ -9,9 +8,11 @@ namespace Snout
 {
     public class Program
     {
-#pragma warning disable CS8618 // Un champ non-nullable doit contenir une valeur non-null lors de la fermeture du constructeur. Envisagez de déclarer le champ comme nullable.
         private DiscordSocketClient _client;
-#pragma warning restore CS8618 // Un champ non-nullable doit contenir une valeur non-null lors de la fermeture du constructeur. Envisagez de déclarer le champ comme nullable.
+        private HllSniffer liveSniffer;
+        private List<IMessageChannel> liveChannels;
+
+        System.Timers.Timer updater = new System.Timers.Timer();
 
         public static void Main(string[] args)
             => new Program().MainAsync().GetAwaiter().GetResult();
@@ -20,6 +21,8 @@ namespace Snout
         public async Task MainAsync()
         {
             _client = new DiscordSocketClient();
+            liveSniffer = new HllSniffer();
+            liveChannels = new List<IMessageChannel>();
 
             _client.Log += Log;
             _client.Ready += ClientReady;
@@ -42,6 +45,10 @@ namespace Snout
 
         public async Task ClientReady()
         {
+           
+            updater.Interval = 60000; // Vitesse de l'auto-updater (en ms)
+            updater.AutoReset = true;
+            updater.Elapsed += Timer_Elapsed;
 
             var globalCommandPing = new SlashCommandBuilder();
             globalCommandPing.WithName("ping");
@@ -71,25 +78,23 @@ namespace Snout
                 var json = JsonConvert.SerializeObject(exception.Errors, Formatting.Indented);
                 Console.WriteLine(json);
             }
-            
-            // MINUTEUR DE L'EMBED (60000 = 1 minute)
-            // System.Timers.Timer timer = new System.Timers.Timer();
-            //timer.Interval = 10000;
-            //timer.AutoReset = true;
-            //timer.Elapsed += Timer_Elapsed;
-            //timer.Start();
+
         }
 
-        /*private void Timer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
+        private async void Timer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
         {
-            void Autoupdate()
+
+            // Envoyer un embed dans chaque live channel
+
+            var embed = liveSniffer.Pull();
+
+            foreach (IMessageChannel channel in liveChannels) 
             {
-                // Pré-implémentation de l'évènement déclenchant l'update de l'embed des serveurs
-                Console.WriteLine("Execution");
+                await channel.SendMessageAsync(null, false, embed);
+                Console.WriteLine("Embed envoyé dans le canal ID = " + (channel.Name));
             }
-            Autoupdate();
-            throw new NotImplementedException();
-        }*/
+
+        }
 
         private async Task SlashCommandHandler(SocketSlashCommand command)
         {
@@ -106,6 +111,18 @@ namespace Snout
         }
         private async Task HandlePingCommand(SocketSlashCommand command)
         {
+            var chnl = _client.GetChannel(command.Channel.Id) as IMessageChannel;
+            
+            ///////////// DEBUG = /ping permet d'interrompre l'auto-updater
+            if (updater.Enabled)
+            {
+                updater.Stop();
+                await chnl.SendMessageAsync("AUTO-UPDATER : **OFF**");
+                liveChannels.Clear();
+                await chnl.SendMessageAsync("Liste des canaux de diffusion purgée !");
+            }
+            //////////////
+            
             string url = "gateway.discord.gg";
             Ping pingSender = new Ping();
             PingReply reply = pingSender.Send(url);
@@ -124,10 +141,11 @@ namespace Snout
         }
         private async Task HandleFetchCommand(SocketSlashCommand command)
         {
+            var chnl = _client.GetChannel(command.Channel.Id) as IMessageChannel;
 
             await command.RespondAsync("*Recherche ...*");
 
-            
+            /*
             // Créer un tableau pour stocker les URL
             string[] tableauURL = new string[6];
 
@@ -202,11 +220,24 @@ namespace Snout
                 var trimmedElement = element.Split('_', 3, StringSplitOptions.RemoveEmptyEntries);
                 embed.AddField(trimmedElement[0], " Joueurs : " + trimmedElement[1] + " ● Statut : " + trimmedElement[2]);
             }
-            
-            var endResult = embed.Build();
 
-            var chnl = _client.GetChannel(command.Channel.Id) as IMessageChannel;
-            await chnl.SendMessageAsync(null, false, endResult);
+            var endResult = embed.Build(); 
+
+            */
+
+            var localSniffer = new HllSniffer();
+            var embed = localSniffer.Pull();
+
+            await chnl.SendMessageAsync(null, false, embed);
+            liveChannels.Add(chnl);
+            await chnl.SendMessageAsync("Nouveau canal de diffusion ajouté !");
+
+            if (updater.Enabled == false)
+            {
+                updater.Start();
+                await chnl.SendMessageAsync("AUTO-UPDATER : **ON**");
+            }
+
         }
 
     }
