@@ -12,7 +12,7 @@ namespace Snout
         private HllSniffer liveSniffer;
         private List<IMessageChannel> liveChannels;
 
-        System.Timers.Timer updater = new System.Timers.Timer();
+        System.Timers.Timer _timer = new System.Timers.Timer();
 
         public static void Main(string[] args)
             => new Program().MainAsync().GetAwaiter().GetResult();
@@ -46,9 +46,9 @@ namespace Snout
         public async Task ClientReady()
         {
            
-            updater.Interval = 60000; // Vitesse de l'auto-updater (en ms)
-            updater.AutoReset = true;
-            updater.Elapsed += Timer_Elapsed;
+            _timer.Interval = 60000; // Vitesse de l'auto-updater (en ms)
+            _timer.AutoReset = true;
+            _timer.Elapsed += Timer_Elapsed;
 
             var globalCommandPing = new SlashCommandBuilder();
             globalCommandPing.WithName("ping");
@@ -114,9 +114,9 @@ namespace Snout
             var chnl = _client.GetChannel(command.Channel.Id) as IMessageChannel;
             
             ///////////// DEBUG = /ping permet d'interrompre l'auto-updater
-            if (updater.Enabled)
+            if (_timer.Enabled)
             {
-                updater.Stop();
+                _timer.Stop();
                 await chnl.SendMessageAsync("AUTO-UPDATER : **OFF**");
                 liveChannels.Clear();
                 await chnl.SendMessageAsync("Liste des canaux de diffusion purgée !");
@@ -232,9 +232,9 @@ namespace Snout
             liveChannels.Add(chnl);
             await chnl.SendMessageAsync("Nouveau canal de diffusion ajouté !");
 
-            if (updater.Enabled == false)
+            if (_timer.Enabled == false)
             {
-                updater.Start();
+                _timer.Start();
                 await chnl.SendMessageAsync("AUTO-UPDATER : **ON**");
             }
 
