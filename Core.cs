@@ -71,8 +71,31 @@ namespace Snout
                 var json = JsonConvert.SerializeObject(exception.Errors, Formatting.Indented);
                 Console.WriteLine(json);
             }
+            
+            // MINUTEUR DE L'EMBED (60000 = 1 minute)
+            // System.Timers.Timer timer = new System.Timers.Timer();
+            //timer.Interval = 10000;
+            //timer.AutoReset = true;
+            //timer.Elapsed += Timer_Elapsed;
+            //timer.Start();
         }
 
+        /*private void Timer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
+        {
+
+            void Autoupdate()
+            {
+
+                // Pré-implémentation de l'évènement déclenchant l'update de l'embed des serveurs
+                Console.WriteLine("Execution");
+
+            }
+
+            Autoupdate();
+
+            throw new NotImplementedException();
+        }*/
+        
         private async Task SlashCommandHandler(SocketSlashCommand command)
         {
             switch (command.Data.Name)
