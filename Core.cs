@@ -11,8 +11,7 @@ namespace Snout
         private DiscordSocketClient _client;
         private HllSniffer liveSniffer;
         private List<IMessageChannel> liveChannels;
-
-        System.Timers.Timer _timer = new System.Timers.Timer();
+        readonly System.Timers.Timer _timer = new System.Timers.Timer();
 
         public static void Main(string[] args)
             => new Program().MainAsync().GetAwaiter().GetResult();
