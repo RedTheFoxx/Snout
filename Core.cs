@@ -72,30 +72,8 @@ namespace Snout
                 Console.WriteLine(json);
             }
             
-            // MINUTEUR DE L'EMBED (60000 = 1 minute)
-            // System.Timers.Timer timer = new System.Timers.Timer();
-            //timer.Interval = 10000;
-            //timer.AutoReset = true;
-            //timer.Elapsed += Timer_Elapsed;
-            //timer.Start();
         }
 
-        /*private void Timer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
-        {
-
-            void Autoupdate()
-            {
-
-                // Pré-implémentation de l'évènement déclenchant l'update de l'embed des serveurs
-                Console.WriteLine("Execution");
-
-            }
-
-            Autoupdate();
-
-            throw new NotImplementedException();
-        }*/
-        
         private async Task SlashCommandHandler(SocketSlashCommand command)
         {
             switch (command.Data.Name)
@@ -199,7 +177,7 @@ namespace Snout
                 .WithTitle("🇫🇷 Statut des serveurs FR HLL")
                 .WithThumbnailUrl("https://static.wixstatic.com/media/da3421_111b24ae66f64f73aa94efeb80b08f58~mv2.png/v1/fit/w_2500,h_1330,al_c/da3421_111b24ae66f64f73aa94efeb80b08f58~mv2.png")
                 .WithColor(new Color(0, 0, 255))
-                .WithFooter("Données fournies par Battlemetrics")
+                .WithFooter("Snout v1.0 | Source : Battlemetrics")
                 .WithTimestamp(DateTimeOffset.UtcNow);
 
             foreach (var element in listed)
