@@ -59,7 +59,7 @@ namespace Snout
 
             var globalCommandStop = new SlashCommandBuilder();
             globalCommandStop.WithName("stop");
-            globalCommandStop.WithDescription("Obtenir des informations sur les serveurs FR de Hell Let Loose");
+            globalCommandStop.WithDescription("Eteint l'auto-fetcher de manière globale et purge les canaux de diffusion enregistrés");
 
             try
             {
