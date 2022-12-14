@@ -3,7 +3,6 @@ using Discord.Net;
 using Discord.WebSocket;
 using Newtonsoft.Json;
 using System.Net.NetworkInformation;
-using Discord.Rest;
 
 namespace Snout
 {
