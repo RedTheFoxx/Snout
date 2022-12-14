@@ -114,7 +114,7 @@ namespace Snout
 
                     {
                         await channel.DeleteMessageAsync(lastMessage);
-                        Console.WriteLine("AUTO-FETCHER : Dernier message supprimé OK");
+                        Console.WriteLine("AUTO-FETCHER : Dernier message supprimé / ID = " + lastMessage.Id);
                     }
                 }
                 else
