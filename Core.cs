@@ -27,7 +27,7 @@ namespace Snout
             _client.Ready += ClientReady;
             _client.SlashCommandExecuted += SlashCommandHandler;
 
-            string token = "MTA1MTYwNjQzOTc3NDM5NjQxNg.GLMSon.cJPfdTsJp3Orzc5VPi4PGwI4nyGuPewHhr1aok";
+            string token = "MTA1MDU4NTA4ODI2MzQ2Mjk2NA.GAiJ0n.pPhPiYoS1wpG_Fg8kkWPjsWJ9w8PSmBGPCHLhw";
 
             await _client.LoginAsync(TokenType.Bot, token);
             await _client.StartAsync();
