@@ -8,9 +8,9 @@ namespace Snout
 {
     public class Program
     {
-        private DiscordSocketClient _client;
-        private HllSniffer liveSniffer;
-        private List<IMessageChannel> liveChannels;
+        private DiscordSocketClient? _client;
+        private HllSniffer? _liveSniffer;
+        private List<IMessageChannel>? _liveChannels;
         readonly System.Timers.Timer _timer = new System.Timers.Timer();
 
         public static void Main(string[] args)
@@ -20,8 +20,8 @@ namespace Snout
         public async Task MainAsync()
         {
             _client = new DiscordSocketClient();
-            liveSniffer = new HllSniffer();
-            liveChannels = new List<IMessageChannel>();
+            _liveSniffer = new HllSniffer();
+            _liveChannels = new List<IMessageChannel>();
 
             _client.Log += Log;
             _client.Ready += ClientReady;
@@ -57,6 +57,10 @@ namespace Snout
             globalCommandFetch.WithName("fetch");
             globalCommandFetch.WithDescription("Obtenir des informations sur les serveurs FR de Hell Let Loose");
 
+            var globalCommandStop = new SlashCommandBuilder();
+            globalCommandStop.WithName("stop");
+            globalCommandStop.WithDescription("Obtenir des informations sur les serveurs FR de Hell Let Loose");
+
             try
             {
                 await _client.CreateGlobalApplicationCommandAsync(globalCommandPing.Build());
@@ -78,19 +82,29 @@ namespace Snout
                 Console.WriteLine(json);
             }
 
+            try
+            {
+                await _client.CreateGlobalApplicationCommandAsync(globalCommandStop.Build());
+            }
+            catch (HttpException exception)
+            {
+                var json = JsonConvert.SerializeObject(exception.Errors, Formatting.Indented);
+                Console.WriteLine(json);
+            }
+
         }
 
         private async void Timer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
         {
 
-            // Envoyer un embed dans chaque live channel
+            // TODO : Nettoyer le canal avant de renouveller l'embed
 
-            var embed = liveSniffer.Pull();
+            var embed = _liveSniffer.Pull();
 
-            foreach (IMessageChannel channel in liveChannels) 
+            foreach (IMessageChannel channel in _liveChannels) 
             {
                 await channel.SendMessageAsync(null, false, embed);
-                Console.WriteLine("Embed envoyé dans le canal ID = " + (channel.Name));
+                Console.WriteLine("Diffusion : Embed envoyé - canal = " + (channel.Name));
             }
 
         }
@@ -106,21 +120,15 @@ namespace Snout
                 case "fetch":
                     await HandleFetchCommand(command);
                     break;
+
+                case "stop":
+                    await HandleStopCommand(command);
+                    break;
             }
         }
         private async Task HandlePingCommand(SocketSlashCommand command)
         {
             var chnl = _client.GetChannel(command.Channel.Id) as IMessageChannel;
-            
-            ///////////// DEBUG = /ping permet d'interrompre l'auto-updater
-            if (_timer.Enabled)
-            {
-                _timer.Stop();
-                await chnl.SendMessageAsync("AUTO-UPDATER : **OFF**");
-                liveChannels.Clear();
-                await chnl.SendMessageAsync("Liste des canaux de diffusion purgée !");
-            }
-            //////////////
             
             string url = "gateway.discord.gg";
             Ping pingSender = new Ping();
@@ -142,21 +150,52 @@ namespace Snout
         {
             var chnl = _client.GetChannel(command.Channel.Id) as IMessageChannel;
 
-            await command.RespondAsync("*Recherche ...*");
+            // var localSniffer = new HllSniffer();
+            // var embed = localSniffer.Pull();
+            // await chnl.SendMessageAsync(null, false, embed);
 
-            var localSniffer = new HllSniffer();
-            var embed = localSniffer.Pull();
-
-            await chnl.SendMessageAsync(null, false, embed);
-            liveChannels.Add(chnl);
-            await chnl.SendMessageAsync("Nouveau canal de diffusion ajouté !");
+            if (_liveChannels.Contains(chnl) == false)
+            {
+                _liveChannels.Add(chnl);
+                await chnl.SendMessageAsync("**Nouveau canal de diffusion ajouté !**");
+            }
+            else
+            {
+                await chnl.SendMessageAsync("*Ce canal de diffusion existe déjà !*");
+            }
 
             if (_timer.Enabled == false)
             {
                 _timer.Start();
-                await chnl.SendMessageAsync("AUTO-UPDATER : **ON**");
+                await command.RespondAsync("AUTO-FETCHER : **ON**");
+            }
+            else
+            {
+                await command.RespondAsync("*L'auto-fetcher est déjà actif !*");
             }
 
+        }
+
+        private async Task HandleStopCommand(SocketSlashCommand command)
+        {
+            // /stop : Stoppe l'auto-fetcher et purge tous les canaux de diffusion (global)
+
+            var chnl = _client.GetChannel(command.Channel.Id) as IMessageChannel;
+
+            if (_timer.Enabled)
+            {
+                _timer.Stop();
+                await chnl.SendMessageAsync("AUTO-FETCHER : **OFF**");
+                _liveChannels.Clear();
+                await command.RespondAsync("Liste des canaux de diffusion purgée !");
+            }
+            else
+            {
+                _liveChannels.Clear();
+                await chnl.SendMessageAsync("Liste des canaux de diffusion purgée !");
+                await command.RespondAsync("*L'auto-fetch est déjà désactivé.*");
+            }
+            
         }
 
     }
