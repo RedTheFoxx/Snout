@@ -1,7 +1,6 @@
-﻿using Discord;
+using Discord;
 using Discord.Net;
 using Discord.WebSocket;
-using HtmlAgilityPack;
 using Newtonsoft.Json;
 using System.Net.NetworkInformation;
 
@@ -9,9 +8,10 @@ namespace Snout
 {
     public class Program
     {
-#pragma warning disable CS8618 // Un champ non-nullable doit contenir une valeur non-null lors de la fermeture du constructeur. Envisagez de déclarer le champ comme nullable.
-        private DiscordSocketClient _client;
-#pragma warning restore CS8618 // Un champ non-nullable doit contenir une valeur non-null lors de la fermeture du constructeur. Envisagez de déclarer le champ comme nullable.
+        private DiscordSocketClient? _client;
+        private HllSniffer? _liveSniffer;
+        private List<IMessageChannel>? _liveChannels;
+        readonly System.Timers.Timer _timer = new System.Timers.Timer();
 
         public static void Main(string[] args)
             => new Program().MainAsync().GetAwaiter().GetResult();
@@ -20,6 +20,8 @@ namespace Snout
         public async Task MainAsync()
         {
             _client = new DiscordSocketClient();
+            _liveSniffer = new HllSniffer();
+            _liveChannels = new List<IMessageChannel>();
 
             _client.Log += Log;
             _client.Ready += ClientReady;
@@ -42,6 +44,10 @@ namespace Snout
 
         public async Task ClientReady()
         {
+           
+            _timer.Interval = 60000; // Vitesse de l'auto-updater (en ms)
+            _timer.AutoReset = true;
+            _timer.Elapsed += Timer_Elapsed;
 
             var globalCommandPing = new SlashCommandBuilder();
             globalCommandPing.WithName("ping");
@@ -50,6 +56,10 @@ namespace Snout
             var globalCommandFetch = new SlashCommandBuilder();
             globalCommandFetch.WithName("fetch");
             globalCommandFetch.WithDescription("Obtenir des informations sur les serveurs FR de Hell Let Loose");
+
+            var globalCommandStop = new SlashCommandBuilder();
+            globalCommandStop.WithName("stop");
+            globalCommandStop.WithDescription("Obtenir des informations sur les serveurs FR de Hell Let Loose");
 
             try
             {
@@ -71,7 +81,50 @@ namespace Snout
                 var json = JsonConvert.SerializeObject(exception.Errors, Formatting.Indented);
                 Console.WriteLine(json);
             }
-            
+
+            try
+            {
+                await _client.CreateGlobalApplicationCommandAsync(globalCommandStop.Build());
+            }
+            catch (HttpException exception)
+            {
+                var json = JsonConvert.SerializeObject(exception.Errors, Formatting.Indented);
+                Console.WriteLine(json);
+            }
+
+        }
+
+        private async void Timer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
+        {
+
+
+            var embed = _liveSniffer.Pull();
+
+            foreach (IMessageChannel channel in _liveChannels)
+            {
+
+                var lastMessages = channel.GetMessagesAsync(1, CacheMode.AllowDownload);
+                var cursor = lastMessages.GetAsyncEnumerator();
+                if (await cursor.MoveNextAsync())
+                {
+                    var currentCollection = cursor.Current;
+                    var lastMessage = currentCollection.First();
+                    if (lastMessage != null)
+
+                    {
+                        await channel.DeleteMessageAsync(lastMessage);
+                        Console.WriteLine("AUTO-FETCHER : Dernier message supprimé / ID = " + lastMessage.Id);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("AUTO-FETCHER : Itérateur en fin de collection / Rien à supprimer");
+                }
+
+                await channel.SendMessageAsync(null, false, embed);
+                Console.WriteLine("AUTO-FETCHER / DIFFUSION : Embed envoyé dans " + (channel.Name));
+            }
+
         }
 
         private async Task SlashCommandHandler(SocketSlashCommand command)
@@ -85,10 +138,16 @@ namespace Snout
                 case "fetch":
                     await HandleFetchCommand(command);
                     break;
+
+                case "stop":
+                    await HandleStopCommand(command);
+                    break;
             }
         }
         private async Task HandlePingCommand(SocketSlashCommand command)
         {
+            var chnl = _client.GetChannel(command.Channel.Id) as IMessageChannel;
+            
             string url = "gateway.discord.gg";
             Ping pingSender = new Ping();
             PingReply reply = pingSender.Send(url);
@@ -107,89 +166,65 @@ namespace Snout
         }
         private async Task HandleFetchCommand(SocketSlashCommand command)
         {
+            var chnl = _client.GetChannel(command.Channel.Id) as IMessageChannel;
 
-            await command.RespondAsync("*Recherche ...*");
+            // var localSniffer = new HllSniffer();
+            // var embed = localSniffer.Pull();
+            // await chnl.SendMessageAsync(null, false, embed);
 
-            
-            // Créer un tableau pour stocker les URL
-            string[] tableauURL = new string[6];
-
-            // Ajouter chaque URL au tableau
-            tableauURL[0] = "https://www.battlemetrics.com/servers/hll/17380658"; // La Jungle
-            tableauURL[1] = "https://www.battlemetrics.com/servers/hll/10626575"; // HLL France
-            tableauURL[2] = "https://www.battlemetrics.com/servers/hll/15169632"; // LpF
-            tableauURL[3] = "https://www.battlemetrics.com/servers/hll/13799070"; // CfR
-            tableauURL[4] = "https://www.battlemetrics.com/servers/hll/14971018"; // ARES
-            tableauURL[5] = "https://www.battlemetrics.com/servers/hll/14245343"; // ARC Team
-
-            string endAnswer = "";
-
-            using (var client = new HttpClient())
+            if (_liveChannels.Contains(chnl) == false)
             {
-                
-                foreach ( string extractedUrl in tableauURL )
-                {
-
-                    try
-                    {
-                        var response = await client.SendAsync(new HttpRequestMessage(HttpMethod.Head, extractedUrl));
-                        if (response.IsSuccessStatusCode)
-                        {
-                            // Le site est accessible extraire son contenu
-
-                            Console.WriteLine("J'ai testé l'URL " + extractedUrl + " et c'est OK (200)");
-
-                            var url = extractedUrl;
-                            var web = new HtmlWeb();
-                            var doc = web.Load(url);
-
-                            var title = doc.DocumentNode.SelectSingleNode("/html/body/div/div/div[2]/div[2]/ol/li[3]/a/span");
-                            var playerCount = doc.DocumentNode.SelectSingleNode("/html/body/div/div/div[2]/div[2]/div/div/div[1]/div[1]/dl/dd[2]");
-                            var status = doc.DocumentNode.SelectSingleNode("/html/body/div/div/div[2]/div[2]/div/div/div[1]/div[1]/dl/dd[4]");
-
-                            if (title != null)
-                            {
-                                var answer = "";
-                                answer = title.InnerText + "_" + playerCount.InnerText + "_" + status.InnerText;
-                                endAnswer += " ~ " + answer;
-                            }
-
-                        }
-                        else
-                        {
-                            Console.WriteLine("Le site n'est pas accessible");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine("Une erreur s'est produite : " + ex.Message);
-                    }
-
-                }
-                
+                _liveChannels.Add(chnl);
+                await chnl.SendMessageAsync("**Nouveau canal de diffusion ajouté !**");
+                Console.WriteLine("AUTO-FETCHER : Canal ajouté / ID = " + chnl.Id);
+            }
+            else
+            {
+                await chnl.SendMessageAsync("*Ce canal de diffusion existe déjà !*");
+                Console.WriteLine("AUTO-FETCHER : Canal existe déjà ! / ID = " + chnl.Id);
             }
 
-            var splitted = endAnswer.Split('~');
-            var listed = splitted.ToList();
-            listed.RemoveAt(0);
-
-            var embed = new EmbedBuilder()
-                .WithTitle("🇫🇷 Statut des serveurs FR HLL")
-                .WithThumbnailUrl("https://static.wixstatic.com/media/da3421_111b24ae66f64f73aa94efeb80b08f58~mv2.png/v1/fit/w_2500,h_1330,al_c/da3421_111b24ae66f64f73aa94efeb80b08f58~mv2.png")
-                .WithColor(new Color(0, 0, 255))
-                .WithFooter("Snout v1.0 | Source : Battlemetrics")
-                .WithTimestamp(DateTimeOffset.UtcNow);
-
-            foreach (var element in listed)
+            if (_timer.Enabled == false)
             {
-                var trimmedElement = element.Split('_', 3, StringSplitOptions.RemoveEmptyEntries);
-                embed.AddField(trimmedElement[0], " Joueurs : " + trimmedElement[1] + " ● Statut : " + trimmedElement[2]);
+                _timer.Start();
+                await command.RespondAsync("AUTO-FETCHER : **ON**");
+                Console.WriteLine("AUTO-FETCHER : ON / Timing = " + _timer.Interval + " ms");
             }
-            
-            var endResult = embed.Build();
+            else
+            {
+                await command.RespondAsync("*L'auto-fetcher est déjà actif !*");
+                Console.WriteLine("AUTO-FETCHER : J'étais déjà ON !");
+
+            }
+
+        }
+
+        private async Task HandleStopCommand(SocketSlashCommand command)
+        {
+            // /stop : Stoppe l'auto-fetcher et purge tous les canaux de diffusion (global)
 
             var chnl = _client.GetChannel(command.Channel.Id) as IMessageChannel;
-            await chnl.SendMessageAsync(null, false, endResult);
+
+            if (_timer.Enabled)
+            {
+                _timer.Stop();
+                await chnl.SendMessageAsync("AUTO-FETCHER : **OFF**");
+                Console.WriteLine("AUTO-FETCHER : OFF");
+
+                _liveChannels.Clear();
+                await command.RespondAsync("Liste des canaux de diffusion purgée !");
+                Console.WriteLine("AUTO-FETCHER : Canaux purgés !");
+
+            }
+            else
+            {
+                _liveChannels.Clear();
+                await chnl.SendMessageAsync("Liste des canaux de diffusion purgée !");
+                Console.WriteLine("AUTO-FETCHER : Canaux purgés !");
+                await command.RespondAsync("*L'auto-fetch est déjà désactivé.*");
+                Console.WriteLine("AUTO-FETCHER : Déjà OFF !");
+            }
+            
         }
 
     }
