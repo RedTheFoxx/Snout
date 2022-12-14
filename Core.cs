@@ -3,6 +3,7 @@ using Discord.Net;
 using Discord.WebSocket;
 using Newtonsoft.Json;
 using System.Net.NetworkInformation;
+using Discord.Rest;
 
 namespace Snout
 {
@@ -97,12 +98,29 @@ namespace Snout
         private async void Timer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
         {
 
-            // TODO : Nettoyer le canal avant de renouveller l'embed
 
             var embed = _liveSniffer.Pull();
 
-            foreach (IMessageChannel channel in _liveChannels) 
+            foreach (IMessageChannel channel in _liveChannels)
             {
+
+                var lastMessages = channel.GetMessagesAsync(1, CacheMode.AllowDownload);
+                var cursor = lastMessages.GetAsyncEnumerator();
+                if (await cursor.MoveNextAsync())
+                {
+                    var currentCollection = cursor.Current;
+                    var lastMessage = currentCollection.First();
+                    if (lastMessage != null)
+
+                    {
+                        await channel.DeleteMessageAsync(lastMessage);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Curseur à la fin de la collection !");
+                }
+
                 await channel.SendMessageAsync(null, false, embed);
                 Console.WriteLine("Diffusion : Embed envoyé - canal = " + (channel.Name));
             }
