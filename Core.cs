@@ -114,15 +114,16 @@ namespace Snout
 
                     {
                         await channel.DeleteMessageAsync(lastMessage);
+                        Console.WriteLine("AUTO-FETCHER : Dernier message supprimé OK");
                     }
                 }
                 else
                 {
-                    Console.WriteLine("Curseur à la fin de la collection !");
+                    Console.WriteLine("AUTO-FETCHER : Itérateur en fin de collection / Rien à supprimer");
                 }
 
                 await channel.SendMessageAsync(null, false, embed);
-                Console.WriteLine("Diffusion : Embed envoyé - canal = " + (channel.Name));
+                Console.WriteLine("AUTO-FETCHER / DIFFUSION : Embed envoyé dans " + (channel.Name));
             }
 
         }
@@ -176,20 +177,25 @@ namespace Snout
             {
                 _liveChannels.Add(chnl);
                 await chnl.SendMessageAsync("**Nouveau canal de diffusion ajouté !**");
+                Console.WriteLine("AUTO-FETCHER : Canal ajouté / ID = " + chnl.Id);
             }
             else
             {
                 await chnl.SendMessageAsync("*Ce canal de diffusion existe déjà !*");
+                Console.WriteLine("AUTO-FETCHER : Canal existe déjà ! / ID = " + chnl.Id);
             }
 
             if (_timer.Enabled == false)
             {
                 _timer.Start();
                 await command.RespondAsync("AUTO-FETCHER : **ON**");
+                Console.WriteLine("AUTO-FETCHER : ON / Timing = " + _timer.Interval + " ms");
             }
             else
             {
                 await command.RespondAsync("*L'auto-fetcher est déjà actif !*");
+                Console.WriteLine("AUTO-FETCHER : J'étais déjà ON !");
+
             }
 
         }
@@ -204,14 +210,20 @@ namespace Snout
             {
                 _timer.Stop();
                 await chnl.SendMessageAsync("AUTO-FETCHER : **OFF**");
+                Console.WriteLine("AUTO-FETCHER : OFF");
+
                 _liveChannels.Clear();
                 await command.RespondAsync("Liste des canaux de diffusion purgée !");
+                Console.WriteLine("AUTO-FETCHER : Canaux purgés !");
+
             }
             else
             {
                 _liveChannels.Clear();
                 await chnl.SendMessageAsync("Liste des canaux de diffusion purgée !");
+                Console.WriteLine("AUTO-FETCHER : Canaux purgés !");
                 await command.RespondAsync("*L'auto-fetch est déjà désactivé.*");
+                Console.WriteLine("AUTO-FETCHER : Déjà OFF !");
             }
             
         }
