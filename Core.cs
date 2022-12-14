@@ -20,12 +20,17 @@ namespace Snout
         public async Task MainAsync()
         {
             _client = new DiscordSocketClient();
+
+            _timer.Interval = 300000; // Vitesse de l'auto-updater (= 5 minutes entre chaque Fetch vers Battlemetrics)
+            _timer.AutoReset = true;
+
             _liveSniffer = new HllSniffer();
             _liveChannels = new List<IMessageChannel>();
 
             _client.Log += Log;
             _client.Ready += ClientReady;
             _client.SlashCommandExecuted += SlashCommandHandler;
+            _timer.Elapsed += Timer_Elapsed;
 
             string token = "MTA1MDU4NTA4ODI2MzQ2Mjk2NA.GAiJ0n.pPhPiYoS1wpG_Fg8kkWPjsWJ9w8PSmBGPCHLhw";
 
@@ -44,10 +49,6 @@ namespace Snout
 
         public async Task ClientReady()
         {
-           
-            _timer.Interval = 60000; // Vitesse de l'auto-updater (en ms)
-            _timer.AutoReset = true;
-            _timer.Elapsed += Timer_Elapsed;
 
             var globalCommandPing = new SlashCommandBuilder();
             globalCommandPing.WithName("ping");
@@ -123,8 +124,10 @@ namespace Snout
 
                 await channel.SendMessageAsync(null, false, embed);
                 Console.WriteLine("AUTO-FETCHER / DIFFUSION : Embed envoyé dans " + (channel.Name));
-            }
 
+                await Task.Delay(5000); // 5 secondes entre chaque diffusion d'embed
+            }
+            
         }
 
         private async Task SlashCommandHandler(SocketSlashCommand command)
@@ -208,10 +211,12 @@ namespace Snout
             if (_timer.Enabled)
             {
                 _timer.Stop();
+                
                 await chnl.SendMessageAsync("AUTO-FETCHER : **OFF**");
                 Console.WriteLine("AUTO-FETCHER : OFF");
 
                 _liveChannels.Clear();
+                
                 await command.RespondAsync("Liste des canaux de diffusion purgée !");
                 Console.WriteLine("AUTO-FETCHER : Canaux purgés !");
 
@@ -219,6 +224,7 @@ namespace Snout
             else
             {
                 _liveChannels.Clear();
+                
                 await chnl.SendMessageAsync("Liste des canaux de diffusion purgée !");
                 Console.WriteLine("AUTO-FETCHER : Canaux purgés !");
                 await command.RespondAsync("*L'auto-fetch est déjà désactivé.*");
