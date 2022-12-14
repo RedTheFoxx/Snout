@@ -62,6 +62,8 @@ namespace Snout
                         Console.WriteLine("Une erreur s'est produite : " + ex.Message);
                     }
 
+                    Thread.Sleep(5000); // 5 secondes entre chaque HTTP request + extract de DOM
+
                 }
 
             }
