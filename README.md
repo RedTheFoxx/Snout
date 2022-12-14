@@ -12,6 +12,7 @@ Basé sur des requêtes différées, ses services ne bloquent pas la gateway de 
 #### COMMANDES
 - /ping 
 - /fetch
+- /stop
 
 #### TEAM
 Red (Lead Dev)
