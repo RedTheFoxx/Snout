@@ -11,6 +11,8 @@ namespace Snout
         private DiscordSocketClient? _client;
         private HllSniffer? _liveSniffer;
         private List<IMessageChannel>? _liveChannels;
+        private string[] URLs = new string[6];
+
         readonly System.Timers.Timer _timer = new System.Timers.Timer();
 
         public static void Main(string[] args)
@@ -30,9 +32,18 @@ namespace Snout
             _client.Log += Log;
             _client.Ready += ClientReady;
             _client.SlashCommandExecuted += SlashCommandHandler;
+            _client.ModalSubmitted += ModalHandler;
+
             _timer.Elapsed += Timer_Elapsed;
 
-            string token = "MTA1MDU4NTA4ODI2MzQ2Mjk2NA.GAiJ0n.pPhPiYoS1wpG_Fg8kkWPjsWJ9w8PSmBGPCHLhw";
+            string token = "MTA1MTYwNjQzOTc3NDM5NjQxNg.GLMSon.cJPfdTsJp3Orzc5VPi4PGwI4nyGuPewHhr1aok";
+
+            URLs[0] = "https://www.battlemetrics.com/servers/hll/17380658"; // La Jungle
+            URLs[1] = "https://www.battlemetrics.com/servers/hll/10626575"; // HLL France
+            URLs[2] = "https://www.battlemetrics.com/servers/hll/15169632"; // LpF
+            URLs[3] = "https://www.battlemetrics.com/servers/hll/13799070"; // CfR
+            URLs[4] = "https://www.battlemetrics.com/servers/hll/14971018"; // ARES
+            URLs[5] = "https://www.battlemetrics.com/servers/hll/14245343"; // ARC Team
 
             await _client.LoginAsync(TokenType.Bot, token);
             await _client.StartAsync();
@@ -61,6 +72,10 @@ namespace Snout
             var globalCommandStop = new SlashCommandBuilder();
             globalCommandStop.WithName("stop");
             globalCommandStop.WithDescription("Eteint l'auto-fetcher de manière globale et purge les canaux de diffusion enregistrés");
+
+            var globalCommandAdd = new SlashCommandBuilder();
+            globalCommandAdd.WithName("add");
+            globalCommandAdd.WithDescription("Ajoute une nouvelle URL Battlemetrics (exclusivement) aux serveurs à surveiller");
 
             try
             {
@@ -93,13 +108,21 @@ namespace Snout
                 Console.WriteLine(json);
             }
 
+            try
+            {
+                await _client.CreateGlobalApplicationCommandAsync(globalCommandAdd.Build());
+            }
+            catch (HttpException exception)
+            {
+                var json = JsonConvert.SerializeObject(exception.Errors, Formatting.Indented);
+                Console.WriteLine(json);
+            }
         }
 
         private async void Timer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
         {
 
-
-            var embed = _liveSniffer.Pull();
+            var embed = _liveSniffer.Pull(URLs);
 
             foreach (IMessageChannel channel in _liveChannels)
             {
@@ -129,7 +152,6 @@ namespace Snout
             }
             
         }
-
         private async Task SlashCommandHandler(SocketSlashCommand command)
         {
             switch (command.Data.Name)
@@ -145,7 +167,57 @@ namespace Snout
                 case "stop":
                     await HandleStopCommand(command);
                     break;
+
+                case "add":
+                    await HandleAddCommand(command);
+                    break;
             }
+        }
+        private async Task ModalHandler(SocketModal modal)
+        {
+            // MODAL : AJOUT D'URL
+            //////////////////////////////////////////////////////////////////////////////
+            List<SocketMessageComponentData> components = modal.Data.Components.ToList();
+
+            var nouvelUrl = components.First(x => x.CustomId == "new_url_textbox").Value;
+            var pattern = "^https:\\/\\/www\\.battlemetrics\\.com\\/servers\\/hll\\/\\d+$";
+            bool isMatch = System.Text.RegularExpressions.Regex.IsMatch(nouvelUrl, pattern);
+
+            if (isMatch)
+            {
+                if (URLs.Contains(components.First(x => x.CustomId == "new_url_textbox").Value) == false)
+                {
+                    URLs.Append(components.First(x => x.CustomId == "new_url_textbox").Value);
+                    Console.WriteLine("AUTO-FETCHER : Nouvel URL ajouté : " + URLs.Last());
+                    await modal.RespondAsync("**Nouvel URL ajouté !**");
+                }
+                else
+                {
+                    Console.WriteLine("AUTO-FETCHER : L'URL existait déjà et n'a pas été ajouté");
+                    await modal.RespondAsync("*Cet URL existe déjà dans la liste de diffusion*");
+                }
+            }
+            else
+            {
+                Console.WriteLine("AUTO-FETCHER : Mauvais format d'URL / Ne pointe pas vers un serveur HLL Battlemetrics");
+                await modal.RespondAsync("*L'URL n'a pas été ajoutée. Ce n'est pas l'adresse d'un serveur HLL.*");
+            }
+
+            //////////////////////////////////////////////////////////////////////////////
+
+            // Autre modal
+            //////////////////////////////////////////////////////////////////////////////
+            
+            // Autre code
+        }
+        private async Task HandleAddCommand(SocketSlashCommand command)
+        {
+            var modal = new ModalBuilder();
+            modal.WithTitle("Configuration de l'auto-fetcher")
+                .WithCustomId("new_url_modal")
+                .AddTextInput("Ajouter l'URL", "new_url_textbox", TextInputStyle.Short, placeholder: "https://www.battlemetrics.com/hll/[SERVER_ID]", required: true);
+
+            await command.RespondWithModalAsync(modal.Build());
         }
         private async Task HandlePingCommand(SocketSlashCommand command)
         {
@@ -169,13 +241,38 @@ namespace Snout
         }
         private async Task HandleFetchCommand(SocketSlashCommand command)
         {
+
             var chnl = _client.GetChannel(command.Channel.Id) as IMessageChannel;
 
-            // var localSniffer = new HllSniffer();
-            // var embed = localSniffer.Pull();
-            // await chnl.SendMessageAsync(null, false, embed);
+            await command.RespondAsync("DEBUG");
 
-            if (_liveChannels.Contains(chnl) == false)
+            var localSniffer = new HllSniffer();
+            var buttonsBuilder = new ComponentBuilder();
+            int buttonCounter = 0;
+
+            // foreach (string url in URLs)
+            // {
+            //    await chnl.SendMessageAsync(url);
+            // }
+
+            var embed = localSniffer.Pull(URLs);
+
+            await chnl.SendMessageAsync(null, false, embed);
+
+            foreach (EmbedField server in embed.Fields)
+            {
+                var fieldValue = server.Value;
+                var extractedUrl = fieldValue.Split('●', 3, StringSplitOptions.RemoveEmptyEntries);
+                
+                Console.WriteLine(extractedUrl[2]);
+
+                buttonsBuilder.WithButton($"{buttonCounter}", null, ButtonStyle.Link, url: "https://www.google.fr/", row: 1);
+                buttonCounter++;
+            }
+
+            await chnl.SendMessageAsync(null, false, components: buttonsBuilder.Build());
+            
+            /*if (_liveChannels.Contains(chnl) == false)
             {
                 _liveChannels.Add(chnl);
                 await chnl.SendMessageAsync("**Nouveau canal de diffusion ajouté !**");
@@ -198,10 +295,9 @@ namespace Snout
                 await command.RespondAsync("*L'auto-fetcher est déjà actif !*");
                 Console.WriteLine("AUTO-FETCHER : J'étais déjà ON !");
 
-            }
+            }*/
 
         }
-
         private async Task HandleStopCommand(SocketSlashCommand command)
         {
             // /stop : Stoppe l'auto-fetcher et purge tous les canaux de diffusion (global)
