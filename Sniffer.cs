@@ -1,24 +1,13 @@
-﻿using Discord;
+using Discord;
 using HtmlAgilityPack;
 
 namespace Snout
 {
     public class HllSniffer {
 
-        public Embed Pull()
+        public Embed Pull(string[] tableauURL)
 
         {
-            // Créer un tableau pour stocker les URL
-            string[] tableauURL = new string[6];
-
-            // Ajouter chaque URL au tableau
-            tableauURL[0] = "https://www.battlemetrics.com/servers/hll/17380658"; // La Jungle
-            tableauURL[1] = "https://www.battlemetrics.com/servers/hll/10626575"; // HLL France
-            tableauURL[2] = "https://www.battlemetrics.com/servers/hll/15169632"; // LpF
-            tableauURL[3] = "https://www.battlemetrics.com/servers/hll/13799070"; // CfR
-            tableauURL[4] = "https://www.battlemetrics.com/servers/hll/14971018"; // ARES
-            tableauURL[5] = "https://www.battlemetrics.com/servers/hll/14245343"; // ARC Team
-
             string endAnswer = "";
 
             using (var client = new HttpClient())
@@ -43,11 +32,12 @@ namespace Snout
                             var title = doc.DocumentNode.SelectSingleNode("/html/body/div/div/div[2]/div[2]/ol/li[3]/a/span");
                             var playerCount = doc.DocumentNode.SelectSingleNode("/html/body/div/div/div[2]/div[2]/div/div/div[1]/div[1]/dl/dd[2]");
                             var status = doc.DocumentNode.SelectSingleNode("/html/body/div/div/div[2]/div[2]/div/div/div[1]/div[1]/dl/dd[4]");
+                            var ipPort = doc.DocumentNode.SelectSingleNode("/html/body/div/div/div[2]/div[2]/div/div/div[1]/div[1]/dl/dd[3]/span[1]");
 
                             if (title != null)
                             {
                                 var answer = "";
-                                answer = title.InnerText + "_" + playerCount.InnerText + "_" + status.InnerText;
+                                answer = title.InnerText + "_" + playerCount.InnerText + "_" + status.InnerText + "_" + ipPort.InnerText;
                                 endAnswer += " ~ " + answer;
                             }
 
@@ -79,14 +69,16 @@ namespace Snout
                 .WithFooter("Snout v1.0.1 | Source : Battlemetrics")
                 .WithTimestamp(DateTimeOffset.UtcNow);
 
+            int serverCounter = 1;
+
             foreach (var element in listed)
             {
-                var trimmedElement = element.Split('_', 3, StringSplitOptions.RemoveEmptyEntries);
-                embed.AddField(trimmedElement[0], " Joueurs : " + trimmedElement[1] + " ● Statut : " + trimmedElement[2]);
+                var trimmedElement = element.Split('_', 4, StringSplitOptions.RemoveEmptyEntries);
+                embed.AddField(serverCounter + ". " + trimmedElement[0], " Joueurs : " + trimmedElement[1] + " ● Statut : " + trimmedElement[2] + " ● IP : " + trimmedElement[3]);
+                serverCounter++;    
             }
 
             var endResult = embed.Build();
-
             return endResult;
         }
 
