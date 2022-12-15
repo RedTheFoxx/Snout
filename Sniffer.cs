@@ -5,7 +5,7 @@ namespace Snout
 {
     public class HllSniffer {
 
-        public Embed Pull(string[] tableauURL)
+        public Embed Pull(List<string> listUrl)
 
         {
             string endAnswer = "";
@@ -13,7 +13,7 @@ namespace Snout
             using (var client = new HttpClient())
             {
 
-                foreach (string extractedUrl in tableauURL)
+                foreach (string extractedUrl in listUrl)
                 {
 
                     try
