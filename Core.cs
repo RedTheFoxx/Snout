@@ -63,64 +63,36 @@ namespace Snout
 
         public async Task ClientReady()
         {
-
-            var globalCommandPing = new SlashCommandBuilder();
-            globalCommandPing.WithName("ping");
-            globalCommandPing.WithDescription("Mesure le ping vers la gateway Discord");
-
-            var globalCommandFetch = new SlashCommandBuilder();
-            globalCommandFetch.WithName("fetch");
-            globalCommandFetch.WithDescription("Obtenir des informations sur les serveurs FR de Hell Let Loose");
-
-            var globalCommandStop = new SlashCommandBuilder();
-            globalCommandStop.WithName("stop");
-            globalCommandStop.WithDescription("Eteint l'auto-fetcher de manière globale et purge les canaux de diffusion enregistrés");
-
-            var globalCommandAdd = new SlashCommandBuilder();
-            globalCommandAdd.WithName("add");
-            globalCommandAdd.WithDescription("Ajoute une nouvelle URL Battlemetrics (exclusivement) aux serveurs à surveiller");
-
-            try
+            var commands = new List<SlashCommandBuilder>
             {
-                await _client.CreateGlobalApplicationCommandAsync(globalCommandPing.Build());
+                new SlashCommandBuilder()
+                    .WithName("ping")
+                    .WithDescription("Mesure le ping vers la gateway Discord"),
+                new SlashCommandBuilder()
+                    .WithName("fetch")
+                    .WithDescription("Obtenir des informations sur les serveurs FR de Hell Let Loose"),
+                new SlashCommandBuilder()
+                    .WithName("stop")
+                    .WithDescription("Eteint l'auto-fetcher de manière globale et purge les canaux de diffusion enregistrés"),
+                new SlashCommandBuilder()
+                    .WithName("add")
+                    .WithDescription("Ajoute une nouvelle URL Battlemetrics (exclusivement) aux serveurs à surveiller")
+            };
 
-            }
-            catch (HttpException exception)
+            foreach (var command in commands)
             {
-                var json = JsonConvert.SerializeObject(exception.Errors, Formatting.Indented);
-                Console.WriteLine(json);
-            }
-
-            try
-            {
-                await _client.CreateGlobalApplicationCommandAsync(globalCommandFetch.Build());
-            }
-            catch (HttpException exception)
-            {
-                var json = JsonConvert.SerializeObject(exception.Errors, Formatting.Indented);
-                Console.WriteLine(json);
-            }
-
-            try
-            {
-                await _client.CreateGlobalApplicationCommandAsync(globalCommandStop.Build());
-            }
-            catch (HttpException exception)
-            {
-                var json = JsonConvert.SerializeObject(exception.Errors, Formatting.Indented);
-                Console.WriteLine(json);
-            }
-
-            try
-            {
-                await _client.CreateGlobalApplicationCommandAsync(globalCommandAdd.Build());
-            }
-            catch (HttpException exception)
-            {
-                var json = JsonConvert.SerializeObject(exception.Errors, Formatting.Indented);
-                Console.WriteLine(json);
+                try
+                {
+                    await _client.CreateGlobalApplicationCommandAsync(command.Build());
+                }
+                catch (HttpException exception)
+                {
+                    var json = JsonConvert.SerializeObject(exception.Errors, Formatting.Indented);
+                    Console.WriteLine(json);
+                }
             }
         }
+
 
         private async void Timer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
         {
