@@ -127,7 +127,7 @@ namespace Snout
                     }
                     else
                     {
-                        Console.Write("AUTO-FETCHER / DATA :L'URL existe déjà. Opération suivante ...\n");
+                        Console.Write("AUTO-FETCHER / DATA : L'URL existe déjà. Opération suivante ...\n");
                     }
                 }
 
