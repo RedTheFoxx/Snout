@@ -32,7 +32,7 @@ namespace Snout
                             var title = doc.DocumentNode.SelectSingleNode("/html/body/div/div/div[2]/div[2]/ol/li[3]/a/span");
                             var playerCount = doc.DocumentNode.SelectSingleNode("/html/body/div/div/div[2]/div[2]/div/div/div[1]/div[1]/dl/dd[2]");
                             var status = doc.DocumentNode.SelectSingleNode("/html/body/div/div/div[2]/div[2]/div/div/div[1]/div[1]/dl/dd[4]");
-                            var ipPort = doc.DocumentNode.SelectSingleNode("/html/body/div/div/div[2]/div[2]/div/div/div[1]/div[1]/dl/dd[3]/span[1]");
+                            var ipPort = doc.DocumentNode.SelectSingleNode("/html/body/div/div/div[2]/div[2]/div/div/div[1]/div[1]/dl/dd[3]/span[2]");
 
                             if (title != null)
                             {
@@ -63,19 +63,19 @@ namespace Snout
             listed.RemoveAt(0);
 
             var embed = new EmbedBuilder()
-                .WithTitle("🇫🇷 Statut des serveurs FR HLL")
+                .WithTitle("🇫🇷 Hell Let Loose - Serveurs de la communauté")
                 .WithThumbnailUrl("https://static.wixstatic.com/media/da3421_111b24ae66f64f73aa94efeb80b08f58~mv2.png/v1/fit/w_2500,h_1330,al_c/da3421_111b24ae66f64f73aa94efeb80b08f58~mv2.png")
                 .WithColor(new Color(0, 0, 255))
-                .WithFooter("Snout v1.0.1 | Source : Battlemetrics")
+                .WithFooter("Snout v1.0.2 | Source : Battlemetrics")
                 .WithTimestamp(DateTimeOffset.UtcNow);
-
-            int serverCounter = 1;
 
             foreach (var element in listed)
             {
                 var trimmedElement = element.Split('_', 4, StringSplitOptions.RemoveEmptyEntries);
-                embed.AddField(serverCounter + ". " + trimmedElement[0], " Joueurs : " + trimmedElement[1] + " ● Statut : " + trimmedElement[2] + " ● IP : " + trimmedElement[3]);
-                serverCounter++;    
+                
+                string pastille = trimmedElement[2] == "online" ? ":white_check_mark:" : ":x:";
+                embed.AddField(trimmedElement[0],$"{pastille} | Joueurs : {trimmedElement[1]} ● steam://connect/{trimmedElement[3]}");
+                    
             }
 
             var endResult = embed.Build();
