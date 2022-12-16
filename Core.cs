@@ -3,7 +3,6 @@ using Discord.Net;
 using Discord.WebSocket;
 using Newtonsoft.Json;
 using System.Net.NetworkInformation;
-using Discord.Interactions;
 
 #pragma warning disable CS8602
 
@@ -50,6 +49,7 @@ namespace Snout
             listUrl.Add("https://www.battlemetrics.com/servers/hll/13799070");
             listUrl.Add("https://www.battlemetrics.com/servers/hll/14971018");
             listUrl.Add("https://www.battlemetrics.com/servers/hll/14245343");
+            listUrl.Add("https://www.battlemetrics.com/servers/hll/12973888");
 
             // Block this task until the program is closed.
             await Task.Delay(-1);
@@ -219,15 +219,10 @@ namespace Snout
 
             var chnl = _client.GetChannel(command.Channel.Id) as IMessageChannel;
 
-            await command.RespondAsync("DEBUG");
+            // var localSniffer = new HllSniffer();
+            // var embed = localSniffer.Pull(listUrl);
 
-            var localSniffer = new HllSniffer();
-
-            var embed = localSniffer.Pull(listUrl);
-
-            await chnl.SendMessageAsync(null, false, embed);
-
-            /*if (_liveChannels.Contains(chnl) == false)
+            if (_liveChannels.Contains(chnl) == false)
             {
                 _liveChannels.Add(chnl);
                 await chnl.SendMessageAsync("**Nouveau canal de diffusion ajouté !**");
@@ -250,7 +245,7 @@ namespace Snout
                 await command.RespondAsync("*L'auto-fetcher est déjà actif !*");
                 Console.WriteLine("AUTO-FETCHER : J'étais déjà ON !");
 
-            }*/
+            }
 
         }
         private async Task HandleStopCommand(SocketSlashCommand command)
