@@ -189,7 +189,7 @@ namespace Snout
 
             modal.WithTitle("Configuration de l'auto-fetcher")
                     .WithCustomId("new_url_modal")
-                    .AddTextInput("Ajouter l'URL", "new_url_textbox", TextInputStyle.Short, placeholder: "https://www.battlemetrics.com/hll/[SERVER_ID]", required: true);
+                    .AddTextInput("Ajouter l'URL", "new_url_textbox", TextInputStyle.Short, placeholder: "https://www.battlemetrics.com/servers/hll/[SERVER_ID]", required: true);
 
             await command.RespondWithModalAsync(modal.Build());
 
