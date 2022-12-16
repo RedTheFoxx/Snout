@@ -79,7 +79,6 @@ namespace Snout
                     .WithName("add")
                     .WithDescription("Ajoute une nouvelle URL Battlemetrics (exclusivement) aux serveurs à surveiller")
             };
-
             foreach (var command in commands)
             {
                 try
@@ -91,6 +90,87 @@ namespace Snout
                     var json = JsonConvert.SerializeObject(exception.Errors, Formatting.Indented);
                     Console.WriteLine(json);
                 }
+            }
+
+            // Injecte les URLs pré-programées dans la db "dynamic_data" si elles n'y sont pas déjà et dispose de l'objet connecteur.
+            // La commande /add ajoute les données à la fois dans la listUrl (utilisée au runtime) et en statique dans la DB.
+
+            if (File.Exists("dynamic_data.db")) // Si la DB existe déjà, on cherchera à ajouter les URLs préprogrammées dedans (en vérifiant qu'elles n'y soient pas déjà)
+            {
+                Console.Write("AUTO-FETCHER / DATA : La DB existe. Vérification des données ...\n");
+
+                SQLiteConnection connexion = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;");
+                connexion.Open();
+
+                Console.Write("AUTO-FETCHER / DATA : DB ouverte\n");
+
+                SQLiteCommand sqlCommand = connexion.CreateCommand();
+                sqlCommand.CommandText = "INSERT INTO urls (url) VALUES (@url)";
+
+                foreach (string url in listUrl)
+                {
+                    // Vérifiez si l'URL existe déjà dans la table "urls"
+                    SQLiteCommand selectCommand = connexion.CreateCommand();
+                    selectCommand.CommandText = "SELECT COUNT(*) FROM urls WHERE url = @url";
+                    selectCommand.Parameters.AddWithValue("@url", url);
+                    int count = Convert.ToInt32(selectCommand.ExecuteScalar());
+
+                    // Si l'URL n'existe pas, insérez-la dans la table
+                    if (count == 0)
+                    {
+                        SQLiteCommand insertCommand = connexion.CreateCommand();
+                        insertCommand.CommandText = "INSERT INTO urls (url) VALUES (@url)";
+                        insertCommand.Parameters.AddWithValue("@url", url);
+                        insertCommand.ExecuteNonQuery();
+
+                        Console.Write($"AUTO-FETCHER / DATA : {url} => Ajouté OK\n");
+                    }
+                    else
+                    {
+                        Console.Write("AUTO-FETCHER / DATA :L'URL existe déjà. Opération suivante ...\n");
+                    }
+                }
+
+                connexion.Close();
+                connexion.Dispose();
+                Console.Write("AUTO-FETCHER / DATA : DB libérée !\n");
+            }
+            else // Si elle n'existe pas, on la crée et on ajoute les données d'URL pré-programmées
+            {
+                Console.Write("AUTO-FETCHER / DATA : DB introuvable. Création ...\n");
+
+                SQLiteConnection connexion = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;");
+
+                // Créez la base de données
+                SQLiteConnection.CreateFile("dynamic_data.db");
+
+                // Ouvrez la connexion à la base de données
+                connexion.Open();
+
+                Console.Write("AUTO-FETCHER / DATA : DB ouverte\n");
+
+                // Créez la table "urls"
+                SQLiteCommand command = connexion.CreateCommand();
+                command.CommandText = "CREATE TABLE urls (id INTEGER PRIMARY KEY, url TEXT)";
+                command.ExecuteNonQuery();
+
+                Console.Write("AUTO-FETCHER / DATA : Table d'URL OK\n");
+
+                // Remplir cette table avec les URLs
+                foreach (string url in listUrl)
+                {
+                    SQLiteCommand insertCommand = connexion.CreateCommand();
+                    insertCommand.CommandText = "INSERT INTO urls (url) VALUES (@url)";
+                    insertCommand.Parameters.AddWithValue("@url", url);
+                    insertCommand.ExecuteNonQuery();
+
+                    Console.Write($"AUTO-FETCHER / DATA : {url} => Ajouté OK\n");
+                }
+
+                // Fermez la connexion à la base de données
+                connexion.Close();
+                connexion.Dispose();
+                Console.Write("AUTO-FETCHER / DATA : DB libérée !\n");
             }
         }
 
