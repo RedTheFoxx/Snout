@@ -14,7 +14,7 @@ namespace Snout
         private DiscordSocketClient? _client;
         private HllSniffer? _liveSniffer;
         private List<IMessageChannel>? _liveChannels;
-        private List<string> listUrl = new();
+        private List<string> _listUrl = new();
 
         readonly System.Timers.Timer _timer = new System.Timers.Timer();
 
@@ -44,13 +44,13 @@ namespace Snout
             await _client.LoginAsync(TokenType.Bot, token);
             await _client.StartAsync();
 
-            listUrl.Add("https://www.battlemetrics.com/servers/hll/17380658");
-            listUrl.Add("https://www.battlemetrics.com/servers/hll/10626575");
-            listUrl.Add("https://www.battlemetrics.com/servers/hll/15169632");
-            listUrl.Add("https://www.battlemetrics.com/servers/hll/13799070");
-            listUrl.Add("https://www.battlemetrics.com/servers/hll/14971018");
-            listUrl.Add("https://www.battlemetrics.com/servers/hll/14245343");
-            listUrl.Add("https://www.battlemetrics.com/servers/hll/12973888");
+            _listUrl.Add("https://www.battlemetrics.com/servers/hll/17380658");
+            _listUrl.Add("https://www.battlemetrics.com/servers/hll/10626575");
+            _listUrl.Add("https://www.battlemetrics.com/servers/hll/15169632");
+            _listUrl.Add("https://www.battlemetrics.com/servers/hll/13799070");
+            _listUrl.Add("https://www.battlemetrics.com/servers/hll/14971018");
+            _listUrl.Add("https://www.battlemetrics.com/servers/hll/14245343");
+            _listUrl.Add("https://www.battlemetrics.com/servers/hll/12973888");
 
             // Block this task until the program is closed.
             await Task.Delay(-1);
@@ -107,7 +107,7 @@ namespace Snout
                 SQLiteCommand sqlCommand = connexion.CreateCommand();
                 sqlCommand.CommandText = "INSERT INTO urls (url) VALUES (@url)";
 
-                foreach (string url in listUrl)
+                foreach (string url in _listUrl)
                 {
                     // Vérifiez si l'URL existe déjà dans la table "urls"
                     SQLiteCommand selectCommand = connexion.CreateCommand();
@@ -157,7 +157,7 @@ namespace Snout
                 Console.Write("AUTO-FETCHER / DATA : Table d'URL OK\n");
 
                 // Remplir cette table avec les URLs
-                foreach (string url in listUrl)
+                foreach (string url in _listUrl)
                 {
                     SQLiteCommand insertCommand = connexion.CreateCommand();
                     insertCommand.CommandText = "INSERT INTO urls (url) VALUES (@url)";
@@ -178,12 +178,12 @@ namespace Snout
         private async void Timer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
         {
 
-            var embed = _liveSniffer.Pull(listUrl);
+            var embed = _liveSniffer.Pull(_listUrl);
 
             foreach (IMessageChannel channel in _liveChannels)
             {
 
-                var lastMessages = channel.GetMessagesAsync(1, CacheMode.AllowDownload);
+                var lastMessages = channel.GetMessagesAsync(1);
                 var cursor = lastMessages.GetAsyncEnumerator();
                 if (await cursor.MoveNextAsync())
                 {
@@ -241,10 +241,10 @@ namespace Snout
 
             if (isMatch)
             {
-                if (listUrl.Contains(components.First(x => x.CustomId == "new_url_textbox").Value) == false)
+                if (_listUrl.Contains(components.First(x => x.CustomId == "new_url_textbox").Value) == false)
                 {
-                    listUrl.Add(components.First(x => x.CustomId == "new_url_textbox").Value);
-                    Console.WriteLine("AUTO-FETCHER : Nouvel URL ajouté : " + listUrl.Last());
+                    _listUrl.Add(components.First(x => x.CustomId == "new_url_textbox").Value);
+                    Console.WriteLine("AUTO-FETCHER : Nouvel URL ajouté : " + _listUrl.Last());
                     await modal.RespondAsync("**Nouvel URL ajouté !**");
                 }
                 else
@@ -277,7 +277,6 @@ namespace Snout
         }
         private async Task HandlePingCommand(SocketSlashCommand command)
         {
-            var chnl = _client.GetChannel(command.Channel.Id) as IMessageChannel;
             
             string url = "gateway.discord.gg";
             Ping pingSender = new Ping();
@@ -290,7 +289,7 @@ namespace Snout
             }
             else
             {
-                Console.WriteLine("La gateway ne repond pas au ping !", reply.Status);
+                Console.WriteLine("La gateway ne repond pas au ping !");
                 await command.RespondAsync("La gateway ne repond pas au ping ! - " + reply.RoundtripTime + " ms.");
             }
 
@@ -303,16 +302,19 @@ namespace Snout
             // var localSniffer = new HllSniffer();
             // var embed = localSniffer.Pull(listUrl);
 
-            if (_liveChannels.Contains(chnl) == false)
+            if (chnl != null)
             {
-                _liveChannels.Add(chnl);
-                await chnl.SendMessageAsync("**Nouveau canal de diffusion ajouté !**");
-                Console.WriteLine("AUTO-FETCHER : Canal ajouté / ID = " + chnl.Id);
-            }
-            else
-            {
-                await chnl.SendMessageAsync("*Ce canal de diffusion existe déjà !*");
-                Console.WriteLine("AUTO-FETCHER : Canal existe déjà ! / ID = " + chnl.Id);
+                if (_liveChannels.Contains(chnl) == false)
+                {
+                    _liveChannels.Add(chnl);
+                    await chnl.SendMessageAsync("**Nouveau canal de diffusion ajouté !**");
+                    Console.WriteLine("AUTO-FETCHER : Canal ajouté / ID = " + chnl.Id);
+                }
+                else
+                {
+                    await chnl.SendMessageAsync("*Ce canal de diffusion existe déjà !*");
+                    Console.WriteLine("AUTO-FETCHER : Canal existe déjà ! / ID = " + chnl.Id);
+                }
             }
 
             if (_timer.Enabled == false)
