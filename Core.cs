@@ -20,7 +20,7 @@ namespace Snout
 
         public static void Main(string[] args)
             => new Program().MainAsync().GetAwaiter().GetResult();
-
+ 
         // Thread principal
         public async Task MainAsync()
         {
