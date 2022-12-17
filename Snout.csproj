@@ -11,9 +11,4 @@
     <PackageReference Include="HtmlAgilityPack" Version="1.11.46" />
     <PackageReference Include="System.Data.SQLite" Version="1.0.117" />
   </ItemGroup>
-  <ItemGroup>
-    <None Update="Settings.job">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
 </Project>
