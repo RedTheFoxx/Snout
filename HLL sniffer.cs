@@ -94,18 +94,6 @@ namespace Snout
 
             var endResult = embed.Build();
 
-            /*foreach (var element in listed)
-            {
-                var trimmedElement = element.Split('_', 4, StringSplitOptions.RemoveEmptyEntries);
-                string pastille = trimmedElement[2] == "online" ? ":white_check_mark:" : ":x:";
-                var joueurs = trimmedElement[1].Split('/');
-                var nbJoueurs = joueurs[1];
-                var nbTotalJoueurs = joueurs[2];
-                
-                embed.AddField(trimmedElement[0],$"{pastille} | Joueurs : {nbJoueurs}/{nbTotalJoueurs} ● steam://connect/{trimmedElement[3]}");
-
-            }*/
-
             return endResult;
         }
 
