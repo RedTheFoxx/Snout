@@ -36,8 +36,7 @@ namespace Snout
 
                             if (title != null)
                             {
-                                var answer = "";
-                                answer = title.InnerText + "_" + playerCount.InnerText + "_" + status.InnerText + "_" + ipPort.InnerText;
+                                var answer = title.InnerText + "_" + playerCount.InnerText + "_" + status.InnerText + "_" + ipPort.InnerText;
                                 endAnswer += " ~ " + answer;
                             }
 
@@ -64,21 +63,49 @@ namespace Snout
 
             var embed = new EmbedBuilder()
                 .WithTitle("🇫🇷 Hell Let Loose - Serveurs de la communauté")
+                .WithDescription("---")
                 .WithThumbnailUrl("https://static.wixstatic.com/media/da3421_111b24ae66f64f73aa94efeb80b08f58~mv2.png/v1/fit/w_2500,h_1330,al_c/da3421_111b24ae66f64f73aa94efeb80b08f58~mv2.png")
                 .WithColor(new Color(0, 0, 255))
-                .WithFooter("Snout v1.0.2 | Source : Battlemetrics")
+                .WithFooter("Snout v1.0.3 | Source : Battlemetrics")
                 .WithTimestamp(DateTimeOffset.UtcNow);
 
-            foreach (var element in listed)
+            var sortedFields = listed
+                .Select(element => {
+                    var trimmedElement = element.Split('_', 4, StringSplitOptions.RemoveEmptyEntries);
+                    string pastille = trimmedElement[2] == "online" ? ":white_check_mark:" : ":x:";
+                    var joueurs = trimmedElement[1].Split('/');
+                    var nbJoueurs = int.Parse(joueurs[0]);
+                    var nbTotalJoueurs = int.Parse(joueurs[1]);
+
+                    return new
+                    {
+                        Name = trimmedElement[0],
+                        Value = $"{pastille} | Joueurs : {nbJoueurs}/{nbTotalJoueurs} ● steam://connect/{trimmedElement[3]}",
+                        NbJoueurs = nbJoueurs
+                    };
+                })
+                .OrderByDescending(field => field.NbJoueurs)
+                .ToList();
+
+            foreach (var field in sortedFields)
             {
-                var trimmedElement = element.Split('_', 4, StringSplitOptions.RemoveEmptyEntries);
-                
-                string pastille = trimmedElement[2] == "online" ? ":white_check_mark:" : ":x:";
-                embed.AddField(trimmedElement[0],$"{pastille} | Joueurs : {trimmedElement[1]} ● steam://connect/{trimmedElement[3]}");
-                    
+                embed.AddField(field.Name, field.Value);
             }
 
             var endResult = embed.Build();
+
+            /*foreach (var element in listed)
+            {
+                var trimmedElement = element.Split('_', 4, StringSplitOptions.RemoveEmptyEntries);
+                string pastille = trimmedElement[2] == "online" ? ":white_check_mark:" : ":x:";
+                var joueurs = trimmedElement[1].Split('/');
+                var nbJoueurs = joueurs[1];
+                var nbTotalJoueurs = joueurs[2];
+                
+                embed.AddField(trimmedElement[0],$"{pastille} | Joueurs : {nbJoueurs}/{nbTotalJoueurs} ● steam://connect/{trimmedElement[3]}");
+
+            }*/
+
             return endResult;
         }
 
