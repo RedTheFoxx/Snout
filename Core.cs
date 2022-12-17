@@ -94,7 +94,7 @@ namespace Snout
 
             // Injecte les URLs pré-programées dans la db "dynamic_data" si elles n'y sont pas déjà et dispose de l'objet connecteur.
             // La commande /add ajoute les données à la fois dans la listUrl (utilisée au runtime) et en statique dans la DB.
-
+           
             if (File.Exists("dynamic_data.db")) // Si la DB existe déjà, on cherchera à ajouter les URLs préprogrammées dedans (en vérifiant qu'elles n'y soient pas déjà)
             {
                 Console.Write("AUTO-FETCHER / DATA : La DB existe. Vérification des données ...\n");
@@ -245,6 +245,32 @@ namespace Snout
                 {
                     _listUrl.Add(components.First(x => x.CustomId == "new_url_textbox").Value);
                     Console.WriteLine("AUTO-FETCHER : Nouvel URL ajouté : " + _listUrl.Last());
+
+                    try
+                    {
+                        await using SQLiteConnection connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;");
+                        connection.Open();
+
+                        // Vérifie si la valeur existe déjà dans la table
+                        string checkSql = "SELECT COUNT(*) FROM urls WHERE url = @valueToAdd";
+                        SQLiteCommand checkCommand = new SQLiteCommand(checkSql, connection);
+                        checkCommand.Parameters.AddWithValue("@valueToAdd", nouvelUrl);
+                        int count = Convert.ToInt32(checkCommand.ExecuteScalar());
+
+                        if (count == 0)
+                        {
+                            // La valeur n'existe pas, on peut l'ajouter à la table
+                            string insertSql = "INSERT INTO urls (url) VALUES (@valueToAdd)";
+                            SQLiteCommand insertCommand = new SQLiteCommand(insertSql, connection);
+                            insertCommand.Parameters.AddWithValue("@valueToAdd", nouvelUrl);
+                            insertCommand.ExecuteNonQuery();
+                        }
+                    }
+                    catch (SQLiteException ex)
+                    {
+                        Console.WriteLine("Erreur lors de l'accès à la base de données : " + ex.Message);
+                    }
+
                     await modal.RespondAsync("**Nouvel URL ajouté !**");
                 }
                 else
@@ -299,10 +325,14 @@ namespace Snout
 
             var chnl = _client.GetChannel(command.Channel.Id) as IMessageChannel;
 
-            // var localSniffer = new HllSniffer();
-            // var embed = localSniffer.Pull(listUrl);
+            await command.RespondAsync("*DEBUG*");
 
-            if (chnl != null)
+            var localSniffer = new HllSniffer();
+            var embed = localSniffer.Pull(_listUrl);
+
+            await chnl.SendMessageAsync(null, false, embed);
+
+            /*if (chnl != null)
             {
                 if (_liveChannels.Contains(chnl) == false)
                 {
@@ -328,7 +358,7 @@ namespace Snout
                 await command.RespondAsync("*L'auto-fetcher est déjà actif !*");
                 Console.WriteLine("AUTO-FETCHER : J'étais déjà ON !");
 
-            }
+            }*/
 
         }
         private async Task HandleStopCommand(SocketSlashCommand command)
