@@ -325,14 +325,10 @@ namespace Snout
 
             var chnl = _client.GetChannel(command.Channel.Id) as IMessageChannel;
 
-            await command.RespondAsync("*DEBUG*");
+            // var localSniffer = new HllSniffer();
+            // var embed = localSniffer.Pull(_listUrl);
 
-            var localSniffer = new HllSniffer();
-            var embed = localSniffer.Pull(_listUrl);
-
-            await chnl.SendMessageAsync(null, false, embed);
-
-            /*if (chnl != null)
+            if (chnl != null)
             {
                 if (_liveChannels.Contains(chnl) == false)
                 {
@@ -343,7 +339,7 @@ namespace Snout
                 else
                 {
                     await chnl.SendMessageAsync("*Ce canal de diffusion existe déjà !*");
-                    Console.WriteLine("AUTO-FETCHER : Canal existe déjà ! / ID = " + chnl.Id);
+                    Console.WriteLine("AUTO-FETCHER : Le canal existe déjà ! / ID = " + chnl.Id);
                 }
             }
 
@@ -351,14 +347,14 @@ namespace Snout
             {
                 _timer.Start();
                 await command.RespondAsync("AUTO-FETCHER : **ON**");
-                Console.WriteLine("AUTO-FETCHER : ON / Timing = " + _timer.Interval + " ms");
+                Console.WriteLine("AUTO-FETCHER : ON / Timer = " + _timer.Interval + " ms");
             }
             else
             {
                 await command.RespondAsync("*L'auto-fetcher est déjà actif !*");
-                Console.WriteLine("AUTO-FETCHER : J'étais déjà ON !");
+                Console.WriteLine("AUTO-FETCHER : Déjà actif !");
 
-            }*/
+            }
 
         }
         private async Task HandleStopCommand(SocketSlashCommand command)
