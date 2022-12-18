@@ -271,18 +271,25 @@ public class Program
                     Console.WriteLine("Erreur lors de l'accès à la base de données : " + ex.Message);
                 }
 
-                await modal.RespondAsync("**Nouvel URL ajouté !**");
+                Console.WriteLine("AUTO-FETCHER : L'URL à été ajoutée");
+                CustomNotification notif = new CustomNotification(NotificationType.Success, "AUTO-FETCHER",
+                    "URL ajoutée à la liste de diffusion !");
+                await modal.RespondAsync(embed: notif.BuildEmbed());
             }
             else
             {
                 Console.WriteLine("AUTO-FETCHER : L'URL existait déjà et n'a pas été ajouté");
-                await modal.RespondAsync("*Cet URL existe déjà dans la liste de diffusion*");
+                CustomNotification notif = new CustomNotification(NotificationType.Error, "AUTO-FETCHER",
+                    "Cet URL existe déjà dans la base de données");
+                await modal.RespondAsync(embed: notif.BuildEmbed());
             }
         }
         else
         {
             Console.WriteLine("AUTO-FETCHER : Mauvais format d'URL / Ne pointe pas vers un serveur HLL Battlemetrics");
-            await modal.RespondAsync("*L'URL n'a pas été ajoutée. Ce n'est pas l'adresse d'un serveur HLL.*");
+            CustomNotification notif = new CustomNotification(NotificationType.Error, "AUTO-FETCHER",
+                "Cet URL ne correspond pas à un serveur Hell Let Loose");
+            await modal.RespondAsync(embed: notif.BuildEmbed());
         }
 
         // Autre modal
@@ -303,7 +310,7 @@ public class Program
     }
     private async Task HandlePingCommand(SocketSlashCommand command)
     {
-            
+
         string url = "gateway.discord.gg";
         Ping pingSender = new Ping();
         PingReply reply = pingSender.Send(url);
@@ -311,12 +318,16 @@ public class Program
         if (reply.Status == IPStatus.Success)
         {
             Console.WriteLine("Ping success: RTT = {0} ms", reply.RoundtripTime);
-            await command.RespondAsync("La gateway retourne : " + reply.RoundtripTime + " ms.");
+            CustomNotification notif = new CustomNotification(NotificationType.Info, "PING",
+                "La gateway retourne : " + reply.RoundtripTime + " ms.");
+            await command.RespondAsync(embed: notif.BuildEmbed());
         }
         else
         {
             Console.WriteLine("La gateway ne repond pas au ping !");
-            await command.RespondAsync("La gateway ne repond pas au ping ! - " + reply.RoundtripTime + " ms.");
+            CustomNotification notif = new CustomNotification(NotificationType.Error, "PING",
+                "La gateway retourne : " + reply.RoundtripTime + " ms.");
+            await command.RespondAsync(embed: notif.BuildEmbed());
         }
 
     }
@@ -333,12 +344,14 @@ public class Program
             if (_liveChannels.Contains(chnl) == false)
             {
                 _liveChannels.Add(chnl);
-                await chnl.SendMessageAsync("**Nouveau canal de diffusion ajouté !**");
+                CustomNotification notif = new CustomNotification(NotificationType.Success, "AUTO-FETCHER", "Nouveau canal de diffusion ajouté");
+                await chnl.SendMessageAsync(embed: notif.BuildEmbed());
                 Console.WriteLine("AUTO-FETCHER : Canal ajouté / ID = " + chnl.Id);
             }
             else
             {
-                await chnl.SendMessageAsync("*Ce canal de diffusion existe déjà !*");
+                CustomNotification notif = new CustomNotification(NotificationType.Info, "AUTO-FETCHER", "Ce canal de diffusion est déjà enregistré");
+                await chnl.SendMessageAsync(embed: notif.BuildEmbed());
                 Console.WriteLine("AUTO-FETCHER : Le canal existe déjà ! / ID = " + chnl.Id);
             }
         }
@@ -346,12 +359,14 @@ public class Program
         if (_timer.Enabled == false)
         {
             _timer.Start();
-            await command.RespondAsync("AUTO-FETCHER : **ON**");
+            CustomNotification notif = new CustomNotification(NotificationType.Success, "AUTO-FETCHER", "Auto-fetcher activé");
+            await command.RespondAsync(embed: notif.BuildEmbed());
             Console.WriteLine("AUTO-FETCHER : ON / Timer = " + _timer.Interval + " ms");
         }
         else
         {
-            await command.RespondAsync("*L'auto-fetcher est déjà actif !*");
+            CustomNotification notif = new CustomNotification(NotificationType.Info, "AUTO-FETCHER", "Auto-fetcher déjà actif");
+            await command.RespondAsync(embed: notif.BuildEmbed());
             Console.WriteLine("AUTO-FETCHER : Déjà actif !");
 
         }
@@ -366,23 +381,28 @@ public class Program
         if (_timer.Enabled)
         {
             _timer.Stop();
-                
-            await chnl.SendMessageAsync("AUTO-FETCHER : **OFF**");
+
+            CustomNotification notifFetcher = new CustomNotification(NotificationType.Success, "AUTO-FETCHER", "Auto-fetcher désactivé");
+            await chnl.SendMessageAsync(embed: notifFetcher.BuildEmbed());
             Console.WriteLine("AUTO-FETCHER : OFF");
 
             _liveChannels.Clear();
-                
-            await command.RespondAsync("Liste des canaux de diffusion purgée !");
+
+            CustomNotification notifCanaux = new CustomNotification(NotificationType.Info, "AUTO-FETCHER", "Liste des canaux de diffusion purgée");
+            await command.RespondAsync(embed: notifCanaux.BuildEmbed());
             Console.WriteLine("AUTO-FETCHER : Canaux purgés !");
 
         }
         else
         {
             _liveChannels.Clear();
-                
-            await chnl.SendMessageAsync("Liste des canaux de diffusion purgée !");
+
+            CustomNotification notifCanaux = new CustomNotification(NotificationType.Info, "AUTO-FETCHER", "Liste des canaux de diffusion purgée");
+            CustomNotification notifFetcher = new CustomNotification(NotificationType.Error, "AUTO-FETCHER", "Auto-fetcher déjà désactivé");
+
+            await chnl.SendMessageAsync(embed: notifCanaux.BuildEmbed());
             Console.WriteLine("AUTO-FETCHER : Canaux purgés !");
-            await command.RespondAsync("*L'auto-fetch est déjà désactivé.*");
+            await command.RespondAsync(embed: notifFetcher.BuildEmbed());
             Console.WriteLine("AUTO-FETCHER : Déjà OFF !");
         }
             
