@@ -27,23 +27,21 @@ public class CustomNotification
     public Embed BuildEmbed()
     {
 
-        // TODO : Ajouter chaque image de thumbnail + icone de Snout et champ "auteur"
-
         Color color;
         string imageUrl;
         switch (_type)
         {
             case NotificationType.Error:
                 color = new Color(255, 0, 0); // rouge
-                imageUrl = ""; // image : croix rouge
+                imageUrl = "https://cdn-icons-png.flaticon.com/512/189/189678.png"; // image : croix rouge
                 break;
             case NotificationType.Info:
                 color = new Color(0, 0, 255); // bleu
-                imageUrl = ""; // image : point d'exclamation
+                imageUrl = "https://cdn-icons-png.flaticon.com/512/5828/5828450.png"; // image : point d'exclamation
                 break;
             case NotificationType.Success:
                 color = new Color(0, 255, 0); // vert
-                imageUrl = ""; // image : coche verte
+                imageUrl = "https://cdn-icons-png.flaticon.com/512/1709/1709977.png"; // image : coche verte
                 break; 
             default:
                 color = new Color(0, 0, 0); // noir
@@ -53,9 +51,9 @@ public class CustomNotification
 
         var embed = new EmbedBuilder()
             .WithTitle(_title)
+            .WithAuthor("Snout", imageUrl)
             .WithColor(color)
             .WithDescription(_message)
-            .WithThumbnailUrl(imageUrl)
             .Build();
 
         return embed;
