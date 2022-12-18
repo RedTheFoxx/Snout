@@ -26,6 +26,9 @@ namespace Snout
 
         public Embed BuildEmbed()
         {
+
+            // TODO : Ajouter chaque image de thumbnail + icone de Snout et champ "auteur"
+
             Color color;
             string imageUrl;
             switch (_type)
