@@ -9,6 +9,7 @@
   <ItemGroup>
     <PackageReference Include="Discord.Net" Version="3.8.1" />
     <PackageReference Include="HtmlAgilityPack" Version="1.11.46" />
+    <PackageReference Include="PuppeteerSharp" Version="8.0.0" />
     <PackageReference Include="RandomOrg.CoreApi" Version="1.0.1" />
     <PackageReference Include="System.Data.SQLite" Version="1.0.117" />
   </ItemGroup>
