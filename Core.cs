@@ -14,7 +14,7 @@ public class Program
     private DiscordSocketClient? _client;
     private HllSniffer? _liveSniffer;
     private List<IMessageChannel>? _liveChannels;
-    private List<string> _listUrl = new();
+    private readonly List<string> _listUrl = new();
 
     readonly System.Timers.Timer _timer = new System.Timers.Timer();
 
@@ -22,7 +22,7 @@ public class Program
         => new Program().MainAsync().GetAwaiter().GetResult();
  
     // Thread principal
-    public async Task MainAsync()
+    private async Task MainAsync()
     {
         _client = new DiscordSocketClient();
 
@@ -62,7 +62,7 @@ public class Program
         return Task.CompletedTask;
     }
 
-    public async Task ClientReady()
+    private async Task ClientReady()
     {
         var commands = new List<SlashCommandBuilder>
         {
@@ -333,13 +333,10 @@ public class Program
     }
     private async Task HandleFetchCommand(SocketSlashCommand command)
     {
-
-        var chnl = _client.GetChannel(command.Channel.Id) as IMessageChannel;
-
         // var localSniffer = new HllSniffer();
         // var embed = localSniffer.Pull(_listUrl);
 
-        if (chnl != null)
+        if (_client.GetChannel(command.Channel.Id) is IMessageChannel chnl)
         {
             if (_liveChannels.Contains(chnl) == false)
             {
