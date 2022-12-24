@@ -1,19 +1,10 @@
-public class User
-{
-    public int? UserId { get; set; }
-    public string? DiscordId { get; set; }
-
-    public User(string discordId)
-    {
-        DiscordId = discordId ?? throw new ArgumentNullException(nameof(discordId));
-    }
-}
+using System.Data.SQLite;
 
 public class Account
 {
     public string? AccountNumber { get; set; }
     public AccountType? Type { get; set; }
-    public List<User>? AccountHolders { get; set; }
+    public List<SnoutUser>? AccountHolders { get; set; }
     public decimal Balance { get; set; }
     public string? Currency { get; set; }
     public decimal OverdraftLimit { get; set; }
@@ -24,7 +15,7 @@ public class Account
     // CONSTRUCTEUR : (AccountNumber, Type, Currency, AccountHolders) sont obligatoires et ne peuvent pas être null. Si l'un de ces champs est null => 
     // => une exception ArgumentNullException est levée. Le champ AccountHolders doit également contenir au moins un élément, sinon une exception ArgumentException est levée. 
     // Les autres champs ont des valeurs par défaut et peuvent être null si elles ne sont pas fournies.
-    public Account(string accountNumber, AccountType type, List<User> accountHolders, decimal balance, string currency, decimal overdraftLimit, decimal interestRate, decimal accountFees, List<Transaction> transactionHistory)
+    public Account(string accountNumber, AccountType type, List<SnoutUser> accountHolders, decimal balance, string currency, decimal overdraftLimit, decimal interestRate, decimal accountFees, List<Transaction> transactionHistory)
     {
         AccountNumber = accountNumber ?? throw new ArgumentNullException(nameof(accountNumber));
         if (!Enum.IsDefined(typeof(AccountType), type))

@@ -77,7 +77,10 @@ public class Program
                 .WithDescription("Eteint l'auto-fetcher de manière globale et purge les canaux de diffusion enregistrés"),
             new SlashCommandBuilder()
                 .WithName("add")
-                .WithDescription("Ajoute une nouvelle URL Battlemetrics (exclusivement) aux serveurs à surveiller")
+                .WithDescription("Ajoute une nouvelle URL Battlemetrics (exclusivement) aux serveurs à surveiller"),
+            new SlashCommandBuilder()
+                .WithName("register")
+                .WithDescription("Inscrit un utilisateur dans Snout")
         };
         foreach (var command in commands)
         {
@@ -227,75 +230,100 @@ public class Program
             case "add":
                 await HandleAddCommand(command);
                 break;
+            
+            case "register":
+                await HandleRegisterCommand(command);
+                break;
         }
     }
     private async Task ModalHandler(SocketModal modal)
     {
         // MODAL : AJOUT D'URL
         //////////////////////////////////////////////////////////////////////////////
-        List<SocketMessageComponentData> components = modal.Data.Components.ToList();
+        
+        if (modal.Data.CustomId == "new_url_modal") {
+            List<SocketMessageComponentData> components = modal.Data.Components.ToList();
 
-        var nouvelUrl = components.First(x => x.CustomId == "new_url_textbox").Value;
-        var pattern = "^https:\\/\\/www\\.battlemetrics\\.com\\/servers\\/hll\\/\\d+$";
-        bool isMatch = System.Text.RegularExpressions.Regex.IsMatch(nouvelUrl, pattern);
+            var nouvelUrl = components.First(x => x.CustomId == "new_url_textbox").Value;
+            var pattern = "^https:\\/\\/www\\.battlemetrics\\.com\\/servers\\/hll\\/\\d+$";
+            bool isMatch = System.Text.RegularExpressions.Regex.IsMatch(nouvelUrl, pattern);
 
-        if (isMatch)
-        {
-            if (_listUrl.Contains(components.First(x => x.CustomId == "new_url_textbox").Value) == false)
+            if (isMatch)
             {
-                _listUrl.Add(components.First(x => x.CustomId == "new_url_textbox").Value);
-                Console.WriteLine("AUTO-FETCHER : Nouvel URL ajouté : " + _listUrl.Last());
-
-                try
+                if (_listUrl.Contains(components.First(x => x.CustomId == "new_url_textbox").Value) == false)
                 {
-                    await using SQLiteConnection connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;");
-                    connection.Open();
+                    _listUrl.Add(components.First(x => x.CustomId == "new_url_textbox").Value);
+                    Console.WriteLine("AUTO-FETCHER : Nouvel URL ajouté : " + _listUrl.Last());
 
-                    // Vérifie si la valeur existe déjà dans la table
-                    string checkSql = "SELECT COUNT(*) FROM urls WHERE url = @valueToAdd";
-                    SQLiteCommand checkCommand = new SQLiteCommand(checkSql, connection);
-                    checkCommand.Parameters.AddWithValue("@valueToAdd", nouvelUrl);
-                    int count = Convert.ToInt32(checkCommand.ExecuteScalar());
-
-                    if (count == 0)
+                    try
                     {
-                        // La valeur n'existe pas, on peut l'ajouter à la table
-                        string insertSql = "INSERT INTO urls (url) VALUES (@valueToAdd)";
-                        SQLiteCommand insertCommand = new SQLiteCommand(insertSql, connection);
-                        insertCommand.Parameters.AddWithValue("@valueToAdd", nouvelUrl);
-                        insertCommand.ExecuteNonQuery();
-                    }
-                }
-                catch (SQLiteException ex)
-                {
-                    Console.WriteLine("Erreur lors de l'accès à la base de données : " + ex.Message);
-                }
+                        await using SQLiteConnection connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;");
+                        connection.Open();
 
-                Console.WriteLine("AUTO-FETCHER : L'URL à été ajoutée");
-                CustomNotification notif = new CustomNotification(NotificationType.Success, "AUTO-FETCHER",
-                    "URL ajoutée à la liste de diffusion !");
-                await modal.RespondAsync(embed: notif.BuildEmbed());
+                        // Vérifie si la valeur existe déjà dans la table
+                        string checkSql = "SELECT COUNT(*) FROM urls WHERE url = @valueToAdd";
+                        SQLiteCommand checkCommand = new SQLiteCommand(checkSql, connection);
+                        checkCommand.Parameters.AddWithValue("@valueToAdd", nouvelUrl);
+                        int count = Convert.ToInt32(checkCommand.ExecuteScalar());
+
+                        if (count == 0)
+                        {
+                            // La valeur n'existe pas, on peut l'ajouter à la table
+                            string insertSql = "INSERT INTO urls (url) VALUES (@valueToAdd)";
+                            SQLiteCommand insertCommand = new SQLiteCommand(insertSql, connection);
+                            insertCommand.Parameters.AddWithValue("@valueToAdd", nouvelUrl);
+                            insertCommand.ExecuteNonQuery();
+                        }
+                    }
+                    catch (SQLiteException ex)
+                    {
+                        Console.WriteLine("Erreur lors de l'accès à la base de données : " + ex.Message);
+                    }
+
+                    Console.WriteLine("AUTO-FETCHER : L'URL à été ajoutée");
+                    CustomNotification notif = new CustomNotification(NotificationType.Success, "AUTO-FETCHER",
+                        "URL ajoutée à la liste de diffusion !");
+                    await modal.RespondAsync(embed: notif.BuildEmbed());
+                }
+                else
+                {
+                    Console.WriteLine("AUTO-FETCHER : L'URL existait déjà et n'a pas été ajouté");
+                    CustomNotification notif = new CustomNotification(NotificationType.Error, "AUTO-FETCHER",
+                        "Cet URL existe déjà dans la base de données");
+                    await modal.RespondAsync(embed: notif.BuildEmbed());
+                }
             }
             else
             {
-                Console.WriteLine("AUTO-FETCHER : L'URL existait déjà et n'a pas été ajouté");
+                Console.WriteLine("AUTO-FETCHER : Mauvais format d'URL / Ne pointe pas vers un serveur HLL Battlemetrics");
                 CustomNotification notif = new CustomNotification(NotificationType.Error, "AUTO-FETCHER",
-                    "Cet URL existe déjà dans la base de données");
+                    "Cet URL ne correspond pas à un serveur Hell Let Loose");
                 await modal.RespondAsync(embed: notif.BuildEmbed());
             }
         }
-        else
-        {
-            Console.WriteLine("AUTO-FETCHER : Mauvais format d'URL / Ne pointe pas vers un serveur HLL Battlemetrics");
-            CustomNotification notif = new CustomNotification(NotificationType.Error, "AUTO-FETCHER",
-                "Cet URL ne correspond pas à un serveur Hell Let Loose");
+       
+        // MODAL : AJOUT D'UTILISATEUR
+        //////////////////////////////////////////////////////////////////////////////
+
+        if (modal.Data.CustomId == "new_user_modal") {  
+            
+            List<SocketMessageComponentData> components = modal.Data.Components.ToList();
+            var nouvelUser = components.First(x => x.CustomId == "new_user_textbox").Value;
+            var pattern = "^[^#]+#[0-9]{4,10}$";
+            bool isMatch = System.Text.RegularExpressions.Regex.IsMatch(nouvelUser, pattern);
+
+            if(isMatch) {
+                var nouvelUserInDb = new SnoutUser(nouvelUser);
+                var ID = await nouvelUserInDb.CreateUserAsync();
+
+                CustomNotification notifOk = new CustomNotification(NotificationType.Info, "Base de données", $"L'utilisateur {nouvelUser} dispose de l'ID {ID}");
+                await modal.RespondAsync(embed: notifOk.BuildEmbed());
+            }
+
+            CustomNotification notif = new CustomNotification(NotificationType.Error, "Mauvais format", "L'entrée ne correspond pas à un Discord ID valide");
             await modal.RespondAsync(embed: notif.BuildEmbed());
         }
-
-        // Autre modal
-        //////////////////////////////////////////////////////////////////////////////
             
-        // Autre code
     }
     private async Task HandleAddCommand(SocketSlashCommand command)
     {
@@ -405,4 +433,14 @@ public class Program
             
     }
 
+    private async Task HandleRegisterCommand(SocketSlashCommand command)
+    {
+        var modal = new ModalBuilder();
+
+        modal.WithTitle("Inscrire un utilisateur")
+            .WithCustomId("new_user_modal")
+            .AddTextInput("Discord ID", "new_user_textbox", TextInputStyle.Short, placeholder: "RedFox#9999", required: true);
+
+        await command.RespondWithModalAsync(modal.Build());
+    }
 }
