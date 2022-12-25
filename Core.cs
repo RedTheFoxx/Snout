@@ -330,13 +330,6 @@ public class Program
             CustomNotification notif = new CustomNotification(NotificationType.Error, "Mauvais format", "L'entrée ne correspond pas à un Discord ID valide");
             await modal.RespondAsync(embed: notif.BuildEmbed());
         }
-
-        // MODAL : SUPPR. D'UTILISATEUR
-        //////////////////////////////////////////////////////////////////////////////
-
-        if (modal.Data.CustomId == "del_user_modal"){
-            // Modal DEL
-        }
     }
     private async Task HandleAddCommand(SocketSlashCommand command)
     {
@@ -460,11 +453,34 @@ public class Program
     private async Task HandleUnregisterCommand(SocketSlashCommand command)
     {
         
-        // Ouvrir une modal qui présente tous les utilisateurs de la DB et donner le choix
+        using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
+        {
+            await connection.OpenAsync();
+            var sqlCommand = new SQLiteCommand("SELECT UserId, DiscordId FROM Users", connection);
+            
+            using (var reader = await sqlCommand.ExecuteReaderAsync())
+            {
+                var menuBuilder = new SelectMenuBuilder()
+                    .WithPlaceholder("Sélectionnez un utilisateur")
+                    .WithCustomId("del_user_menu");
+                    
+                while (await reader.ReadAsync())
+                {
+                    var userId = reader.GetInt32(0);
+                    var discordId = reader.GetString(1);
+                    menuBuilder.AddOption($"ID {userId}", $"opt-{userId}", $"{discordId}");
+                }
+
+                var menuComponent = new ComponentBuilder().WithSelectMenu(menuBuilder);
+
+                await command.RespondAsync("Quel utilisateur faut-il supprimer ?", components: menuComponent.Build());
+
+            }
+        }
 
         // DEBUG
-        CustomNotification notif = new CustomNotification(NotificationType.Info, "En construction", "Cette commande n'est pas encore implémentée");
-        await command.RespondAsync(embed: notif.BuildEmbed());
+        // CustomNotification notif = new CustomNotification(NotificationType.Info, "En construction", "Cette commande n'est pas encore implémentée");
+        // await command.RespondAsync(embed: notif.BuildEmbed());
 
     }
 
