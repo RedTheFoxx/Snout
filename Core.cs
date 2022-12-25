@@ -473,7 +473,7 @@ public class Program
 
                 var menuComponent = new ComponentBuilder().WithSelectMenu(menuBuilder);
 
-                await command.RespondAsync("Quel utilisateur faut-il supprimer ?", components: menuComponent.Build());
+                await command.RespondAsync("Quel utilisateur faut-il supprimer ?", components: menuComponent.Build()); // Manque à gérer le handler associé et générer la notif.
 
             }
         }
