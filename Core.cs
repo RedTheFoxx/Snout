@@ -462,6 +462,7 @@ public class Program
         
         // Ouvrir une modal qui présente tous les utilisateurs de la DB et donner le choix
 
+        // DEBUG
         CustomNotification notif = new CustomNotification(NotificationType.Info, "En construction", "Cette commande n'est pas encore implémentée");
         await command.RespondAsync(embed: notif.BuildEmbed());
 
