@@ -20,6 +20,7 @@ public async Task<int> CreateUserAsync()
         command.Parameters.AddWithValue("@discordId", DiscordId);
     
         var result = await command.ExecuteScalarAsync();
+        
         long count = 0;
         
         if (result != null)
@@ -30,9 +31,11 @@ public async Task<int> CreateUserAsync()
         if (count > 0)
         {
             // L'utilisateur existe déjà, retourner son ID
+            
             command = new SQLiteCommand("SELECT UserId FROM Users WHERE DiscordId = @discordId", connection);
             command.Parameters.AddWithValue("@discordId", DiscordId);
             var result2 = await command.ExecuteScalarAsync();
+            
             long? count2 = (long?)result;
             
             if (count2.HasValue)
