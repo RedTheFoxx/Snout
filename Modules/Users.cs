@@ -61,4 +61,25 @@ public async Task<int> CreateUserAsync()
     }
 }
 
+public async Task<bool> DeleteUserAsync(string discordId)
+{
+    if (string.IsNullOrEmpty(discordId))
+    {
+        throw new ArgumentNullException(nameof(discordId));
+    }
+
+    using (var connection = new SQLiteConnection("Data Source=dynamic_data.db; Version=3;"))
+    {
+        await connection.OpenAsync();
+
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "DELETE FROM Users WHERE DiscordId = @DiscordId";
+            command.Parameters.AddWithValue("@DiscordId", discordId);
+            var rowsAffected = await command.ExecuteNonQueryAsync();
+            return rowsAffected > 0;
+        }
+    }
+}
+
 }
