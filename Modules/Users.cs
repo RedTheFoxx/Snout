@@ -19,13 +19,33 @@ public async Task<int> CreateUserAsync()
         var command = new SQLiteCommand("SELECT COUNT(*) FROM Users WHERE DiscordId = @discordId", connection);
         command.Parameters.AddWithValue("@discordId", DiscordId);
     
-        var count = (long)await command.ExecuteScalarAsync();
+        var result = await command.ExecuteScalarAsync();
+        long count = 0;
+        
+        if (result != null)
+        {
+            count = (long)result;
+        }
+        
         if (count > 0)
         {
             // L'utilisateur existe déjà, retourner son ID
             command = new SQLiteCommand("SELECT UserId FROM Users WHERE DiscordId = @discordId", connection);
             command.Parameters.AddWithValue("@discordId", DiscordId);
-            return (int)(long)await command.ExecuteScalarAsync();
+            var result2 = await command.ExecuteScalarAsync();
+            long? count2 = (long?)result;
+            
+            if (count2.HasValue)
+            {
+                // count est un long non-null
+                return (int)count2.Value;
+            }
+            else
+            {
+                // count est null
+                return 0;
+            }
+
         }
 
         // L'utilisateur n'existe pas, l'insérer dans la table
