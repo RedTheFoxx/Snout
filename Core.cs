@@ -80,7 +80,10 @@ public class Program
                 .WithDescription("Ajoute une nouvelle URL Battlemetrics (exclusivement) aux serveurs à surveiller"),
             new SlashCommandBuilder()
                 .WithName("register")
-                .WithDescription("Inscrit un utilisateur dans Snout")
+                .WithDescription("Inscrit un utilisateur de la DB de Snout"),
+            new SlashCommandBuilder()
+                .WithName("unregister")
+                .WithDescription("Retire un utilisateur de la DB de Snout")
         };
         foreach (var command in commands)
         {
@@ -234,6 +237,10 @@ public class Program
             case "register":
                 await HandleRegisterCommand(command);
                 break;
+
+            case "unregister":
+                await HandleUnregisterCommand(command);
+                break;
         }
     }
     private async Task ModalHandler(SocketModal modal)
@@ -323,7 +330,13 @@ public class Program
             CustomNotification notif = new CustomNotification(NotificationType.Error, "Mauvais format", "L'entrée ne correspond pas à un Discord ID valide");
             await modal.RespondAsync(embed: notif.BuildEmbed());
         }
-            
+
+        // MODAL : SUPPR. D'UTILISATEUR
+        //////////////////////////////////////////////////////////////////////////////
+
+        if (modal.Data.CustomId == "del_user_modal"){
+            // Modal DEL
+        }
     }
     private async Task HandleAddCommand(SocketSlashCommand command)
     {
@@ -443,4 +456,15 @@ public class Program
 
         await command.RespondWithModalAsync(modal.Build());
     }
+
+    private async Task HandleUnregisterCommand(SocketSlashCommand command)
+    {
+        
+        // Ouvrir une modal qui présente tous les utilisateurs de la DB et donner le choix
+
+        CustomNotification notif = new CustomNotification(NotificationType.Info, "En construction", "Cette commande n'est pas encore implémentée");
+        await command.RespondAsync(embed: notif.BuildEmbed());
+
+    }
+
 }
