@@ -84,7 +84,11 @@ public class Program
                 .WithDescription("Inscrit un utilisateur de la DB de Snout"),
             new SlashCommandBuilder()
                 .WithName("unregister")
-                .WithDescription("Retire un utilisateur de la DB de Snout")
+                .WithDescription("Retire un utilisateur de la DB de Snout"),
+            new SlashCommandBuilder()
+                .WithName("newaccount")
+                .WithDescription("Crée un nouveau compte bancaire en spécifiant ses paramètres")
+                
         };
         foreach (var command in commands)
         {
@@ -241,6 +245,9 @@ public class Program
 
             case "unregister":
                 await HandleUnregisterCommand(command);
+                break;
+            case "newaccount":
+                await HandleNewAccountCommand(command);
                 break;
         }
     }
@@ -509,6 +516,15 @@ public class Program
         }
 
     }
+
+    private async Task HandleNewAccountCommand(SocketSlashCommand command)
+    {
+        // TODO : Ouvrir une modal avec les champs à compléter
+    }
+
+
+/////////// METHODES DIVERSES /////////////
+///////////////////////////////////////////
     public async Task SendEmbedPrivateMessageAsync(DiscordSocketClient client, ulong userId, Embed embed)
     {
     // Vérifiez que le client est connecté et prêt
