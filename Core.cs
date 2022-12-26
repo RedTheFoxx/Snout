@@ -65,46 +65,63 @@ public class Program
 
     private async Task ClientReady()
     {
-        var commands = new List<SlashCommandBuilder>
+
+        // POUR SUPPRIMER TOUTES LES GLOBAL COMMMANDS.
+
+        await _client.Rest.DeleteAllGlobalCommandsAsync();
+        Console.WriteLine("GLOBAL COMMMANDS -> All Deleted");
+
+
+        // CI-DESSOUS : Ne faire tourner cela qu'une seule fois pour créer les commandes globales de l'appli
+        /*var commands = new List<SlashCommandBuilder>
         {
             new SlashCommandBuilder()
                 .WithName("ping")
-                .WithDescription("Mesure le ping vers la gateway Discord"),
+                .WithDescription("Mesurer le ping vers la gateway Discord"),
             new SlashCommandBuilder()
                 .WithName("fetch")
-                .WithDescription("Obtenir des informations sur les serveurs FR de Hell Let Loose"),
+                .WithDescription("Assigner l'auto-fetcher Hell Let Loose à un canal de diffusion"),
             new SlashCommandBuilder()
                 .WithName("stop")
-                .WithDescription("Eteint l'auto-fetcher de manière globale et purge les canaux de diffusion enregistrés"),
+                .WithDescription("Eteindre l'auto-fetcher globalement et purger les canaux de diffusion assignés"),
             new SlashCommandBuilder()
                 .WithName("add")
-                .WithDescription("Ajoute une nouvelle URL Battlemetrics (exclusivement) aux serveurs à surveiller"),
+                .WithDescription("Ajouter une nouvelle URL Battlemetrics à la liste de surveillance de l'auto-fetcher"),
             new SlashCommandBuilder()
                 .WithName("register")
-                .WithDescription("Inscrit un utilisateur de la DB de Snout"),
+                .WithDescription("Inscrire un utilisateur dans la base de données de Snout"),
             new SlashCommandBuilder()
                 .WithName("unregister")
-                .WithDescription("Retire un utilisateur de la DB de Snout"),
+                .WithDescription("Retirer un utilisateur de la base de données de Snout"),
             new SlashCommandBuilder()
-                .WithName("newaccount")
-                .WithDescription("Crée un nouveau compte bancaire en spécifiant ses paramètres")
-                
+                .WithName("account")
+                .WithDescription("Gérer les comptes bancaires")
+                .AddOption(new SlashCommandOptionBuilder()
+                    .WithName("add")
+                    .WithDescription("Créer un nouveau compte bancaire")
+                    .WithType(ApplicationCommandOptionType.SubCommand))
+
         };
+        
         foreach (var command in commands)
         {
             try
             {
                 await _client.CreateGlobalApplicationCommandAsync(command.Build());
+                Console.WriteLine(command.Name + " -> Enregistrée en GlobalCommand");
+                Thread.Sleep(2000);
             }
             catch (HttpException exception)
             {
                 var json = JsonConvert.SerializeObject(exception.Errors, Formatting.Indented);
                 Console.WriteLine(json);
             }
-        }
+        }*/
 
         // Injecte les URLs pré-programées dans la db "dynamic_data" si elles n'y sont pas déjà et dispose de l'objet connecteur.
         // La commande /add ajoute les données à la fois dans la listUrl (utilisée au runtime) et en statique dans la DB.
+
+        // ATTENTION : Section non asynchrone et bloquante pour la suite. Si la DB ne peut être crée, le bot ne fonctionnera pas.
            
         if (File.Exists("dynamic_data.db")) // Si la DB existe déjà, on cherchera à ajouter les URLs préprogrammées dedans (en vérifiant qu'elles n'y soient pas déjà)
         {
@@ -246,8 +263,8 @@ public class Program
             case "unregister":
                 await HandleUnregisterCommand(command);
                 break;
-            case "newaccount":
-                await HandleNewAccountCommand(command);
+            case "add_account":
+                await HandleAddAccountCommand(command);
                 break;
         }
     }
@@ -517,22 +534,25 @@ public class Program
 
     }
 
-    private async Task HandleNewAccountCommand(SocketSlashCommand command)
+    private async Task HandleAddAccountCommand(SocketSlashCommand command)
     {
-        var modal = new ModalBuilder();
 
-        modal.WithTitle("Créer un nouveau compte")
-            .WithCustomId("new_account_modal")
-            .AddTextInput("Propriétaire", "new_account_userid_textbox", TextInputStyle.Short, placeholder: "0 (ID DB)", required: true)
-            .AddTextInput("Type de compte", "new_account_type_textbox", TextInputStyle.Short, placeholder: "Checkings / Savings / Locked", required: true)
-            .AddTextInput("Limite de découvert", "new_account_overdraft_textbox", TextInputStyle.Short, placeholder: "1000", required: true)
-            .AddTextInput("Taux d'intérêt", "new_account_interest_textbox", TextInputStyle.Short, placeholder: "0.02", required: true)
-            .AddTextInput("Frais de service", "new_account_fees_textbox", TextInputStyle.Short, placeholder: "8", required: true);
-            
 
-        await command.RespondWithModalAsync(modal.Build());
+            var modal = new ModalBuilder();
+
+            modal.WithTitle("Créer un nouveau compte")
+                .WithCustomId("new_account_modal")
+                .AddTextInput("Propriétaire", "new_account_userid_textbox", TextInputStyle.Short, placeholder: "0 (ID DB)", required: true)
+                .AddTextInput("Type de compte", "new_account_type_textbox", TextInputStyle.Short, placeholder: "Checkings / Savings / Locked", required: true)
+                .AddTextInput("Limite de découvert", "new_account_overdraft_textbox", TextInputStyle.Short, placeholder: "1000", required: true)
+                .AddTextInput("Taux d'intérêt", "new_account_interest_textbox", TextInputStyle.Short, placeholder: "0.02", required: true)
+                .AddTextInput("Frais de service", "new_account_fees_textbox", TextInputStyle.Short, placeholder: "8", required: true);
+
+
+            await command.RespondWithModalAsync(modal.Build());
+
+        
     }
-
 
 /////////// FONCTIONS DIVERSES /////////////
 ///////////////////////////////////////////
