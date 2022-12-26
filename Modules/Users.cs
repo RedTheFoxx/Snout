@@ -5,11 +5,16 @@ public class SnoutUser
     public int? UserId { get; set; }
     public string? DiscordId { get; set; }
 
+    public SnoutUser(int userId)
+    {
+        UserId = userId;
+    }
+
     public SnoutUser(string discordId)
     {
         DiscordId = discordId ?? throw new ArgumentNullException(nameof(discordId));
     }
-public async Task<int> CreateUserAsync()
+    public async Task<int> CreateUserAsync()
 {
     using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
     {
@@ -61,7 +66,7 @@ public async Task<int> CreateUserAsync()
     }
 }
 
-public async Task<bool> DeleteUserAsync()
+    public async Task<bool> DeleteUserAsync()
 {
     
     using (var connection = new SQLiteConnection("Data Source=dynamic_data.db; Version=3;"))
