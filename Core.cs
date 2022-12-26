@@ -323,7 +323,7 @@ public class Program
             if(isMatch) {
                 var nouvelUserInDb = new SnoutUser(nouvelUser);
                 var ID = await nouvelUserInDb.CreateUserAsync();
-
+                
                 CustomNotification notifOk = new CustomNotification(NotificationType.Info, "Base de données", $"L'utilisateur {nouvelUser} dispose de l'ID {ID}");
                 await modal.RespondAsync(embed: notifOk.BuildEmbed());
             }
@@ -508,6 +508,22 @@ public class Program
             }
         }
 
+    }
+    public async Task SendEmbedPrivateMessageAsync(DiscordSocketClient client, ulong userId, Embed embed)
+    {
+    // Vérifiez que le client est connecté et prêt
+    if (client.ConnectionState != ConnectionState.Connected)
+        return;
+
+    // Récupérez l'utilisateur à partir de leur ID
+    var user = client.GetUser(userId);
+
+    // Vérifiez que l'utilisateur existe et que le bot a la permission de lui envoyer un message privé
+    if (user == null)
+        return;
+
+    // Envoyez le message privé
+    await user.SendMessageAsync(embed: embed);
     }
 
 }
