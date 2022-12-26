@@ -356,6 +356,60 @@ public class Program
             }
 
         }
+
+        // MODAL : AJOUT D'UN COMPTE BANCAIRE
+        //////////////////////////////////////////////////////////////////////////////
+
+        if (modal.Data.CustomId == "new_account_modal")
+        {
+            List<SocketMessageComponentData> components = modal.Data.Components.ToList();
+
+            // 1. Un numéro de compte aléatoire
+
+            var randomAccountNumber = new Random();
+            randomAccountNumber.NextInt64(9999999999999);
+
+            // 2. On switch sur le type de compte renseigné et on élimine les autres cas par une erreur
+
+            string importedAccountType = "";
+
+            switch (components.First(x => x.CustomId == "new_account_type_textbox").Value.ToLower())
+            {
+                case "checkings":
+                    importedAccountType = components.First(x => x.CustomId == "new_account_type_textbox").Value.ToLower();
+                    break;
+
+                case "savings":
+                    importedAccountType = components.First(x => x.CustomId == "new_account_type_textbox").Value.ToLower();
+                    break;
+
+                case "locked":
+                    importedAccountType = components.First(x => x.CustomId == "new_account_type_textbox").Value.ToLower();
+                    break;
+
+                default: throw new Exception("Le type de compte n'est pas valide !");
+            }
+
+            // 3. On construit un SnoutUser sur la base de son UserID (et pas son DiscordID)
+
+            SnoutUser importedSnoutUser = new(components.First(x => x.CustomId == "new_account_userid_textbox").Value);
+            var snoutUserId = importedSnoutUser.UserId;
+
+            // 4. Prendre l'overdraft
+
+            long importedOverdraftLimit = long.Parse(components.First(x => x.CustomId == "new_account_overdraft_textbox").Value);
+
+            // 5. Prendre l'interest
+
+            double importedInterest = double.Parse(components.First(x => x.CustomId == "new_account_interest_textbox").Value);
+
+            // 6. Prendre la fee
+
+            long importedFee = long.Parse(components.First(x => x.CustomId == "new_account_fee_textbox").Value);
+
+            // TODO : Construire l'objet ACCOUNT et l'envoyer en base.
+
+        }
     }
 
     private async Task SelectMenuHandler(SocketMessageComponent menu)
