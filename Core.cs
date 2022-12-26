@@ -36,6 +36,7 @@ public class Program
         _client.Ready += ClientReady;
         _client.SlashCommandExecuted += SlashCommandHandler;
         _client.ModalSubmitted += ModalHandler;
+        _client.SelectMenuExecuted += SelectMenuHandler;
 
         _timer.Elapsed += Timer_Elapsed;
 
@@ -326,10 +327,30 @@ public class Program
                 CustomNotification notifOk = new CustomNotification(NotificationType.Info, "Base de données", $"L'utilisateur {nouvelUser} dispose de l'ID {ID}");
                 await modal.RespondAsync(embed: notifOk.BuildEmbed());
             }
-
-            CustomNotification notif = new CustomNotification(NotificationType.Error, "Mauvais format", "L'entrée ne correspond pas à un Discord ID valide");
-            await modal.RespondAsync(embed: notif.BuildEmbed());
+            else {
+                CustomNotification notif = new CustomNotification(NotificationType.Error, "Mauvais format", "L'entrée ne correspond pas à un Discord ID valide");
+                await modal.RespondAsync(embed: notif.BuildEmbed());
+            }
+            
         }
+    }
+    
+    private async Task SelectMenuHandler(SocketMessageComponent menu)
+    {
+        var selectedUserData = string.Join(", ", menu.Data.Values);
+        Console.WriteLine("DATA : Utilisateur supprimé / Discord ID = " + selectedUserData);
+
+        SnoutUser userToDelete = new SnoutUser(selectedUserData);
+        
+        if (await userToDelete.DeleteUserAsync()) {
+            CustomNotification notifOk = new CustomNotification(NotificationType.Success, "Base de données", "L'utilisateur à été supprimé");
+            await menu.RespondAsync(embed: notifOk.BuildEmbed());
+        }
+        else {
+            CustomNotification notif = new CustomNotification(NotificationType.Error, "Base de données", "Erreur lors de la suppression de l'utilisateur");
+            await menu.RespondAsync(embed: notif.BuildEmbed());
+        }
+    
     }
     private async Task HandleAddCommand(SocketSlashCommand command)
     {
@@ -457,30 +478,35 @@ public class Program
         {
             await connection.OpenAsync();
             var sqlCommand = new SQLiteCommand("SELECT UserId, DiscordId FROM Users", connection);
-            
+
             using (var reader = await sqlCommand.ExecuteReaderAsync())
             {
+                if (!reader.HasRows)
+                {
+                  
+                    CustomNotification notifDbVide = new CustomNotification(NotificationType.Error, "Base de données", "La base de données est vide : opération impossible");
+
+                    await command.RespondAsync(embed: notifDbVide.BuildEmbed());
+
+                    return;
+                }
+
                 var menuBuilder = new SelectMenuBuilder()
                     .WithPlaceholder("Sélectionnez un utilisateur")
                     .WithCustomId("del_user_menu");
-                    
+
                 while (await reader.ReadAsync())
                 {
                     var userId = reader.GetInt32(0);
                     var discordId = reader.GetString(1);
-                    menuBuilder.AddOption($"ID {userId}", $"opt-{userId}", $"{discordId}");
+                    menuBuilder.AddOption($"ID {userId}", $"{discordId}", $"{discordId}");
                 }
 
                 var menuComponent = new ComponentBuilder().WithSelectMenu(menuBuilder);
 
-                await command.RespondAsync("Quel utilisateur faut-il supprimer ?", components: menuComponent.Build()); // Manque à gérer le handler associé et générer la notif.
-
+                await command.RespondAsync("Quel utilisateur faut-il supprimer ?", components: menuComponent.Build());
             }
         }
-
-        // DEBUG
-        // CustomNotification notif = new CustomNotification(NotificationType.Info, "En construction", "Cette commande n'est pas encore implémentée");
-        // await command.RespondAsync(embed: notif.BuildEmbed());
 
     }
 
