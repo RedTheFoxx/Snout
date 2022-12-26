@@ -2,8 +2,8 @@ using Discord;
 using Discord.Net;
 using Discord.WebSocket;
 using Newtonsoft.Json;
-using System.Net.NetworkInformation;
 using System.Data.SQLite;
+using System.Net.NetworkInformation;
 
 #pragma warning disable CS8602
 
@@ -20,7 +20,7 @@ public class Program
 
     public static void Main(string[] args)
         => new Program().MainAsync().GetAwaiter().GetResult();
- 
+
     // Thread principal
     private async Task MainAsync()
     {
@@ -68,8 +68,8 @@ public class Program
 
         // POUR SUPPRIMER TOUTES LES GLOBAL COMMMANDS.
 
-        await _client.Rest.DeleteAllGlobalCommandsAsync();
-        Console.WriteLine("GLOBAL COMMMANDS -> All Deleted");
+        // await _client.Rest.DeleteAllGlobalCommandsAsync();
+        // Console.WriteLine("GLOBAL COMMMANDS -> All Deleted");
 
 
         // CI-DESSOUS : Ne faire tourner cela qu'une seule fois pour créer les commandes globales de l'appli
@@ -95,21 +95,16 @@ public class Program
                 .WithDescription("Retirer un utilisateur de la base de données de Snout"),
             new SlashCommandBuilder()
                 .WithName("account")
-                .WithDescription("Gérer les comptes bancaires")
-                .AddOption(new SlashCommandOptionBuilder()
-                    .WithName("add")
-                    .WithDescription("Créer un nouveau compte bancaire")
-                    .WithType(ApplicationCommandOptionType.SubCommand))
+                .WithDescription("Créer un nouveau compte bancaire")
 
         };
-        
+
         foreach (var command in commands)
         {
             try
             {
                 await _client.CreateGlobalApplicationCommandAsync(command.Build());
-                Console.WriteLine(command.Name + " -> Enregistrée en GlobalCommand");
-                Thread.Sleep(2000);
+                Console.WriteLine(command.Name + " -> Nouvelle Global Command");
             }
             catch (HttpException exception)
             {
@@ -121,8 +116,8 @@ public class Program
         // Injecte les URLs pré-programées dans la db "dynamic_data" si elles n'y sont pas déjà et dispose de l'objet connecteur.
         // La commande /add ajoute les données à la fois dans la listUrl (utilisée au runtime) et en statique dans la DB.
 
-        // ATTENTION : Section non asynchrone et bloquante pour la suite. Si la DB ne peut être crée, le bot ne fonctionnera pas.
-           
+        // ATTENTION : Section non asynchrone et bloquante pour la suite = volontaire car la DB doit être obligatoire.
+
         if (File.Exists("dynamic_data.db")) // Si la DB existe déjà, on cherchera à ajouter les URLs préprogrammées dedans (en vérifiant qu'elles n'y soient pas déjà)
         {
             Console.Write("AUTO-FETCHER / DATA : La DB existe. Vérification des données ...\n");
@@ -234,7 +229,7 @@ public class Program
 
             await Task.Delay(5000); // 5 secondes entre chaque diffusion d'embed
         }
-            
+
     }
     private async Task SlashCommandHandler(SocketSlashCommand command)
     {
@@ -255,7 +250,7 @@ public class Program
             case "add":
                 await HandleAddCommand(command);
                 break;
-            
+
             case "register":
                 await HandleRegisterCommand(command);
                 break;
@@ -263,8 +258,8 @@ public class Program
             case "unregister":
                 await HandleUnregisterCommand(command);
                 break;
-            case "add_account":
-                await HandleAddAccountCommand(command);
+            case "account":
+                await HandleAccountCommand(command);
                 break;
         }
     }
@@ -272,8 +267,9 @@ public class Program
     {
         // MODAL : AJOUT D'URL
         //////////////////////////////////////////////////////////////////////////////
-        
-        if (modal.Data.CustomId == "new_url_modal") {
+
+        if (modal.Data.CustomId == "new_url_modal")
+        {
             List<SocketMessageComponentData> components = modal.Data.Components.ToList();
 
             var nouvelUrl = components.First(x => x.CustomId == "new_url_textbox").Value;
@@ -333,48 +329,53 @@ public class Program
                 await modal.RespondAsync(embed: notif.BuildEmbed());
             }
         }
-       
+
         // MODAL : AJOUT D'UTILISATEUR
         //////////////////////////////////////////////////////////////////////////////
 
-        if (modal.Data.CustomId == "new_user_modal") {  
-            
+        if (modal.Data.CustomId == "new_user_modal")
+        {
+
             List<SocketMessageComponentData> components = modal.Data.Components.ToList();
             var nouvelUser = components.First(x => x.CustomId == "new_user_textbox").Value;
             var pattern = "^[^#]+#[0-9]{4,10}$";
             bool isMatch = System.Text.RegularExpressions.Regex.IsMatch(nouvelUser, pattern);
 
-            if(isMatch) {
+            if (isMatch)
+            {
                 var nouvelUserInDb = new SnoutUser(nouvelUser);
                 var ID = await nouvelUserInDb.CreateUserAsync();
-                
+
                 CustomNotification notifOk = new CustomNotification(NotificationType.Info, "Base de données", $"L'utilisateur {nouvelUser} dispose de l'ID {ID}");
                 await modal.RespondAsync(embed: notifOk.BuildEmbed());
             }
-            else {
+            else
+            {
                 CustomNotification notif = new CustomNotification(NotificationType.Error, "Mauvais format", "L'entrée ne correspond pas à un Discord ID valide");
                 await modal.RespondAsync(embed: notif.BuildEmbed());
             }
-            
+
         }
     }
-    
+
     private async Task SelectMenuHandler(SocketMessageComponent menu)
     {
         var selectedUserData = string.Join(", ", menu.Data.Values);
         Console.WriteLine("DATA : Utilisateur supprimé / Discord ID = " + selectedUserData);
 
         SnoutUser userToDelete = new SnoutUser(selectedUserData);
-        
-        if (await userToDelete.DeleteUserAsync()) {
+
+        if (await userToDelete.DeleteUserAsync())
+        {
             CustomNotification notifOk = new CustomNotification(NotificationType.Success, "Base de données", "L'utilisateur à été supprimé");
             await menu.RespondAsync(embed: notifOk.BuildEmbed());
         }
-        else {
+        else
+        {
             CustomNotification notif = new CustomNotification(NotificationType.Error, "Base de données", "Erreur lors de la suppression de l'utilisateur");
             await menu.RespondAsync(embed: notif.BuildEmbed());
         }
-    
+
     }
     private async Task HandleAddCommand(SocketSlashCommand command)
     {
@@ -481,7 +482,7 @@ public class Program
             await command.RespondAsync(embed: notifFetcher.BuildEmbed());
             Console.WriteLine("AUTO-FETCHER : Déjà OFF !");
         }
-            
+
     }
 
     private async Task HandleRegisterCommand(SocketSlashCommand command)
@@ -497,7 +498,7 @@ public class Program
 
     private async Task HandleUnregisterCommand(SocketSlashCommand command)
     {
-        
+
         using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
         {
             await connection.OpenAsync();
@@ -507,7 +508,7 @@ public class Program
             {
                 if (!reader.HasRows)
                 {
-                  
+
                     CustomNotification notifDbVide = new CustomNotification(NotificationType.Error, "Base de données", "La base de données est vide : opération impossible");
 
                     await command.RespondAsync(embed: notifDbVide.BuildEmbed());
@@ -534,43 +535,41 @@ public class Program
 
     }
 
-    private async Task HandleAddAccountCommand(SocketSlashCommand command)
+    private async Task HandleAccountCommand(SocketSlashCommand command)
     {
 
+        var modal = new ModalBuilder();
 
-            var modal = new ModalBuilder();
-
-            modal.WithTitle("Créer un nouveau compte")
-                .WithCustomId("new_account_modal")
-                .AddTextInput("Propriétaire", "new_account_userid_textbox", TextInputStyle.Short, placeholder: "0 (ID DB)", required: true)
-                .AddTextInput("Type de compte", "new_account_type_textbox", TextInputStyle.Short, placeholder: "Checkings / Savings / Locked", required: true)
-                .AddTextInput("Limite de découvert", "new_account_overdraft_textbox", TextInputStyle.Short, placeholder: "1000", required: true)
-                .AddTextInput("Taux d'intérêt", "new_account_interest_textbox", TextInputStyle.Short, placeholder: "0.02", required: true)
-                .AddTextInput("Frais de service", "new_account_fees_textbox", TextInputStyle.Short, placeholder: "8", required: true);
+        modal.WithTitle("Créer un nouveau compte")
+            .WithCustomId("new_account_modal")
+            .AddTextInput("Propriétaire", "new_account_userid_textbox", TextInputStyle.Short, placeholder: "0 (ID DB)", required: true)
+            .AddTextInput("Type de compte", "new_account_type_textbox", TextInputStyle.Short, placeholder: "Checkings / Savings / Locked", required: true)
+            .AddTextInput("Limite de découvert", "new_account_overdraft_textbox", TextInputStyle.Short, placeholder: "1000", required: true)
+            .AddTextInput("Taux d'intérêt", "new_account_interest_textbox", TextInputStyle.Short, placeholder: "0.02", required: true)
+            .AddTextInput("Frais de service", "new_account_fees_textbox", TextInputStyle.Short, placeholder: "8", required: true);
 
 
-            await command.RespondWithModalAsync(modal.Build());
+        await command.RespondWithModalAsync(modal.Build());
 
-        
     }
 
-/////////// FONCTIONS DIVERSES /////////////
-///////////////////////////////////////////
+    /////////// FONCTIONS DIVERSES /////////////
+    ///////////////////////////////////////////
     public async Task SendEmbedPrivateMessageAsync(DiscordSocketClient client, ulong userId, Embed embed)
     {
-    // Vérifiez que le client est connecté et prêt
-    if (client.ConnectionState != ConnectionState.Connected)
-        return;
+        // Vérifiez que le client est connecté et prêt
+        if (client.ConnectionState != ConnectionState.Connected)
+            return;
 
-    // Récupérez l'utilisateur à partir de leur ID
-    var user = client.GetUser(userId);
+        // Récupérez l'utilisateur à partir de leur ID
+        var user = client.GetUser(userId);
 
-    // Vérifiez que l'utilisateur existe et que le bot a la permission de lui envoyer un message privé
-    if (user == null)
-        return;
+        // Vérifiez que l'utilisateur existe et que le bot a la permission de lui envoyer un message privé
+        if (user == null)
+            return;
 
-    // Envoyez le message privé
-    await user.SendMessageAsync(embed: embed);
+        // Envoyez le message privé
+        await user.SendMessageAsync(embed: embed);
     }
 
 }
