@@ -33,7 +33,7 @@ public class Account
         TransactionHistory = transactionHistory;
     }
 
-    public void Register()
+    public void RegisterAccount()
     {
         using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
         {
