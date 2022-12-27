@@ -3,6 +3,7 @@ using Discord.Net;
 using Discord.WebSocket;
 using Newtonsoft.Json;
 using System.Data.SQLite;
+using System.Globalization;
 using System.Net.NetworkInformation;
 
 #pragma warning disable CS8602
@@ -114,18 +115,15 @@ public class Program
         }*/
 
         // Injecte les URLs pré-programées dans la db "dynamic_data" si elles n'y sont pas déjà et dispose de l'objet connecteur.
-        // La commande /add ajoute les données à la fois dans la listUrl (utilisée au runtime) et en statique dans la DB.
-
-        // ATTENTION : Section non asynchrone et bloquante pour la suite = volontaire car la DB doit être obligatoire.
 
         if (File.Exists("dynamic_data.db")) // Si la DB existe déjà, on cherchera à ajouter les URLs préprogrammées dedans (en vérifiant qu'elles n'y soient pas déjà)
         {
-            Console.Write("AUTO-FETCHER / DATA : La DB existe. Vérification des données ...\n");
+            Console.Write("DATA : La DB existe. Vérification des données ...\n");
 
             SQLiteConnection connexion = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;");
-            connexion.Open();
+            await connexion.OpenAsync();
 
-            Console.Write("AUTO-FETCHER / DATA : DB ouverte\n");
+            Console.Write("DATA : DB ouverte\n");
 
             SQLiteCommand sqlCommand = connexion.CreateCommand();
             sqlCommand.CommandText = "INSERT INTO urls (url) VALUES (@url)";
@@ -136,7 +134,7 @@ public class Program
                 SQLiteCommand selectCommand = connexion.CreateCommand();
                 selectCommand.CommandText = "SELECT COUNT(*) FROM urls WHERE url = @url";
                 selectCommand.Parameters.AddWithValue("@url", url);
-                int count = Convert.ToInt32(selectCommand.ExecuteScalar());
+                int count = Convert.ToInt32(await selectCommand.ExecuteScalarAsync());
 
                 // Si l'URL n'existe pas, insérez-la dans la table
                 if (count == 0)
@@ -144,23 +142,23 @@ public class Program
                     SQLiteCommand insertCommand = connexion.CreateCommand();
                     insertCommand.CommandText = "INSERT INTO urls (url) VALUES (@url)";
                     insertCommand.Parameters.AddWithValue("@url", url);
-                    insertCommand.ExecuteNonQuery();
+                    await insertCommand.ExecuteNonQueryAsync();
 
-                    Console.Write($"AUTO-FETCHER / DATA : {url} => Ajouté OK\n");
+                    Console.Write($"DATA : {url} => Ajouté\n");
                 }
                 else
                 {
-                    Console.Write("AUTO-FETCHER / DATA : L'URL existe déjà. Opération suivante ...\n");
+                    Console.Write("DATA : Une URL existe déjà\n");
                 }
             }
 
-            connexion.Close();
-            connexion.Dispose();
-            Console.Write("AUTO-FETCHER / DATA : DB libérée !\n");
+            await connexion.CloseAsync();
+            await connexion.DisposeAsync();
+            Console.Write("DATA : DB libérée !\n");
         }
         else // Si elle n'existe pas, on la crée et on ajoute les données d'URL pré-programmées
         {
-            Console.Write("AUTO-FETCHER / DATA : DB introuvable. Création ...\n");
+            Console.Write("DATA : DB introuvable. Création ...\n");
 
             SQLiteConnection connexion = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;");
 
@@ -168,16 +166,16 @@ public class Program
             SQLiteConnection.CreateFile("dynamic_data.db");
 
             // Ouvrez la connexion à la base de données
-            connexion.Open();
+            await connexion.OpenAsync();
 
-            Console.Write("AUTO-FETCHER / DATA : DB ouverte\n");
+            Console.Write("DATA : DB ouverte\n");
 
             // Créez la table "urls"
             SQLiteCommand command = connexion.CreateCommand();
             command.CommandText = "CREATE TABLE urls (id INTEGER PRIMARY KEY, url TEXT)";
-            command.ExecuteNonQuery();
+            await command.ExecuteNonQueryAsync();
 
-            Console.Write("AUTO-FETCHER / DATA : Table d'URL OK\n");
+            Console.Write("DATA : Table d'URL crée\n");
 
             // Remplir cette table avec les URLs
             foreach (string url in _listUrl)
@@ -185,15 +183,16 @@ public class Program
                 SQLiteCommand insertCommand = connexion.CreateCommand();
                 insertCommand.CommandText = "INSERT INTO urls (url) VALUES (@url)";
                 insertCommand.Parameters.AddWithValue("@url", url);
-                insertCommand.ExecuteNonQuery();
+                await insertCommand.ExecuteNonQueryAsync();
 
-                Console.Write($"AUTO-FETCHER / DATA : {url} => Ajouté OK\n");
+                Console.Write($"DATA : {url} => Ajouté\n");
             }
 
             // Fermez la connexion à la base de données
-            connexion.Close();
-            connexion.Dispose();
-            Console.Write("AUTO-FETCHER / DATA : DB libérée !\n");
+            await connexion.CloseAsync();
+            await connexion.DisposeAsync();
+            
+            Console.Write("DATA : DB libérée ! (Attention : la base n'est exploitable que par le Sniffer HLL)\n");
         }
     }
 
@@ -363,11 +362,12 @@ public class Program
         if (modal.Data.CustomId == "new_account_modal")
         {
             List<SocketMessageComponentData> components = modal.Data.Components.ToList();
+            CustomNotification ajoutNok = new CustomNotification(NotificationType.Error, "Banque", "Impossible de créer le compte. Vérifiez votre saisie.");
 
             // 1. Un numéro de compte aléatoire
 
-            var randomAccountNumber = new Random();
-            randomAccountNumber.NextInt64(9999999999999);
+            Random random = new Random();
+            int randomAccountNumber = random.Next();
 
             // 2. On switch sur le type de compte renseigné et on élimine les autres cas par une erreur
 
@@ -387,27 +387,55 @@ public class Program
                     importedAccountType = components.First(x => x.CustomId == "new_account_type_textbox").Value.ToLower();
                     break;
 
-                default: throw new Exception("Le type de compte n'est pas valide !");
+                default:
+                    await modal.RespondAsync(embed: ajoutNok.BuildEmbed());
+                    throw new Exception("Le type de compte n'est pas valide !");
             }
 
             // 3. On construit un SnoutUser sur la base de son UserID (et pas son DiscordID)
 
-            SnoutUser importedSnoutUser = new(components.First(x => x.CustomId == "new_account_userid_textbox").Value);
-            var snoutUserId = importedSnoutUser.UserId;
+            SnoutUser importedSnoutUser = new SnoutUser(userId: int.Parse(components.First(x => x.CustomId == "new_account_userid_textbox").Value));
 
             // 4. Prendre l'overdraft
 
-            long importedOverdraftLimit = long.Parse(components.First(x => x.CustomId == "new_account_overdraft_textbox").Value);
+            string input0 = components.First(x => x.CustomId == "new_account_overdraft_textbox").Value;
+
+            if (!double.TryParse(input0, NumberStyles.Number, CultureInfo.InvariantCulture, out double importedOverdraftLimit))
+            {
+                throw new Exception("Overdraft ne dispose pas d'une entrée valide.");
+            }
 
             // 5. Prendre l'interest
 
-            double importedInterest = double.Parse(components.First(x => x.CustomId == "new_account_interest_textbox").Value);
-
+            string input = components.First(x => x.CustomId == "new_account_interest_textbox").Value;
+            
+            if (!double.TryParse(input, NumberStyles.Number, CultureInfo.InvariantCulture, out double importedInterest))
+            {
+                throw new Exception("Interest ne dispose pas d'une entrée valide.");
+            }
+ 
             // 6. Prendre la fee
 
-            long importedFee = long.Parse(components.First(x => x.CustomId == "new_account_fee_textbox").Value);
+            string input2 = components.First(x => x.CustomId == "new_account_fees_textbox").Value;
+
+            if (!double.TryParse(input2, NumberStyles.Number, CultureInfo.InvariantCulture, out double importedFee))
+            {
+                throw new Exception("Fee ne dispose pas d'une entrée valide.");
+            }
 
             // TODO : Construire l'objet ACCOUNT et l'envoyer en base.
+
+            Account account = new Account(randomAccountNumber, importedAccountType, importedSnoutUser, 0.0, "€", importedOverdraftLimit, importedInterest, importedFee);
+
+            if (account.RegisterAccount())
+            {
+                CustomNotification ajoutOk = new CustomNotification(NotificationType.Success, "Banque", $"Nouveau compte crée avec le numéro {randomAccountNumber}");
+                await modal.RespondAsync(embed: ajoutOk.BuildEmbed());
+            } 
+            else
+            {
+                await modal.RespondAsync(embed: ajoutNok.BuildEmbed());
+            }
 
         }
     }
