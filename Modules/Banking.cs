@@ -5,16 +5,16 @@ public class Account
     public int? AccountNumber { get; set; }
     public string? Type { get; set; }
     public SnoutUser? AccountHolder { get; set; }
-    public decimal Balance { get; set; }
+    public double Balance { get; set; }
     public string? Currency { get; set; }
-    public decimal OverdraftLimit { get; set; }
-    public decimal InterestRate { get; set; }
-    public decimal AccountFees { get; set; }
+    public double OverdraftLimit { get; set; }
+    public double InterestRate { get; set; }
+    public double AccountFees { get; set; }
 
     // CONSTRUCTEUR : (AccountNumber, Type, Currency, AccountHolders) sont obligatoires et ne peuvent pas être null. Si l'un de ces champs est null => 
     // => une exception ArgumentNullException est levée. Le champ AccountHolders doit également contenir au moins un élément, sinon une exception ArgumentException est levée. 
     // Les autres champs ont des valeurs par défaut et peuvent être null si elles ne sont pas fournies.
-    public Account(int accountNumber, string type, SnoutUser accountHolder, decimal balance, string currency, decimal overdraftLimit, decimal interestRate, decimal accountFees)
+    public Account(int accountNumber, string type, SnoutUser accountHolder, double balance, string currency, double overdraftLimit, double interestRate, double accountFees)
     {
         AccountNumber = accountNumber;
         Type = type;
@@ -26,7 +26,7 @@ public class Account
         AccountFees = accountFees;
     }
 
-    public void RegisterAccount()
+    public bool RegisterAccount()
     {
         using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
         {
@@ -40,13 +40,14 @@ public class Account
                 var count = (long)command.ExecuteScalar();
                 if (count > 0)
                 {
-                    throw new InvalidOperationException("Le compte existe déjà dans la base de données");
+                    return false;
                 }
 
                 // Enregistre le compte s'il n'existe pas déjà
-                command.CommandText = "INSERT INTO Accounts (UserId, Type, Balance, Currency, OverdraftLimit, InterestRate, AccountFees) VALUES (@UserId, @Type, @Balance, @Currency, @OverdraftLimit, @InterestRate, @AccountFees)";
-                command.Parameters.AddWithValue("@UserId", AccountHolder?.UserId ?? 0);
-                command.Parameters.AddWithValue("@Type", Type.ToString());
+                command.CommandText = "INSERT INTO Accounts (AccountNumber, UserId, Type, Balance, Currency, OverdraftLimit, InterestRate, AccountFees) VALUES (@AccountNumber, @UserId, @Type, @Balance, @Currency, @OverdraftLimit, @InterestRate, @AccountFees)";
+                command.Parameters.AddWithValue("@AccountNumber", AccountNumber);
+                command.Parameters.AddWithValue("@UserId", AccountHolder.UserId);
+                command.Parameters.AddWithValue("@Type", Type);
                 command.Parameters.AddWithValue("@Balance", Balance);
                 command.Parameters.AddWithValue("@Currency", Currency);
                 command.Parameters.AddWithValue("@OverdraftLimit", OverdraftLimit);
@@ -55,7 +56,9 @@ public class Account
                 command.ExecuteNonQuery();
             }
         }
+        return true;
     }
+
 
 }
 
