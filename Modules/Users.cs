@@ -41,7 +41,7 @@ public class SnoutUser
             command.Parameters.AddWithValue("@discordId", DiscordId);
             var result2 = await command.ExecuteScalarAsync();
             
-            long? count2 = (long?)result;
+            long? count2 = (long?)result2;
             
             if (count2.HasValue)
             {
