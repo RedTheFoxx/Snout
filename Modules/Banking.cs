@@ -1,5 +1,6 @@
 using Discord;
 using System.Data.SQLite;
+using static System.Net.WebRequestMethods;
 
 namespace Snout.Modules
 {
@@ -88,11 +89,32 @@ namespace Snout.Modules
                 {
                     EmbedBuilder embedBuilder = new();
 
-                    embedBuilder.WithTitle("Compte n°" + reader.GetInt32(0));
-                    embedBuilder.WithDescription("Paramètres :");
+                    string accountType = reader.GetString(2);
+                    switch (accountType)
+                    {
+                        case "savings":
+                            embedBuilder.WithAuthor("Compte d'épargne n°" + reader.GetInt32(0), iconUrl: "https://cdn.discordapp.com/app-icons/1050585088263462964/d6fe497e0cb854d8db041a81264eb31b.png?size=512");
+                            break;
+                        case "checkings":
+                            embedBuilder.WithAuthor("Compte courant n°" + reader.GetInt32(0), iconUrl: "https://cdn.discordapp.com/app-icons/1050585088263462964/d6fe497e0cb854d8db041a81264eb31b.png?size=512");
+                            break;
+                        case "locked":
+                            embedBuilder.WithAuthor("Compte (verrouillé) n°" + reader.GetInt32(0), iconUrl: "https://cdn.discordapp.com/app-icons/1050585088263462964/d6fe497e0cb854d8db041a81264eb31b.png?size=512");
+                            break;
+                        default:
+                            embedBuilder.WithAuthor("Compte inconnu n°" + reader.GetInt32(0), iconUrl: "https://cdn.discordapp.com/app-icons/1050585088263462964/d6fe497e0cb854d8db041a81264eb31b.png?size=512");
+                            break;
+                    }
+                     
+                    embedBuilder.WithTitle($"Solde : {reader.GetDouble(3)} {reader.GetString(4)}");
+                    embedBuilder.WithDescription("● Paramètres :");
                     embedBuilder.AddField("Découvert autorisé", reader.GetDouble(5) + " " + reader.GetString(4), true);
-                    embedBuilder.AddField("Taux d'intérêt", reader.GetDouble(6) + " %", true);
-                    embedBuilder.AddField("Frais de service", reader.GetDouble(7) + " " + reader.GetString(4), true);
+
+                    double interestRate = reader.GetDouble(6);
+                    string interestRateString = interestRate.ToString("0.## %");
+                    embedBuilder.AddField("Taux d'intérêt", interestRateString, true);
+
+                    embedBuilder.AddField("Frais de service", reader.GetDouble(7) + " " + reader.GetString(4) + " /mois", true);
                     embedBuilder.WithFooter("Snout v1.1");
                     embedBuilder.WithTimestamp(DateTimeOffset.UtcNow);
                     embedBuilder.WithColor(Color.Gold);
@@ -105,7 +127,7 @@ namespace Snout.Modules
             return embedBuilders;
 
             /*EmbedBuilder builder = new EmbedBuilder();
-
+            
             builder.WithAuthor($"SNOUTBANK - Compte n°{AccountNumber}", iconUrl: "https://cdn.discordapp.com/app-icons/1050585088263462964/d6fe497e0cb854d8db041a81264eb31b.png?size=512");
             builder.WithTitle($"Solde = {Balance} {Currency}");
             builder.WithDescription("Paramètres :");
