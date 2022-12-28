@@ -1,8 +1,9 @@
+using Discord;
 using System.Data.SQLite;
 
 public class Account
 {
-    public int? AccountNumber { get; set; }
+    public int AccountNumber { get; set; }
     public string? Type { get; set; }
     public SnoutUser? AccountHolder { get; set; }
     public double Balance { get; set; }
@@ -57,6 +58,37 @@ public class Account
             }
         }
         return true;
+    }
+
+    public EmbedBuilder GetInfoEmbedBuilder ()
+    {
+       EmbedBuilder builder = new EmbedBuilder();
+
+        builder.WithAuthor($"SNOUTBANK - Compte n°{AccountNumber}", iconUrl: "https://cdn.discordapp.com/app-icons/1050585088263462964/d6fe497e0cb854d8db041a81264eb31b.png?size=512");
+       
+
+        // Ajoute le titre
+        builder.WithTitle($"Solde = {Balance} {Currency}");
+
+        // Ajoute la description
+        builder.WithDescription("Paramètres :");
+
+        // Ajoute les champs
+        builder.AddField("Découvert autorisé", $"{OverdraftLimit}", inline: true);
+        builder.AddField("Taux d'intérêt", $"{InterestRate}", inline: true);
+        builder.AddField("Frais de service", $"{AccountFees}", inline: true);
+
+        // Ajoute le pied de page
+        builder.WithFooter("Snout v1.1");
+        builder.WithTimestamp(DateTimeOffset.UtcNow);
+
+        // Ajoute la couleur rouge
+        builder.WithColor(Color.Gold);
+
+        // Ajoute l'image thumbnail
+        builder.WithThumbnailUrl("https://cdn-icons-png.flaticon.com/512/2474/2474496.png");
+
+        return builder;
     }
 
 
