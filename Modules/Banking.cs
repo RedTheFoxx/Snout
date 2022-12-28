@@ -12,9 +12,8 @@ public class Account
     public double InterestRate { get; set; }
     public double AccountFees { get; set; }
 
-    // CONSTRUCTEUR : (AccountNumber, Type, Currency, AccountHolders) sont obligatoires et ne peuvent pas être null. Si l'un de ces champs est null => 
-    // => une exception ArgumentNullException est levée. Le champ AccountHolders doit également contenir au moins un élément, sinon une exception ArgumentException est levée. 
-    // Les autres champs ont des valeurs par défaut et peuvent être null si elles ne sont pas fournies.
+    // CONSTRUCTEURS : CREATE / GET
+    // CONSTRUCT  1 : usage CREATE
     public Account(int accountNumber, string type, SnoutUser accountHolder, double balance, string currency, double overdraftLimit, double interestRate, double accountFees)
     {
         AccountNumber = accountNumber;
@@ -25,6 +24,19 @@ public class Account
         OverdraftLimit = overdraftLimit;
         InterestRate = interestRate;
         AccountFees = accountFees;
+    }
+
+    // CONSTRUCT 2 : usage GET INFO
+    public Account(SnoutUser accountHolder) 
+    {
+        AccountNumber = 0;
+        Type = ""; 
+        AccountHolder = accountHolder ?? throw new ArgumentNullException(nameof(accountHolder));
+        Balance = 0.0; 
+        Currency = ""; 
+        OverdraftLimit = 0.0; 
+        InterestRate = 0.0; 
+        AccountFees = 0.0; 
     }
 
     public bool RegisterAccount()
