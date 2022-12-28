@@ -258,7 +258,8 @@ public class Program
                 await HandleUnregisterCommand(command);
                 break;
             case "account":
-                await HandleAccountCommand(command);
+                SnoutHandler accountHandlerReference = new SnoutHandler();
+                await accountHandlerReference.HandleAccountCommand(command);
                 break;
         }
     }
@@ -617,7 +618,7 @@ public class Program
 
     }
 
-    private async Task HandleAccountCommand(SocketSlashCommand command)
+    /*private async Task HandleAccountCommand(SocketSlashCommand command)
     {
 
         var modal = new ModalBuilder();
@@ -633,7 +634,7 @@ public class Program
 
         await command.RespondWithModalAsync(modal.Build());
 
-    }
+    }*/
 
     /////////// FONCTIONS DIVERSES /////////////
     ///////////////////////////////////////////
