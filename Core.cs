@@ -1,5 +1,6 @@
 using Discord;
 using Discord.WebSocket;
+using Snout.Modules;
 using System.Data.SQLite;
 using System.Globalization;
 
