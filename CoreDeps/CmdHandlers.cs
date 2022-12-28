@@ -3,6 +3,7 @@ using Discord;
 using Snout;
 using System.Data.SQLite;
 using System.Net.NetworkInformation;
+using Snout.Modules;
 
 class SnoutHandler
 
@@ -181,4 +182,33 @@ class SnoutHandler
         }
     }
 
+    public async Task HandleMyAccountCommand(SocketSlashCommand command, DiscordSocketClient client)
+    {
+
+        var commandUser = command.User.Username + "#" + command.User.Discriminator;
+
+        SnoutUser requestor = new SnoutUser(discordId: commandUser);
+        await requestor.GetUserId();
+
+        Account account = new Account(requestor);
+        var listedAccounts = account.GetAccountInfoEmbedBuilders();
+
+        if (listedAccounts.Count > 0)
+        {
+            foreach (EmbedBuilder elements in listedAccounts)
+            {
+                await command.User.SendMessageAsync(embed: elements.Build());
+            }
+
+            CustomNotification accountNotif = new CustomNotification(NotificationType.Success, "Banque", "Résultats envoyés en messages privés");
+            await command.RespondAsync(embed: accountNotif.BuildEmbed());
+        }
+        else
+        {
+            CustomNotification noAccountNotif = new CustomNotification(NotificationType.Error, "Banque", "Vous ne disposez d'aucun compte");
+            var channel = await command.GetChannelAsync();
+            await command.RespondAsync(embed: noAccountNotif.BuildEmbed());
+        }
+
+    }
 }
