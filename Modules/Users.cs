@@ -15,72 +15,128 @@ public class SnoutUser
         DiscordId = discordId ?? throw new ArgumentNullException(nameof(discordId));
     }
     public async Task<int> CreateUserAsync()
-{
-    using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
     {
-        await connection.OpenAsync();
+        using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
+        {
+            await connection.OpenAsync();
 
-        // Vérifier si l'utilisateur existe déjà
-        var command = new SQLiteCommand("SELECT COUNT(*) FROM Users WHERE DiscordId = @discordId", connection);
-        command.Parameters.AddWithValue("@discordId", DiscordId);
-    
-        var result = await command.ExecuteScalarAsync();
-        
-        long count = 0;
-        
-        if (result != null)
-        {
-            count = (long)result;
-        }
-        
-        if (count > 0)
-        {
-            // L'utilisateur existe déjà, retourner son ID
-            
-            command = new SQLiteCommand("SELECT UserId FROM Users WHERE DiscordId = @discordId", connection);
+            // Vérifier si l'utilisateur existe déjà
+            var command = new SQLiteCommand("SELECT COUNT(*) FROM Users WHERE DiscordId = @discordId", connection);
             command.Parameters.AddWithValue("@discordId", DiscordId);
-            var result2 = await command.ExecuteScalarAsync();
-            
-            long? count2 = (long?)result2;
-            
-            if (count2.HasValue)
+
+            var result = await command.ExecuteScalarAsync();
+
+            long count = 0;
+
+            if (result != null)
+            {
+                count = (long)result;
+            }
+
+            if (count > 0)
+            {
+                // L'utilisateur existe déjà, retourner son ID
+
+                command = new SQLiteCommand("SELECT UserId FROM Users WHERE DiscordId = @discordId", connection);
+                command.Parameters.AddWithValue("@discordId", DiscordId);
+                var result2 = await command.ExecuteScalarAsync();
+
+                long? count2 = (long?)result2;
+
+                if (count2.HasValue)
+                {
+                    // count est un long non-null
+                    return (int)count2.Value;
+                }
+                else
+                {
+                    // count est null
+                    return 0;
+                }
+
+            }
+
+            // L'utilisateur n'existe pas, l'insérer dans la table
+            command = new SQLiteCommand("INSERT INTO Users (DiscordId) VALUES (@discordId)", connection);
+            command.Parameters.AddWithValue("@discordId", DiscordId);
+            await command.ExecuteNonQueryAsync();
+
+            // Retourner l'ID généré par la base de données
+            return (int)connection.LastInsertRowId;
+        }
+    }
+
+    public async Task<bool> DeleteUserAsync()
+    {
+
+        using (var connection = new SQLiteConnection("Data Source=dynamic_data.db; Version=3;"))
+        {
+            await connection.OpenAsync();
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "DELETE FROM Users WHERE DiscordId = @DiscordId";
+                command.Parameters.AddWithValue("@DiscordId", DiscordId);
+                var rowsAffected = await command.ExecuteNonQueryAsync();
+                return rowsAffected > 0;
+            }
+        }
+    }
+
+    public async Task GetUserId()
+
+    {
+        // Trouve l'userID en fonction du DiscordID renseigné et retourne le.
+
+        using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
+        {
+            await connection.OpenAsync();
+
+            var command = new SQLiteCommand("SELECT UserId FROM Users WHERE DiscordId = @discordId", connection);
+            command.Parameters.AddWithValue("@discordId", DiscordId);
+
+            var result = await command.ExecuteScalarAsync();
+
+            long? count = (long?)result;
+
+            if (count.HasValue)
             {
                 // count est un long non-null
-                return (int)count2.Value;
+                UserId = (int)count.Value;
             }
             else
             {
                 // count est null
-                return 0;
+                UserId = 0;
             }
-
         }
-
-        // L'utilisateur n'existe pas, l'insérer dans la table
-        command = new SQLiteCommand("INSERT INTO Users (DiscordId) VALUES (@discordId)", connection);
-        command.Parameters.AddWithValue("@discordId", DiscordId);
-        await command.ExecuteNonQueryAsync();
-
-        // Retourner l'ID généré par la base de données
-        return (int)connection.LastInsertRowId;
     }
-}
 
-    public async Task<bool> DeleteUserAsync()
-{
-    
-    using (var connection = new SQLiteConnection("Data Source=dynamic_data.db; Version=3;"))
+    public async Task GetDiscordId()
     {
-        await connection.OpenAsync();
+        // Trouve le DiscordID en fonction de l'userID renseigné et retourne le.
 
-        using (var command = connection.CreateCommand())
+        using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
         {
-            command.CommandText = "DELETE FROM Users WHERE DiscordId = @DiscordId";
-            command.Parameters.AddWithValue("@DiscordId", DiscordId);
-            var rowsAffected = await command.ExecuteNonQueryAsync();
-            return rowsAffected > 0;
+            await connection.OpenAsync();
+
+            var command = new SQLiteCommand("SELECT DiscordId FROM Users WHERE UserId = @userId", connection);
+            command.Parameters.AddWithValue("@userId", UserId);
+
+            var result = await command.ExecuteScalarAsync();
+
+            string? count = (string?)result;
+
+            if (count != null)
+            {
+                // count est un string non-null
+                DiscordId = count;
+            }
+            else
+            {
+                // count est null
+                DiscordId = null;
+            }
         }
     }
-}
-
 }
