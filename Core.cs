@@ -618,27 +618,9 @@ public class Program
 
     }
 
-    /*private async Task HandleAccountCommand(SocketSlashCommand command)
-    {
-
-        var modal = new ModalBuilder();
-
-        modal.WithTitle("Créer un nouveau compte")
-            .WithCustomId("new_account_modal")
-            .AddTextInput("Propriétaire", "new_account_userid_textbox", TextInputStyle.Short, placeholder: "0 (ID DB)", required: true)
-            .AddTextInput("Type de compte", "new_account_type_textbox", TextInputStyle.Short, placeholder: "Checkings / Savings / Locked", required: true)
-            .AddTextInput("Limite de découvert", "new_account_overdraft_textbox", TextInputStyle.Short, placeholder: "1000", required: true)
-            .AddTextInput("Taux d'intérêt", "new_account_interest_textbox", TextInputStyle.Short, placeholder: "0.02", required: true)
-            .AddTextInput("Frais de service", "new_account_fees_textbox", TextInputStyle.Short, placeholder: "8", required: true);
-
-
-        await command.RespondWithModalAsync(modal.Build());
-
-    }*/
-
-    /////////// FONCTIONS DIVERSES /////////////
+    /////////// VARIOUS CORE FUNC /////////////
     ///////////////////////////////////////////
-    public async Task SendEmbedPrivateMessageAsync(DiscordSocketClient client, ulong userId, Embed embed)
+    public async Task SendEmbedPrivateMessageAsync(DiscordSocketClient client, ulong userId, EmbedBuilder embedBuilder)
     {
         // Vérifiez que le client est connecté et prêt
         if (client.ConnectionState != ConnectionState.Connected)
@@ -647,12 +629,12 @@ public class Program
         // Récupérez l'utilisateur à partir de leur ID
         var user = client.GetUser(userId);
 
-        // Vérifiez que l'utilisateur existe et que le bot a la permission de lui envoyer un message privé
+        // Vérifiez que l'utilisateur existe
         if (user == null)
             return;
 
         // Envoyez le message privé
-        await user.SendMessageAsync(embed: embed);
+        await user.SendMessageAsync(embed: embedBuilder.Build());
     }
 
 }
