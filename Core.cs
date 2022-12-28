@@ -1,5 +1,7 @@
 using Discord;
+using Discord.Net;
 using Discord.WebSocket;
+using Newtonsoft.Json;
 using Snout.Modules;
 using System.Data.SQLite;
 using System.Globalization;
@@ -69,17 +71,17 @@ public class Program
         //////////////////////////////////////////////////////////
         
         await _client.Rest.DeleteAllGlobalCommandsAsync();
-        Console.WriteLine("GLOBAL COMMMANDS -> All Deleted");/*
+        Console.WriteLine("GLOBAL COMMMANDS -> All Deleted");*/
 
 
-        /* POUR AJOUTER UNE GLOBAL COMMAND (UNE FOIS).
+         // POUR AJOUTER UNE GLOBAL COMMAND (UNE FOIS).
         //////////////////////////////////////////////////
         
-        var commands = new List<SlashCommandBuilder>
+        /*var commands = new List<SlashCommandBuilder>
         {
             new SlashCommandBuilder()
-                .WithName("command")
-                .WithDescription("commandDesc")
+                .WithName("myaccount")
+                .WithDescription("Consulter l'état de ses comptes bancaires")
         };
 
         foreach (var command in commands)
@@ -249,6 +251,11 @@ public class Program
             case "account":
                 SnoutHandler accountHandlerReference = new SnoutHandler();
                 await accountHandlerReference.HandleAccountCommand(command);
+                break;
+
+            case "myaccount":
+                SnoutHandler myaccountHandlerReference = new SnoutHandler();
+                await myaccountHandlerReference.HandleMyAccountCommand(command, _client);
                 break;
         }
     }
