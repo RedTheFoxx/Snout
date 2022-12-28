@@ -66,7 +66,7 @@ public class HllSniffer {
             .WithDescription("---")
             .WithThumbnailUrl("https://static.wixstatic.com/media/da3421_111b24ae66f64f73aa94efeb80b08f58~mv2.png/v1/fit/w_2500,h_1330,al_c/da3421_111b24ae66f64f73aa94efeb80b08f58~mv2.png")
             .WithColor(new Color(0, 0, 255))
-            .WithFooter("Snout v1.0.4 | Source : Battlemetrics")
+            .WithFooter("Snout v1.1 | Source : Battlemetrics")
             .WithTimestamp(DateTimeOffset.UtcNow);
 
         var sortedFields = listed
