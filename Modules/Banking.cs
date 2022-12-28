@@ -26,7 +26,7 @@ public class Account
         AccountFees = accountFees;
     }
 
-    // CONSTRUCT 2 : usage GET INFO
+    // CONSTRUCT 2 : usage GET INFO / EDIT INFO
     public Account(SnoutUser accountHolder) 
     {
         AccountNumber = 0;
@@ -72,35 +72,31 @@ public class Account
         return true;
     }
 
-    public EmbedBuilder GetInfoEmbedBuilder ()
+    public List<EmbedBuilder> GetInfoEmbedBuilder ()
     {
-       EmbedBuilder builder = new EmbedBuilder();
+        List<EmbedBuilder> embedBuilders = new List<EmbedBuilder>();
+        
+        // SQL / FOREACH : tous les Accounts correspondant à un UserID
+       
+        EmbedBuilder builder = new EmbedBuilder();
 
         builder.WithAuthor($"SNOUTBANK - Compte n°{AccountNumber}", iconUrl: "https://cdn.discordapp.com/app-icons/1050585088263462964/d6fe497e0cb854d8db041a81264eb31b.png?size=512");
-       
-
-        // Ajoute le titre
         builder.WithTitle($"Solde = {Balance} {Currency}");
-
-        // Ajoute la description
         builder.WithDescription("Paramètres :");
-
-        // Ajoute les champs
         builder.AddField("Découvert autorisé", $"{OverdraftLimit}", inline: true);
         builder.AddField("Taux d'intérêt", $"{InterestRate}", inline: true);
         builder.AddField("Frais de service", $"{AccountFees}", inline: true);
-
-        // Ajoute le pied de page
         builder.WithFooter("Snout v1.1");
         builder.WithTimestamp(DateTimeOffset.UtcNow);
-
-        // Ajoute la couleur rouge
         builder.WithColor(Color.Gold);
-
-        // Ajoute l'image thumbnail
         builder.WithThumbnailUrl("https://cdn-icons-png.flaticon.com/512/2474/2474496.png");
+        
+        // Ajouter l'embedbuilder à la liste à retourner
+        
+        // FIN FOREACH
 
-        return builder;
+        // Une liste d'embedBuilders prête à build() en la parcourant plus tard
+        return embedBuilders;
     }
 
 
