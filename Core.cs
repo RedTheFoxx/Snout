@@ -1,10 +1,7 @@
 using Discord;
-using Discord.Net;
 using Discord.WebSocket;
-using Newtonsoft.Json;
 using System.Data.SQLite;
 using System.Globalization;
-using System.Net.NetworkInformation;
 
 #pragma warning disable CS8602
 
@@ -12,9 +9,9 @@ namespace Snout;
 
 public class Program
 {
-    private DiscordSocketClient? _client;
+    private DiscordSocketClient _client;
     private HllSniffer? _liveSniffer;
-    private List<IMessageChannel>? _liveChannels;
+    private List<IMessageChannel> _liveChannels;
     private readonly List<string> _listUrl = new();
 
     readonly System.Timers.Timer _timer = new System.Timers.Timer();
@@ -66,38 +63,22 @@ public class Program
 
     private async Task ClientReady()
     {
+        #region Ajout/Suppr. Global Commands
+        /* POUR SUPPRIMER TOUTES LES GLOBAL COMMMANDS (UNE FOIS).
+        //////////////////////////////////////////////////////////
+        
+        await _client.Rest.DeleteAllGlobalCommandsAsync();
+        Console.WriteLine("GLOBAL COMMMANDS -> All Deleted");/*
 
-        // POUR SUPPRIMER TOUTES LES GLOBAL COMMMANDS.
 
-        // await _client.Rest.DeleteAllGlobalCommandsAsync();
-        // Console.WriteLine("GLOBAL COMMMANDS -> All Deleted");
-
-
-        // CI-DESSOUS : Ne faire tourner cela qu'une seule fois pour créer les commandes globales de l'appli
-        /*var commands = new List<SlashCommandBuilder>
+        /* POUR AJOUTER UNE GLOBAL COMMAND (UNE FOIS).
+        //////////////////////////////////////////////////
+        
+        var commands = new List<SlashCommandBuilder>
         {
             new SlashCommandBuilder()
-                .WithName("ping")
-                .WithDescription("Mesurer le ping vers la gateway Discord"),
-            new SlashCommandBuilder()
-                .WithName("fetch")
-                .WithDescription("Assigner l'auto-fetcher Hell Let Loose à un canal de diffusion"),
-            new SlashCommandBuilder()
-                .WithName("stop")
-                .WithDescription("Eteindre l'auto-fetcher globalement et purger les canaux de diffusion assignés"),
-            new SlashCommandBuilder()
-                .WithName("add")
-                .WithDescription("Ajouter une nouvelle URL Battlemetrics à la liste de surveillance de l'auto-fetcher"),
-            new SlashCommandBuilder()
-                .WithName("register")
-                .WithDescription("Inscrire un utilisateur dans la base de données de Snout"),
-            new SlashCommandBuilder()
-                .WithName("unregister")
-                .WithDescription("Retirer un utilisateur de la base de données de Snout"),
-            new SlashCommandBuilder()
-                .WithName("account")
-                .WithDescription("Créer un nouveau compte bancaire")
-
+                .WithName("command")
+                .WithDescription("commandDesc")
         };
 
         foreach (var command in commands)
@@ -113,6 +94,7 @@ public class Program
                 Console.WriteLine(json);
             }
         }*/
+        #endregion
 
         // Injecte les URLs pré-programées dans la db "dynamic_data" si elles n'y sont pas déjà et dispose de l'objet connecteur.
 
@@ -191,11 +173,10 @@ public class Program
             // Fermez la connexion à la base de données
             await connexion.CloseAsync();
             await connexion.DisposeAsync();
-            
+
             Console.Write("DATA : DB libérée ! (Attention : la base n'est exploitable que par le Sniffer HLL)\n");
         }
     }
-
 
     private async void Timer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
     {
@@ -230,32 +211,39 @@ public class Program
         }
 
     }
+
     private async Task SlashCommandHandler(SocketSlashCommand command)
     {
         switch (command.Data.Name)
         {
             case "ping":
-                await HandlePingCommand(command);
+                SnoutHandler pingHandlerReference = new SnoutHandler();
+                await pingHandlerReference.HandlePingCommand(command);
                 break;
 
             case "fetch":
-                await HandleFetchCommand(command);
+                SnoutHandler fetchHandlerReference = new SnoutHandler();
+                await fetchHandlerReference.HandleFetchCommand(command, _client, _liveChannels, _timer);
                 break;
 
             case "stop":
-                await HandleStopCommand(command);
+                SnoutHandler stopHandlerReference = new SnoutHandler();
+                await stopHandlerReference.HandleStopCommand(command, _client, _liveChannels, _timer);
                 break;
 
             case "add":
-                await HandleAddCommand(command);
+                SnoutHandler addHandlerReference = new SnoutHandler();
+                await addHandlerReference.HandleAddCommand(command);
                 break;
 
             case "register":
-                await HandleRegisterCommand(command);
+                SnoutHandler registerHandlerReference = new SnoutHandler();
+                await registerHandlerReference.HandleRegisterCommand(command);
                 break;
 
             case "unregister":
-                await HandleUnregisterCommand(command);
+                SnoutHandler unregisterHandlerReference = new SnoutHandler();
+                await unregisterHandlerReference.HandleUnregisterCommand(command);
                 break;
             case "account":
                 SnoutHandler accountHandlerReference = new SnoutHandler();
@@ -263,6 +251,7 @@ public class Program
                 break;
         }
     }
+
     private async Task ModalHandler(SocketModal modal)
     {
         // MODAL : AJOUT D'URL
@@ -409,12 +398,12 @@ public class Program
             // 5. Prendre l'interest
 
             string input = components.First(x => x.CustomId == "new_account_interest_textbox").Value;
-            
+
             if (!double.TryParse(input, NumberStyles.Number, CultureInfo.InvariantCulture, out double importedInterest))
             {
                 throw new Exception("Interest ne dispose pas d'une entrée valide.");
             }
- 
+
             // 6. Prendre la fee
 
             string input2 = components.First(x => x.CustomId == "new_account_fees_textbox").Value;
@@ -432,7 +421,7 @@ public class Program
             {
                 CustomNotification ajoutOk = new CustomNotification(NotificationType.Success, "Banque", $"Nouveau compte crée avec le numéro {randomAccountNumber}");
                 await modal.RespondAsync(embed: ajoutOk.BuildEmbed());
-            } 
+            }
             else
             {
                 await modal.RespondAsync(embed: ajoutNok.BuildEmbed());
@@ -457,163 +446,6 @@ public class Program
         {
             CustomNotification notif = new CustomNotification(NotificationType.Error, "Base de données", "Erreur lors de la suppression de l'utilisateur");
             await menu.RespondAsync(embed: notif.BuildEmbed());
-        }
-
-    }
-    private async Task HandleAddCommand(SocketSlashCommand command)
-    {
-        var modal = new ModalBuilder();
-
-        modal.WithTitle("Configuration de l'auto-fetcher")
-            .WithCustomId("new_url_modal")
-            .AddTextInput("Ajouter l'URL", "new_url_textbox", TextInputStyle.Short, placeholder: "https://www.battlemetrics.com/servers/hll/[SERVER_ID]", required: true);
-
-        await command.RespondWithModalAsync(modal.Build());
-
-    }
-    private async Task HandlePingCommand(SocketSlashCommand command)
-    {
-
-        string url = "gateway.discord.gg";
-        Ping pingSender = new Ping();
-        PingReply reply = pingSender.Send(url);
-
-        if (reply.Status == IPStatus.Success)
-        {
-            Console.WriteLine("Ping success: RTT = {0} ms", reply.RoundtripTime);
-            CustomNotification notif = new CustomNotification(NotificationType.Info, "PING",
-                "La gateway retourne : " + reply.RoundtripTime + " ms.");
-            await command.RespondAsync(embed: notif.BuildEmbed());
-        }
-        else
-        {
-            Console.WriteLine("La gateway ne repond pas au ping !");
-            CustomNotification notif = new CustomNotification(NotificationType.Error, "PING",
-                "La gateway retourne : " + reply.RoundtripTime + " ms.");
-            await command.RespondAsync(embed: notif.BuildEmbed());
-        }
-
-    }
-    private async Task HandleFetchCommand(SocketSlashCommand command)
-    {
-        // var localSniffer = new HllSniffer();
-        // var embed = localSniffer.Pull(_listUrl);
-
-        if (_client.GetChannel(command.Channel.Id) is IMessageChannel chnl)
-        {
-            if (_liveChannels.Contains(chnl) == false)
-            {
-                _liveChannels.Add(chnl);
-                CustomNotification notif = new CustomNotification(NotificationType.Success, "AUTO-FETCHER", "Nouveau canal de diffusion ajouté");
-                await chnl.SendMessageAsync(embed: notif.BuildEmbed());
-                Console.WriteLine("AUTO-FETCHER : Canal ajouté / ID = " + chnl.Id);
-            }
-            else
-            {
-                CustomNotification notif = new CustomNotification(NotificationType.Info, "AUTO-FETCHER", "Ce canal de diffusion est déjà enregistré");
-                await chnl.SendMessageAsync(embed: notif.BuildEmbed());
-                Console.WriteLine("AUTO-FETCHER : Le canal existe déjà ! / ID = " + chnl.Id);
-            }
-        }
-
-        if (_timer.Enabled == false)
-        {
-            _timer.Start();
-            CustomNotification notif = new CustomNotification(NotificationType.Success, "AUTO-FETCHER", "Auto-fetcher activé");
-            await command.RespondAsync(embed: notif.BuildEmbed());
-            Console.WriteLine("AUTO-FETCHER : ON / Timer = " + _timer.Interval + " ms");
-        }
-        else
-        {
-            CustomNotification notif = new CustomNotification(NotificationType.Info, "AUTO-FETCHER", "Auto-fetcher déjà actif");
-            await command.RespondAsync(embed: notif.BuildEmbed());
-            Console.WriteLine("AUTO-FETCHER : Déjà actif !");
-
-        }
-
-    }
-    private async Task HandleStopCommand(SocketSlashCommand command)
-    {
-        // /stop : Stoppe l'auto-fetcher et purge tous les canaux de diffusion (global)
-
-        var chnl = _client.GetChannel(command.Channel.Id) as IMessageChannel;
-
-        if (_timer.Enabled)
-        {
-            _timer.Stop();
-
-            CustomNotification notifFetcher = new CustomNotification(NotificationType.Success, "AUTO-FETCHER", "Auto-fetcher désactivé");
-            await chnl.SendMessageAsync(embed: notifFetcher.BuildEmbed());
-            Console.WriteLine("AUTO-FETCHER : OFF");
-
-            _liveChannels.Clear();
-
-            CustomNotification notifCanaux = new CustomNotification(NotificationType.Info, "AUTO-FETCHER", "Liste des canaux de diffusion purgée");
-            await command.RespondAsync(embed: notifCanaux.BuildEmbed());
-            Console.WriteLine("AUTO-FETCHER : Canaux purgés !");
-
-        }
-        else
-        {
-            _liveChannels.Clear();
-
-            CustomNotification notifCanaux = new CustomNotification(NotificationType.Info, "AUTO-FETCHER", "Liste des canaux de diffusion purgée");
-            CustomNotification notifFetcher = new CustomNotification(NotificationType.Error, "AUTO-FETCHER", "Auto-fetcher déjà désactivé");
-
-            await chnl.SendMessageAsync(embed: notifCanaux.BuildEmbed());
-            Console.WriteLine("AUTO-FETCHER : Canaux purgés !");
-            await command.RespondAsync(embed: notifFetcher.BuildEmbed());
-            Console.WriteLine("AUTO-FETCHER : Déjà OFF !");
-        }
-
-    }
-
-    private async Task HandleRegisterCommand(SocketSlashCommand command)
-    {
-        var modal = new ModalBuilder();
-
-        modal.WithTitle("Inscrire un utilisateur")
-            .WithCustomId("new_user_modal")
-            .AddTextInput("Discord ID", "new_user_textbox", TextInputStyle.Short, placeholder: "RedFox#9999", required: true);
-
-        await command.RespondWithModalAsync(modal.Build());
-    }
-
-    private async Task HandleUnregisterCommand(SocketSlashCommand command)
-    {
-
-        using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
-        {
-            await connection.OpenAsync();
-            var sqlCommand = new SQLiteCommand("SELECT UserId, DiscordId FROM Users", connection);
-
-            using (var reader = await sqlCommand.ExecuteReaderAsync())
-            {
-                if (!reader.HasRows)
-                {
-
-                    CustomNotification notifDbVide = new CustomNotification(NotificationType.Error, "Base de données", "La base de données est vide : opération impossible");
-
-                    await command.RespondAsync(embed: notifDbVide.BuildEmbed());
-
-                    return;
-                }
-
-                var menuBuilder = new SelectMenuBuilder()
-                    .WithPlaceholder("Sélectionnez un utilisateur")
-                    .WithCustomId("del_user_menu");
-
-                while (await reader.ReadAsync())
-                {
-                    var userId = reader.GetInt32(0);
-                    var discordId = reader.GetString(1);
-                    menuBuilder.AddOption($"ID {userId}", $"{discordId}", $"{discordId}");
-                }
-
-                var menuComponent = new ComponentBuilder().WithSelectMenu(menuBuilder);
-
-                await command.RespondAsync("Quel utilisateur faut-il supprimer ?", components: menuComponent.Build());
-            }
         }
 
     }
