@@ -16,6 +16,7 @@ public class Program
     private HllSniffer? _liveSniffer;
     private List<IMessageChannel> _liveChannels;
     private readonly List<string> _listUrl = new();
+    private int lastEditedAccountNumber;
 
     readonly System.Timers.Timer _timer = new System.Timers.Timer();
 
@@ -80,8 +81,12 @@ public class Program
         /*var commands = new List<SlashCommandBuilder>
         {
             new SlashCommandBuilder()
-                .WithName("myaccount")
-                .WithDescription("Consulter l'état de ses comptes bancaires")
+                .WithName("checkaccounts")
+                .WithDescription("Consulter l'état des comptes bancaires d'un utilisateur désigné"),
+
+            new SlashCommandBuilder()
+                .WithName("editaccount")
+                .WithDescription("Editer les paramètres d'un compte bancaire désigné"),
         };
 
         foreach (var command in commands)
@@ -256,6 +261,16 @@ public class Program
             case "myaccount":
                 SnoutHandler myaccountHandlerReference = new SnoutHandler();
                 await myaccountHandlerReference.HandleMyAccountCommand(command, _client);
+                break;
+
+            case "checkaccounts":
+                SnoutHandler checkaccountsHandlerReference = new SnoutHandler();
+                await checkaccountsHandlerReference.HandleCheckAccountsCommand(command, _client);
+                break;
+
+            case "editaccount":
+                SnoutHandler editaccountHandlerReference = new SnoutHandler();
+                await editaccountHandlerReference.HandleEditAccountCommand(command, _client);
                 break;
         }
     }
@@ -436,14 +451,166 @@ public class Program
             }
 
         }
+
+        // MODAL : CONSULTATION DES COMPTES D'UN UTILISATEUR
+        //////////////////////////////////////////////////////////////////////////////
+        
+        if (modal.Data.CustomId == "check_accounts_modal")
+        {
+            var modalUser = modal.Data.Components.First(x => x.CustomId == "check_accounts_textbox").Value;
+            
+            SnoutUser requested = new SnoutUser(discordId: modalUser);
+            await requested.GetUserId();
+
+            if (requested.UserId == 0)
+            {
+                CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Cet utilisateur n'existe pas");
+                await modal.RespondAsync(embed: notif.BuildEmbed());
+                return;
+            }
+
+            Account account = new Account(requested);
+            var listedAccounts = account.GetAccountInfoEmbedBuilders();
+
+            if (listedAccounts.Count > 0)
+            {
+                foreach (EmbedBuilder elements in listedAccounts)
+                {
+                    await modal.User.SendMessageAsync(embed: elements.Build());
+                }
+
+                CustomNotification accountNotif = new CustomNotification(NotificationType.Success, "Banque", "Résultats envoyés en messages privés");
+                await modal.RespondAsync(embed: accountNotif.BuildEmbed());
+            }
+            else
+            {
+                CustomNotification noAccountNotif = new CustomNotification(NotificationType.Error, "Banque", "L'utilisateur ne dispose d'aucun compte");
+                var channel = await modal.GetChannelAsync();
+                await modal.RespondAsync(embed: noAccountNotif.BuildEmbed());
+            }
+        }
+
+        // MODAL : EDITION D'UN COMPTE BANCAIRE
+        //////////////////////////////////////////////////////////////////////////////
+        
+        if (modal.Data.CustomId == "edit_account_modal")
+        {
+
+            Account accountToEdit = new Account(accountNumber: int.Parse(modal.Data.Components.First(x => x.CustomId == "edit_account_textbox").Value));
+            accountToEdit.GetParameters();
+
+            if (accountToEdit.Type == "")
+            {
+                CustomNotification notifNoAccount = new CustomNotification(NotificationType.Error, "Banque", "Ce compte n'existe pas");
+                await modal.RespondAsync(embed: notifNoAccount.BuildEmbed());
+            }
+            else
+            {
+                // IMPORTANT : Passe le numéro de compte à éditer sur une var globale à utiliser dans le second modal
+                lastEditedAccountNumber = accountToEdit.AccountNumber;
+
+                var modalToEdit = new ModalBuilder();
+                modalToEdit.CustomId = "edit_accountToEdit_modal";
+
+                modalToEdit.WithTitle("Edition du compte n°" + modal.Data.Components.First(x => x.CustomId == "edit_account_number_textbox").Value);
+                modalToEdit.AddTextInput("Découvert autorisé", "edit_accountToEdit_overdraft_textbox", TextInputStyle.Short, placeholder: accountToEdit.OverdraftLimit.ToString(), required: false);
+                modalToEdit.AddTextInput("Taux d'intérêt", "edit_accountToEdit_interest_textbox", TextInputStyle.Short, placeholder: accountToEdit.InterestRate.ToString(), required: false);
+                modalToEdit.AddTextInput("Frais de service", "edit_accountToEdit_fees_textbox", TextInputStyle.Short, placeholder: accountToEdit.AccountFees.ToString(), required: false);
+
+                await modal.RespondWithModalAsync(modalToEdit.Build());
+            }
+        }
+
+        // MODAL : VALIDER LES DONNEES EDITEES D'UN COMPTE BANCAIRE
+        ///////////////////////////////////////////////////////////
+        
+        if (modal.Data.CustomId == "edit_accountToEdit_modal")
+        {
+            int editionCount = 0;
+
+            if (modal.Data.Components.First(x => x.CustomId == "edit_accountToEdit_overdraft_textbox").Value != "")
+            { 
+
+                using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
+                {
+                    connection.Open();
+
+                    using var command = connection.CreateCommand();
+                    command.CommandText = "UPDATE Accounts SET OverdraftLimit = @OverdraftLimit WHERE AccountNumber = @AccountNumber";
+                    command.Parameters.AddWithValue("@OverdraftLimit", double.Parse(modal.Data.Components.First(x => x.CustomId == "edit_accountToEdit_overdraft_textbox").Value));
+                    command.Parameters.AddWithValue("@AccountNumber", lastEditedAccountNumber);
+                    command.ExecuteNonQuery();
+
+                    connection.Close();
+                }
+
+                editionCount++;
+
+            }
+
+            if (modal.Data.Components.First(x => x.CustomId == "edit_accountToEdit_interest_textbox").Value != "")
+            {
+
+                using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
+                {
+                    connection.Open();
+
+                    using var command = connection.CreateCommand();
+                    command.CommandText = "UPDATE Accounts SET InterestRate = @InterestRate WHERE AccountNumber = @AccountNumber";
+                    command.Parameters.AddWithValue("@InterestRate", double.Parse(modal.Data.Components.First(x => x.CustomId == "edit_accountToEdit_interest_textbox").Value));
+                    command.Parameters.AddWithValue("@AccountNumber", lastEditedAccountNumber);
+                    command.ExecuteNonQuery();
+
+                    connection.Close();
+                }
+
+                editionCount++;
+
+            }
+
+            if (modal.Data.Components.First(x => x.CustomId == "edit_accountToEdit_fees_textbox").Value != "")
+            {
+
+                using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
+                {
+                    connection.Open();
+
+                    using var command = connection.CreateCommand();
+                    command.CommandText = "UPDATE Accounts SET AccountFees = @AccountFees WHERE AccountNumber = @AccountNumber";
+                    command.Parameters.AddWithValue("@AccountFees", double.Parse(modal.Data.Components.First(x => x.CustomId == "edit_accountToEdit_fees_textbox").Value));
+                    command.Parameters.AddWithValue("@AccountNumber", lastEditedAccountNumber);
+                    command.ExecuteNonQuery();
+
+                    connection.Close();
+                }
+
+                editionCount++;
+
+            }
+
+            switch (editionCount)
+            {
+                case 0:
+                    CustomNotification noEditNotif = new CustomNotification(NotificationType.Info, "Banque", "Aucune information n'a été éditée");
+                    await modal.RespondAsync(embed: noEditNotif.BuildEmbed());
+                    break;
+                
+                default:
+                    CustomNotification EditNotif = new CustomNotification(NotificationType.Success, "Banque", $"{editionCount} information(s) éditée(s)");
+                    await modal.RespondAsync(embed: EditNotif.BuildEmbed());
+                    break;
+            }
+        } 
     }
 
     private async Task SelectMenuHandler(SocketMessageComponent menu)
     {
-        var selectedUserData = string.Join(", ", menu.Data.Values);
-        Console.WriteLine("DATA : Utilisateur supprimé / Discord ID = " + selectedUserData);
 
+        var selectedUserData = string.Join(", ", menu.Data.Values);
+        
         SnoutUser userToDelete = new SnoutUser(selectedUserData);
+
+        Console.WriteLine("DATA : Utilisateur supprimé / Discord ID = " + selectedUserData);
 
         if (await userToDelete.DeleteUserAsync())
         {
