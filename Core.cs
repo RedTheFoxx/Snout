@@ -495,112 +495,85 @@ public class Program
         
         if (modal.Data.CustomId == "edit_account_modal")
         {
+         
+            Account account = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "edit_account_textbox").Value));
+            account.GetParameters();
 
-            Account accountToEdit = new Account(accountNumber: int.Parse(modal.Data.Components.First(x => x.CustomId == "edit_account_textbox").Value));
-            accountToEdit.GetParameters();
-
-            if (accountToEdit.Type == "")
+            if (account.Type == "")
             {
-                CustomNotification notifNoAccount = new CustomNotification(NotificationType.Error, "Banque", "Ce compte n'existe pas");
-                await modal.RespondAsync(embed: notifNoAccount.BuildEmbed());
+                CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Ce compte n'existe pas");
+                await modal.RespondAsync(embed: notif.BuildEmbed());
+                return;
             }
             else
             {
-                // IMPORTANT : Passe le numéro de compte à éditer sur une var globale à utiliser dans le second modal
-                lastEditedAccountNumber = accountToEdit.AccountNumber;
+                // Récupérer les données du formulaire
 
-                var modalToEdit = new ModalBuilder();
-                modalToEdit.CustomId = "edit_accountToEdit_modal";
-
-                modalToEdit.WithTitle("Edition du compte n°" + modal.Data.Components.First(x => x.CustomId == "edit_account_number_textbox").Value);
-                modalToEdit.AddTextInput("Découvert autorisé", "edit_accountToEdit_overdraft_textbox", TextInputStyle.Short, placeholder: accountToEdit.OverdraftLimit.ToString(), required: false);
-                modalToEdit.AddTextInput("Taux d'intérêt", "edit_accountToEdit_interest_textbox", TextInputStyle.Short, placeholder: accountToEdit.InterestRate.ToString(), required: false);
-                modalToEdit.AddTextInput("Frais de service", "edit_accountToEdit_fees_textbox", TextInputStyle.Short, placeholder: accountToEdit.AccountFees.ToString(), required: false);
-
-                await modal.RespondWithModalAsync(modalToEdit.Build());
-            }
-        }
-
-        // MODAL : VALIDER LES DONNEES EDITEES D'UN COMPTE BANCAIRE
-        ///////////////////////////////////////////////////////////
-        
-        if (modal.Data.CustomId == "edit_accountToEdit_modal")
-        {
-            int editionCount = 0;
-
-            if (modal.Data.Components.First(x => x.CustomId == "edit_accountToEdit_overdraft_textbox").Value != "")
-            { 
-
-                using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
-                {
-                    connection.Open();
-
-                    using var command = connection.CreateCommand();
-                    command.CommandText = "UPDATE Accounts SET OverdraftLimit = @OverdraftLimit WHERE AccountNumber = @AccountNumber";
-                    command.Parameters.AddWithValue("@OverdraftLimit", double.Parse(modal.Data.Components.First(x => x.CustomId == "edit_accountToEdit_overdraft_textbox").Value));
-                    command.Parameters.AddWithValue("@AccountNumber", lastEditedAccountNumber);
-                    command.ExecuteNonQuery();
-
-                    connection.Close();
-                }
-
-                editionCount++;
-
-            }
-
-            if (modal.Data.Components.First(x => x.CustomId == "edit_accountToEdit_interest_textbox").Value != "")
-            {
-
-                using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
-                {
-                    connection.Open();
-
-                    using var command = connection.CreateCommand();
-                    command.CommandText = "UPDATE Accounts SET InterestRate = @InterestRate WHERE AccountNumber = @AccountNumber";
-                    command.Parameters.AddWithValue("@InterestRate", double.Parse(modal.Data.Components.First(x => x.CustomId == "edit_accountToEdit_interest_textbox").Value));
-                    command.Parameters.AddWithValue("@AccountNumber", lastEditedAccountNumber);
-                    command.ExecuteNonQuery();
-
-                    connection.Close();
-                }
-
-                editionCount++;
-
-            }
-
-            if (modal.Data.Components.First(x => x.CustomId == "edit_accountToEdit_fees_textbox").Value != "")
-            {
-
-                using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
-                {
-                    connection.Open();
-
-                    using var command = connection.CreateCommand();
-                    command.CommandText = "UPDATE Accounts SET AccountFees = @AccountFees WHERE AccountNumber = @AccountNumber";
-                    command.Parameters.AddWithValue("@AccountFees", double.Parse(modal.Data.Components.First(x => x.CustomId == "edit_accountToEdit_fees_textbox").Value));
-                    command.Parameters.AddWithValue("@AccountNumber", lastEditedAccountNumber);
-                    command.ExecuteNonQuery();
-
-                    connection.Close();
-                }
-
-                editionCount++;
-
-            }
-
-            switch (editionCount)
-            {
-                case 0:
-                    CustomNotification noEditNotif = new CustomNotification(NotificationType.Info, "Banque", "Aucune information n'a été éditée");
-                    await modal.RespondAsync(embed: noEditNotif.BuildEmbed());
-                    break;
+                int editCounter = 0;
                 
-                default:
-                    CustomNotification EditNotif = new CustomNotification(NotificationType.Success, "Banque", $"{editionCount} information(s) éditée(s)");
-                    await modal.RespondAsync(embed: EditNotif.BuildEmbed());
-                    break;
+                string input0 = modal.Data.Components.First(x => x.CustomId == "edit_account_overdraft_textbox").Value;
+
+                if (string.IsNullOrEmpty(input0))
+                {
+                    // La donnée n'est pas renseignée, on passe la conditionnelle
+                }
+                else if (!double.TryParse(input0, NumberStyles.Number, CultureInfo.InvariantCulture, out double importedOverdraftLimit))
+                {
+                    throw new Exception("DATA EDIT : Overdraft ne dispose pas d'une entrée valide.");
+                }
+                else
+                {
+                    account.OverdraftLimit = importedOverdraftLimit;
+                    editCounter++;
+                }
+
+                string input = modal.Data.Components.First(x => x.CustomId == "edit_account_interest_textbox").Value;
+
+                if (string.IsNullOrEmpty(input))
+                {
+                    // La donnée n'est pas renseignée, on passe la conditionnelle
+                }
+                else if (!double.TryParse(input, NumberStyles.Number, CultureInfo.InvariantCulture, out double importedInterest))
+                {
+                    throw new Exception("DATA EDIT : InterestRate ne dispose pas d'une entrée valide.");
+                }
+                else
+                {
+                    account.InterestRate = importedInterest;
+                    editCounter++;
+                }
+
+                string input2 = modal.Data.Components.First(x => x.CustomId == "edit_account_fees_textbox").Value;
+
+                if (string.IsNullOrEmpty(input2))
+                {
+                    // La donnée n'est pas renseignée, on passe la conditionnelle
+                }
+                else if (!double.TryParse(input2, NumberStyles.Number, CultureInfo.InvariantCulture, out double importedFee))
+                {
+                    throw new Exception("DATA EDIT : AccountFees ne dispose pas d'une entrée valide.");
+                }
+                else
+                {
+                    account.AccountFees = importedFee;
+                    editCounter++;
+                }
+
+                // Mettre à jour les données du compte
+
+                if (account.UpdateAccountParameters())
+                {
+                    CustomNotification notif = new CustomNotification(NotificationType.Success, "Banque", $"Compte mis à jour avec {editCounter} modification(s)");
+                    await modal.RespondAsync(embed: notif.BuildEmbed());
+                }
+                else
+                {
+                    CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Erreur lors de la mise à jour du compte");
+                    await modal.RespondAsync(embed: notif.BuildEmbed());
+                }
             }
-        } 
+            
+        }
     }
 
     private async Task SelectMenuHandler(SocketMessageComponent menu)
