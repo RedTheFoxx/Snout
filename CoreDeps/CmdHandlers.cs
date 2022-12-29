@@ -190,6 +190,13 @@ class SnoutHandler
         SnoutUser requestor = new SnoutUser(discordId: commandUser);
         await requestor.GetUserId();
 
+        if (requestor.UserId == 0)
+        {
+            CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Snout ne vous connaît pas. Contactez un administrateur.");
+            await command.RespondAsync(embed: notif.BuildEmbed());
+            return;
+        }
+
         Account account = new Account(requestor);
         var listedAccounts = account.GetAccountInfoEmbedBuilders();
 
@@ -210,5 +217,28 @@ class SnoutHandler
             await command.RespondAsync(embed: noAccountNotif.BuildEmbed());
         }
 
+    }
+
+    public async Task HandleCheckAccountsCommand(SocketSlashCommand command, DiscordSocketClient client)
+    {
+        var modal = new ModalBuilder();
+
+        modal.WithTitle("Vérifier les comptes d'un utilisateur")
+            .WithCustomId("check_accounts_modal")
+            .AddTextInput("Discord ID", "check_accounts_textbox", TextInputStyle.Short, placeholder: "RedFox#9999", required: true);
+
+        await command.RespondWithModalAsync(modal.Build());
+
+    }
+
+    public async Task HandleEditAccountCommand(SocketSlashCommand command, DiscordSocketClient client) 
+    {
+        var modal = new ModalBuilder();
+
+        modal.WithTitle("Éditer un compte bancaire")
+            .WithCustomId("edit_account_modal")
+            .AddTextInput("Numéro de compte", "edit_account_textbox", TextInputStyle.Short, placeholder: "RedFox#9999", required: true);
+
+        await command.RespondWithModalAsync(modal.Build());
     }
 }
