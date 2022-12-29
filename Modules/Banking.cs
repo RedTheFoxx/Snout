@@ -42,6 +42,19 @@ namespace Snout.Modules
             AccountFees = 0.0;
         }
 
+        // CONSTRUCT 3 : usage EDIT INFO
+        public Account(int accountNumber)
+        {
+            AccountNumber = accountNumber;
+            Type = "";
+            AccountHolder = null;
+            Balance = 0.0;
+            Currency = "";
+            OverdraftLimit = 0.0;
+            InterestRate = 0.0;
+            AccountFees = 0.0;
+        }
+
         public bool RegisterAccount()
         {
             using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
@@ -140,8 +153,30 @@ namespace Snout.Modules
             builder.WithThumbnailUrl("https://cdn-icons-png.flaticon.com/512/2474/2474496.png");*/
         }
 
+        public List<double> GetParameters()
+        {
+            List<double> parameters = new();
 
+            using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
+            {
+                connection.Open();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = "SELECT * FROM Accounts WHERE AccountNumber = @AccountNumber";
+                command.Parameters.AddWithValue("@AccountNumber", AccountNumber);
+                using var reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    parameters.Add(reader.GetDouble(5));
+                    parameters.Add(reader.GetDouble(6));
+                    parameters.Add(reader.GetDouble(7));
+                }
+            }
+
+            return parameters;
+        }
     }
+    
 
     public class Transaction
     {
