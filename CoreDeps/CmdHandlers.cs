@@ -237,7 +237,10 @@ class SnoutHandler
 
         modal.WithTitle("Éditer un compte bancaire")
             .WithCustomId("edit_account_modal")
-            .AddTextInput("Numéro de compte", "edit_account_textbox", TextInputStyle.Short, placeholder: "RedFox#9999", required: true);
+            .AddTextInput("Numéro de compte", "edit_account_textbox", TextInputStyle.Short, placeholder: "N°", required: true)
+            .AddTextInput("Nouveau découvert autorisé", "edit_account_overdraft_textbox", TextInputStyle.Short, placeholder: "999", required: false)
+            .AddTextInput("Nouveau taux d'intérêt", "edit_account_interest_textbox", TextInputStyle.Short, placeholder: "0.09", required: false)
+            .AddTextInput("Nouveaux frais de service", "edit_account_fees_textbox", TextInputStyle.Short, placeholder: "9", required: false);
 
         await command.RespondWithModalAsync(modal.Build());
     }
