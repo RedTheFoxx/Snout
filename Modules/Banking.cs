@@ -167,14 +167,40 @@ namespace Snout.Modules
                 using var reader = command.ExecuteReader();
                 while (reader.Read())
                 {
+                    
+                    Type = reader.GetString(2);
+                    
                     parameters.Add(reader.GetDouble(5));
+                    OverdraftLimit = reader.GetDouble(5);
                     parameters.Add(reader.GetDouble(6));
+                    InterestRate = reader.GetDouble(6);
                     parameters.Add(reader.GetDouble(7));
+                    AccountFees = reader.GetDouble(7);
+                    
                 }
             }
 
             return parameters;
         }
+        
+        public bool UpdateAccountParameters()
+        {
+            using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
+            {
+                connection.Open();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = "UPDATE Accounts SET OverdraftLimit = @OverdraftLimit, InterestRate = @InterestRate, AccountFees = @AccountFees WHERE AccountNumber = @AccountNumber";
+                command.Parameters.AddWithValue("@AccountNumber", AccountNumber);
+                command.Parameters.AddWithValue("@OverdraftLimit", OverdraftLimit);
+                command.Parameters.AddWithValue("@InterestRate", InterestRate);
+                command.Parameters.AddWithValue("@AccountFees", AccountFees);
+                command.ExecuteNonQuery();
+
+                return true;
+            }
+        }
+
     }
     
 
