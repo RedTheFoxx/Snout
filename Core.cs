@@ -1,5 +1,7 @@
 using Discord;
+using Discord.Net;
 using Discord.WebSocket;
+using Newtonsoft.Json;
 using Snout.Modules;
 using System.Data.SQLite;
 using System.Globalization;
@@ -65,27 +67,65 @@ public class Program
     private async Task ClientReady()
     {
         #region Ajout/Suppr. Global Commands
-        /* POUR SUPPRIMER TOUTES LES GLOBAL COMMMANDS (UNE FOIS).
-        //////////////////////////////////////////////////////////
-        
-        await _client.Rest.DeleteAllGlobalCommandsAsync();
-        Console.WriteLine("GLOBAL COMMMANDS -> All Deleted");*/
 
+        // POUR SUPPRIMER TOUTES LES GLOBAL COMMMANDS (UNE FOIS) :
 
-        // POUR AJOUTER UNE GLOBAL COMMAND (UNE FOIS).
-        //////////////////////////////////////////////////
+        // await _client.Rest.DeleteAllGlobalCommandsAsync();
+        // Console.WriteLine("GLOBAL COMMMANDS -> All Deleted");
 
-        /*var commands = new List<SlashCommandBuilder>
+        // POUR AJOUTER UNE GLOBAL COMMAND (UNE FOIS) :
+
+        var commands = new List<SlashCommandBuilder>
         {
-            
+
+            new SlashCommandBuilder()
+                .WithName("ping")
+                .WithDescription("Envoyer un ping vers la gateway Discord"),
+
+            new SlashCommandBuilder()
+                .WithName("fetch")
+                .WithDescription("Assigne un canal au fetch automatique HLL et déclenche ce dernier"),
+
+            new SlashCommandBuilder()
+                .WithName("stop")
+                .WithDescription("Purger les canaux et arrêter le fetch automatique HLL"),
+
+            new SlashCommandBuilder()
+                .WithName("add")
+                .WithDescription("Ajouter un serveur HLL à la liste de fetch automatique"),
+
+            new SlashCommandBuilder()
+                .WithName("register")
+                .WithDescription("Inscrire un utilisateur dans Snout Bot"),
+
+            new SlashCommandBuilder()
+                .WithName("unregister")
+                .WithDescription("Désinscrire un utilisateur de Snout Bot"),
+
+            new SlashCommandBuilder()
+                .WithName("account")
+                .WithDescription("Créer un nouveau compte bancaire"),
+
+            new SlashCommandBuilder()
+                .WithName("myaccounts")
+                .WithDescription("Afficher ses comptes bancaires"),
+
+            new SlashCommandBuilder()
+                .WithName("checkaccounts")
+                .WithDescription("Afficher les comptes bancaires d'un utilisateur"),
+
+            new SlashCommandBuilder()
+                .WithName("editaccount")
+                .WithDescription("Modifier un compte bancaire"),
+
             new SlashCommandBuilder()
                 .WithName("deposit")
-                .WithDescription("Déposer de l'argent sur un compte bancaire désigné"),
+                .WithDescription("Déposer de l'argent sur un compte bancaire"),
 
             new SlashCommandBuilder()
                 .WithName("withdraw")
-                .WithDescription("Retirer de l'argent d'un compte bancaire désigné"),
-            
+                .WithDescription("Retirer de l'argent d'un compte bancaire"),
+
             new SlashCommandBuilder()
                 .WithName("transfer")
                 .WithDescription("Transférer de l'argent d'un compte bancaire à un autre"),
@@ -103,7 +143,8 @@ public class Program
                 var json = JsonConvert.SerializeObject(exception.Errors, Formatting.Indented);
                 Console.WriteLine(json);
             }
-        }*/
+        }
+
         #endregion
 
         // Injecte les URLs pré-programées dans la db "dynamic_data" si elles n'y sont pas déjà et dispose de l'objet connecteur.
@@ -260,9 +301,9 @@ public class Program
                 await accountHandlerReference.HandleAccountCommand(command);
                 break;
 
-            case "myaccount":
-                SnoutHandler myaccountHandlerReference = new SnoutHandler();
-                await myaccountHandlerReference.HandleMyAccountCommand(command, _client);
+            case "myaccounts":
+                SnoutHandler myaccountsHandlerReference = new SnoutHandler();
+                await myaccountsHandlerReference.HandleMyAccountsCommand(command, _client);
                 break;
 
             case "checkaccounts":
@@ -290,7 +331,7 @@ public class Program
                 await transferHandlerReference.HandleTransferCommand(command);
                 break;
         }
-    }
+    } // Sélecteur de commandes envoyées au bot
 
     private async Task ModalHandler(SocketModal modal)
     {
@@ -639,8 +680,8 @@ public class Program
                             await modal.RespondAsync(embed: notif.BuildEmbed());
                         }
                     }
-                    
-                    
+
+
                 }
             }
         }
@@ -693,7 +734,7 @@ public class Program
                         }
                     }
 
-                    
+
                 }
             }
         }
@@ -758,8 +799,8 @@ public class Program
                             }
                         }
                     }
-       
- 
+
+
                 }
             }
         }
