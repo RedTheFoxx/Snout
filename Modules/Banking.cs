@@ -226,6 +226,7 @@ namespace Snout.Modules
         public async Task<bool> AddMoneyAsync(double amount)
         {
             GetBalance();
+            
             Balance = Balance + amount;
 
             DateTime currentDateTime = DateTime.Now;
@@ -254,6 +255,8 @@ namespace Snout.Modules
         public async Task<bool> RemoveMoneyAsync(double amount)
         {
             GetBalance();
+            GetParameters();
+            
             DateTime currentDateTime = DateTime.Now;
 
             string currentDate = currentDateTime.ToString("dd MMMM yyyy");
@@ -347,8 +350,9 @@ namespace Snout.Modules
         public double Amount { get; set; }
         public string Date { get; set; }
 
-        public Transaction(int AccountNumber, TransactionType type, double amount, string date, int? destinationAccountNumber = null)
+        public Transaction(int accountNumber, TransactionType type, double amount, string date, int? destinationAccountNumber = null)
         {
+            AccountNumber = accountNumber;
             Type = type;
             Amount = amount;
             Date = date;
