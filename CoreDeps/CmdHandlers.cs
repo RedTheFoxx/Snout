@@ -182,7 +182,7 @@ class SnoutHandler
         }
     }
 
-    public async Task HandleMyAccountCommand(SocketSlashCommand command, DiscordSocketClient client)
+    public async Task HandleMyAccountsCommand(SocketSlashCommand command, DiscordSocketClient client)
     {
 
         var commandUser = command.User.Username + "#" + command.User.Discriminator;
