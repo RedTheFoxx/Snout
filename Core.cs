@@ -620,16 +620,27 @@ public class Program
                 }
                 else
                 {
-                    if (await account.AddMoneyAsync(importedAmount))
+                    if (importedAmount <= 0)
                     {
-                        CustomNotification notif = new CustomNotification(NotificationType.Success, "Banque", $"Dépôt de {importedAmount} € effectué");
+                        CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Le montant doit être strictement supérieur à 0");
                         await modal.RespondAsync(embed: notif.BuildEmbed());
+                        return;
                     }
                     else
                     {
-                        CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Erreur lors du dépôt");
-                        await modal.RespondAsync(embed: notif.BuildEmbed());
+                        if (await account.AddMoneyAsync(importedAmount))
+                        {
+                            CustomNotification notif = new CustomNotification(NotificationType.Success, "Banque", $"Dépôt de {importedAmount} € effectué");
+                            await modal.RespondAsync(embed: notif.BuildEmbed());
+                        }
+                        else
+                        {
+                            CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Erreur lors du dépôt");
+                            await modal.RespondAsync(embed: notif.BuildEmbed());
+                        }
                     }
+                    
+                    
                 }
             }
         }
@@ -662,16 +673,27 @@ public class Program
                 }
                 else
                 {
-                    if (await account.RemoveMoneyAsync(importedAmount))
+                    if (importedAmount <= 0)
                     {
-                        CustomNotification notif = new CustomNotification(NotificationType.Success, "Banque", $"Retrait de {importedAmount} € effectué");
+                        CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Le montant doit être strictement supérieur à 0");
                         await modal.RespondAsync(embed: notif.BuildEmbed());
+                        return;
                     }
                     else
                     {
-                        CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Erreur lors du retrait");
-                        await modal.RespondAsync(embed: notif.BuildEmbed());
+                        if (await account.RemoveMoneyAsync(importedAmount))
+                        {
+                            CustomNotification notif = new CustomNotification(NotificationType.Success, "Banque", $"Retrait de {importedAmount} € effectué");
+                            await modal.RespondAsync(embed: notif.BuildEmbed());
+                        }
+                        else
+                        {
+                            CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Erreur lors du retrait");
+                            await modal.RespondAsync(embed: notif.BuildEmbed());
+                        }
                     }
+
+                    
                 }
             }
         }
@@ -704,16 +726,40 @@ public class Program
                 }
                 else
                 {
-                    if (await account.TransferMoneyAsync(importedAmount, int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_destination_textbox").Value)))
+
+                    if (importedAmount <= 0)
                     {
-                        CustomNotification notif = new CustomNotification(NotificationType.Success, "Banque", $"Transfert de {importedAmount} € effectué vers le compte {modal.Data.Components.First(x => x.CustomId == "transfer_destination_textbox").Value}");
+                        CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Le montant doit être strictement supérieur à 0");
                         await modal.RespondAsync(embed: notif.BuildEmbed());
+                        return;
                     }
                     else
                     {
-                        CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Erreur lors du transfert");
-                        await modal.RespondAsync(embed: notif.BuildEmbed());
+                        Account targetAccount = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_target_textbox").Value));
+                        targetAccount.GetParameters();
+
+                        if (targetAccount.Type == "") // On vérifie que le compte existe
+                        {
+                            CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Ce compte n'existe pas");
+                            await modal.RespondAsync(embed: notif.BuildEmbed());
+                            return;
+                        }
+                        else
+                        {
+                            if (await account.TransferMoneyAsync(importedAmount, int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_target_textbox").Value)))
+                            {
+                                CustomNotification notif = new CustomNotification(NotificationType.Success, "Banque", $"Transfert de {importedAmount} € effectué");
+                                await modal.RespondAsync(embed: notif.BuildEmbed());
+                            }
+                            else
+                            {
+                                CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Erreur lors du transfert");
+                                await modal.RespondAsync(embed: notif.BuildEmbed());
+                            }
+                        }
                     }
+       
+ 
                 }
             }
         }
