@@ -255,7 +255,7 @@ namespace Snout.Modules
         public async Task<bool> RemoveMoneyAsync(double amount)
         {
             GetBalance();
-            GetParameters();
+            
             
             DateTime currentDateTime = DateTime.Now;
 
