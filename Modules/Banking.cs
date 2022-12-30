@@ -203,21 +203,50 @@ namespace Snout.Modules
 
     }
     
-
     public class Transaction
     {
         public int TransactionId { get; set; }
+        public int AccountNumber { get; set; }
+        public int? DestinationAccountNumber { get; set; }
         public TransactionType Type { get; set; }
-        public decimal Amount { get; set; }
-        public DateTime Date { get; set; }
-        public string Description { get; set; }
+        public double Amount { get; set; }
+        public string Date { get; set; }
 
-        public Transaction(TransactionType type, decimal amount, DateTime date, string description)
+        public Transaction(int AccountNumber, TransactionType type, double amount, string date, int? destinationAccountNumber = null)
         {
             Type = type;
             Amount = amount;
             Date = date;
-            Description = description;
+            DestinationAccountNumber = destinationAccountNumber;
+        }
+
+        public async Task<bool> CreateTransaction() // Create a transaction in the database
+        {
+            using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
+            {
+                await connection.OpenAsync();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = "INSERT INTO Transactions (AccountNumber, DestinationAccountNumber, Type, Amount, Date) VALUES (@AccountNumber, @DestinationAccountNumber, @Type, @Amount, @Date)";
+                command.Parameters.AddWithValue("@AccountNumber", AccountNumber);
+                if (DestinationAccountNumber != 0)
+                {
+                    command.Parameters.AddWithValue("@DestinationAccountNumber", DestinationAccountNumber);
+                }
+                else
+                {
+                    command.Parameters.AddWithValue("@DestinationAccountNumber", DBNull.Value);
+                }
+                command.Parameters.AddWithValue("@Type", Type.ToString());
+                command.Parameters.AddWithValue("@Amount", Amount);
+                command.Parameters.AddWithValue("@Date", Date);
+
+                await command.ExecuteNonQueryAsync();
+
+                return true;
+            }
+
+
         }
 
     }
