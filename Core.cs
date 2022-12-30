@@ -1,7 +1,5 @@
 using Discord;
-using Discord.Net;
 using Discord.WebSocket;
-using Newtonsoft.Json;
 using Snout.Modules;
 using System.Data.SQLite;
 using System.Globalization;
@@ -16,7 +14,6 @@ public class Program
     private HllSniffer? _liveSniffer;
     private List<IMessageChannel> _liveChannels;
     private readonly List<string> _listUrl = new();
-    private int lastEditedAccountNumber;
 
     readonly System.Timers.Timer _timer = new System.Timers.Timer();
 
@@ -75,18 +72,23 @@ public class Program
         Console.WriteLine("GLOBAL COMMMANDS -> All Deleted");*/
 
 
-         // POUR AJOUTER UNE GLOBAL COMMAND (UNE FOIS).
+        // POUR AJOUTER UNE GLOBAL COMMAND (UNE FOIS).
         //////////////////////////////////////////////////
-        
+
         /*var commands = new List<SlashCommandBuilder>
         {
+            
             new SlashCommandBuilder()
-                .WithName("checkaccounts")
-                .WithDescription("Consulter l'état des comptes bancaires d'un utilisateur désigné"),
+                .WithName("deposit")
+                .WithDescription("Déposer de l'argent sur un compte bancaire désigné"),
 
             new SlashCommandBuilder()
-                .WithName("editaccount")
-                .WithDescription("Editer les paramètres d'un compte bancaire désigné"),
+                .WithName("withdraw")
+                .WithDescription("Retirer de l'argent d'un compte bancaire désigné"),
+            
+            new SlashCommandBuilder()
+                .WithName("transfer")
+                .WithDescription("Transférer de l'argent d'un compte bancaire à un autre"),
         };
 
         foreach (var command in commands)
@@ -272,6 +274,21 @@ public class Program
                 SnoutHandler editaccountHandlerReference = new SnoutHandler();
                 await editaccountHandlerReference.HandleEditAccountCommand(command, _client);
                 break;
+
+            case "deposit":
+                SnoutHandler depositHandlerReference = new SnoutHandler();
+                await depositHandlerReference.HandleDepositCommand(command);
+                break;
+
+            case "withdraw":
+                SnoutHandler withdrawHandlerReference = new SnoutHandler();
+                await withdrawHandlerReference.HandleWithdrawCommand(command);
+                break;
+
+            case "transfer":
+                SnoutHandler transferHandlerReference = new SnoutHandler();
+                await transferHandlerReference.HandleTransferCommand(command);
+                break;
         }
     }
 
@@ -413,7 +430,7 @@ public class Program
 
             string input0 = components.First(x => x.CustomId == "new_account_overdraft_textbox").Value;
 
-            if (!double.TryParse(input0, NumberStyles.Number, CultureInfo.InvariantCulture, out double importedOverdraftLimit))
+            if (!double.TryParse(input0, NumberStyles.Number, new CultureInfo("fr-FR"), out double importedOverdraftLimit))
             {
                 throw new Exception("Overdraft ne dispose pas d'une entrée valide.");
             }
@@ -422,7 +439,7 @@ public class Program
 
             string input = components.First(x => x.CustomId == "new_account_interest_textbox").Value;
 
-            if (!double.TryParse(input, NumberStyles.Number, CultureInfo.InvariantCulture, out double importedInterest))
+            if (!double.TryParse(input, NumberStyles.Number, new CultureInfo("fr-FR"), out double importedInterest))
             {
                 throw new Exception("Interest ne dispose pas d'une entrée valide.");
             }
@@ -431,7 +448,7 @@ public class Program
 
             string input2 = components.First(x => x.CustomId == "new_account_fees_textbox").Value;
 
-            if (!double.TryParse(input2, NumberStyles.Number, CultureInfo.InvariantCulture, out double importedFee))
+            if (!double.TryParse(input2, NumberStyles.Number, new CultureInfo("fr-FR"), out double importedFee))
             {
                 throw new Exception("Fee ne dispose pas d'une entrée valide.");
             }
@@ -454,11 +471,11 @@ public class Program
 
         // MODAL : CONSULTATION DES COMPTES D'UN UTILISATEUR
         //////////////////////////////////////////////////////////////////////////////
-        
+
         if (modal.Data.CustomId == "check_accounts_modal")
         {
             var modalUser = modal.Data.Components.First(x => x.CustomId == "check_accounts_textbox").Value;
-            
+
             SnoutUser requested = new SnoutUser(discordId: modalUser);
             await requested.GetUserId();
 
@@ -492,10 +509,10 @@ public class Program
 
         // MODAL : EDITION D'UN COMPTE BANCAIRE
         //////////////////////////////////////////////////////////////////////////////
-        
+
         if (modal.Data.CustomId == "edit_account_modal")
         {
-         
+
             Account account = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "edit_account_textbox").Value));
             account.GetParameters();
 
@@ -510,14 +527,14 @@ public class Program
                 // Récupérer les données du formulaire
 
                 int editCounter = 0;
-                
+
                 string input0 = modal.Data.Components.First(x => x.CustomId == "edit_account_overdraft_textbox").Value;
 
                 if (string.IsNullOrEmpty(input0))
                 {
                     // La donnée n'est pas renseignée, on passe la conditionnelle
                 }
-                else if (!double.TryParse(input0, NumberStyles.Number, CultureInfo.InvariantCulture, out double importedOverdraftLimit))
+                else if (!double.TryParse(input0, NumberStyles.Number, new CultureInfo("fr-FR"), out double importedOverdraftLimit))
                 {
                     throw new Exception("DATA EDIT : Overdraft ne dispose pas d'une entrée valide.");
                 }
@@ -533,7 +550,7 @@ public class Program
                 {
                     // La donnée n'est pas renseignée, on passe la conditionnelle
                 }
-                else if (!double.TryParse(input, NumberStyles.Number, CultureInfo.InvariantCulture, out double importedInterest))
+                else if (!double.TryParse(input, NumberStyles.Number, new CultureInfo("fr-FR"), out double importedInterest))
                 {
                     throw new Exception("DATA EDIT : InterestRate ne dispose pas d'une entrée valide.");
                 }
@@ -549,7 +566,7 @@ public class Program
                 {
                     // La donnée n'est pas renseignée, on passe la conditionnelle
                 }
-                else if (!double.TryParse(input2, NumberStyles.Number, CultureInfo.InvariantCulture, out double importedFee))
+                else if (!double.TryParse(input2, NumberStyles.Number, new CultureInfo("fr-FR"), out double importedFee))
                 {
                     throw new Exception("DATA EDIT : AccountFees ne dispose pas d'une entrée valide.");
                 }
@@ -572,15 +589,142 @@ public class Program
                     await modal.RespondAsync(embed: notif.BuildEmbed());
                 }
             }
-            
+
         }
+
+        // MODAL : FAIRE UN DEPOT
+        //////////////////////////////////////////////////////////////////////////////
+
+        if (modal.Data.CustomId == "deposit_modal")
+        {
+            Account account = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "deposit_account_textbox").Value));
+            account.GetParameters();
+
+            if (account.Type == "") // On vérifie que le compte existe
+            {
+                CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Ce compte n'existe pas");
+                await modal.RespondAsync(embed: notif.BuildEmbed());
+                return;
+            }
+            else
+            {
+                string input = modal.Data.Components.First(x => x.CustomId == "deposit_amount_textbox").Value;
+
+                if (string.IsNullOrEmpty(input)) // On vérifie que le montant n'est pas vide
+                {
+                    throw new Exception("DATA DEPOSIT : Amount ne dispose pas d'une entrée valide.");
+                }
+                else if (!double.TryParse(input, NumberStyles.Number, new CultureInfo("fr-FR"), out double importedAmount))
+                {
+                    throw new Exception("DATA DEPOSIT : Amount ne dispose pas d'une entrée valide.");
+                }
+                else
+                {
+                    if (await account.AddMoneyAsync(importedAmount))
+                    {
+                        CustomNotification notif = new CustomNotification(NotificationType.Success, "Banque", $"Dépôt de {importedAmount} € effectué");
+                        await modal.RespondAsync(embed: notif.BuildEmbed());
+                    }
+                    else
+                    {
+                        CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Erreur lors du dépôt");
+                        await modal.RespondAsync(embed: notif.BuildEmbed());
+                    }
+                }
+            }
+        }
+
+        // MODAL : RETIRER DE L'ARGENT
+        //////////////////////////////////////////////////////////////////////////////
+
+        if (modal.Data.CustomId == "withdraw_modal")
+        {
+            Account account = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "withdraw_account_textbox").Value));
+            account.GetParameters();
+
+            if (account.Type == "") // On vérifie que le compte existe
+            {
+                CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Ce compte n'existe pas");
+                await modal.RespondAsync(embed: notif.BuildEmbed());
+                return;
+            }
+            else
+            {
+                string input = modal.Data.Components.First(x => x.CustomId == "withdraw_amount_textbox").Value;
+
+                if (string.IsNullOrEmpty(input)) // On vérifie que le montant n'est pas vide
+                {
+                    throw new Exception("DATA WITHDRAW : Amount ne dispose pas d'une entrée valide.");
+                }
+                else if (!double.TryParse(input, NumberStyles.Number, new CultureInfo("fr-FR"), out double importedAmount))
+                {
+                    throw new Exception("DATA WITHDRAW : Amount ne dispose pas d'une entrée valide.");
+                }
+                else
+                {
+                    if (await account.RemoveMoneyAsync(importedAmount))
+                    {
+                        CustomNotification notif = new CustomNotification(NotificationType.Success, "Banque", $"Retrait de {importedAmount} € effectué");
+                        await modal.RespondAsync(embed: notif.BuildEmbed());
+                    }
+                    else
+                    {
+                        CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Erreur lors du retrait");
+                        await modal.RespondAsync(embed: notif.BuildEmbed());
+                    }
+                }
+            }
+        }
+
+        // MODAL : TRANSFERER DE L'ARGENT VERS UN AUTRE COMPTE
+        //////////////////////////////////////////////////////////////////////////////
+
+        if (modal.Data.CustomId == "transfer_modal")
+        {
+            Account account = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_source_textbox").Value));
+            account.GetParameters();
+
+            if (account.Type == "") // On vérifie que le compte existe
+            {
+                CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Ce compte n'existe pas");
+                await modal.RespondAsync(embed: notif.BuildEmbed());
+                return;
+            }
+            else
+            {
+                string input = modal.Data.Components.First(x => x.CustomId == "transfer_amount_textbox").Value;
+
+                if (string.IsNullOrEmpty(input)) // On vérifie que le montant n'est pas vide
+                {
+                    throw new Exception("DATA TRANSFER : Amount ne dispose pas d'une entrée valide.");
+                }
+                else if (!double.TryParse(input, NumberStyles.Number, new CultureInfo("fr-FR"), out double importedAmount))
+                {
+                    throw new Exception("DATA TRANSFER : Amount ne dispose pas d'une entrée valide.");
+                }
+                else
+                {
+                    if (await account.TransferMoneyAsync(importedAmount, int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_destination_textbox").Value)))
+                    {
+                        CustomNotification notif = new CustomNotification(NotificationType.Success, "Banque", $"Transfert de {importedAmount} € effectué vers le compte {modal.Data.Components.First(x => x.CustomId == "transfer_destination_textbox").Value}");
+                        await modal.RespondAsync(embed: notif.BuildEmbed());
+                    }
+                    else
+                    {
+                        CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Erreur lors du transfert");
+                        await modal.RespondAsync(embed: notif.BuildEmbed());
+                    }
+                }
+            }
+        }
+
     }
 
     private async Task SelectMenuHandler(SocketMessageComponent menu)
     {
 
         var selectedUserData = string.Join(", ", menu.Data.Values);
-        
+
         SnoutUser userToDelete = new SnoutUser(selectedUserData);
 
         Console.WriteLine("DATA : Utilisateur supprimé / Discord ID = " + selectedUserData);
