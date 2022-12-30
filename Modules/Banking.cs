@@ -1,5 +1,6 @@
 using Discord;
 using System.Data.SQLite;
+using System.Transactions;
 using static System.Net.WebRequestMethods;
 
 namespace Snout.Modules
@@ -85,7 +86,6 @@ namespace Snout.Modules
             }
             return true;
         }
-
         public List<EmbedBuilder> GetAccountInfoEmbedBuilders()
         {
             List<EmbedBuilder> embedBuilders = new();
@@ -138,21 +138,8 @@ namespace Snout.Modules
             }
 
             return embedBuilders;
-
-            /*EmbedBuilder builder = new EmbedBuilder();
             
-            builder.WithAuthor($"SNOUTBANK - Compte n°{AccountNumber}", iconUrl: "https://cdn.discordapp.com/app-icons/1050585088263462964/d6fe497e0cb854d8db041a81264eb31b.png?size=512");
-            builder.WithTitle($"Solde = {Balance} {Currency}");
-            builder.WithDescription("Paramètres :");
-            builder.AddField("Découvert autorisé", $"{OverdraftLimit}", inline: true);
-            builder.AddField("Taux d'intérêt", $"{InterestRate}", inline: true);
-            builder.AddField("Frais de service", $"{AccountFees}", inline: true);
-            builder.WithFooter("Snout v1.1");
-            builder.WithTimestamp(DateTimeOffset.UtcNow);
-            builder.WithColor(Color.Gold);
-            builder.WithThumbnailUrl("https://cdn-icons-png.flaticon.com/512/2474/2474496.png");*/
         }
-
         public List<double> GetParameters()
         {
             List<double> parameters = new();
@@ -182,7 +169,6 @@ namespace Snout.Modules
 
             return parameters;
         }
-        
         public bool UpdateAccountParameters()
         {
             using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
@@ -200,6 +186,115 @@ namespace Snout.Modules
                 return true;
             }
         }
+        public async Task<bool> AddMoneyAsync(double amount)
+        {
+            Balance = Balance + amount;
+
+            DateTime currentDateTime = DateTime.Now;
+
+            string currentDate = currentDateTime.ToString("dd MMMM yyyy");
+            string currentTime = currentDateTime.ToString("HH:mm:ss");
+
+            Transaction transaction = new(AccountNumber, TransactionType.Deposit, amount, currentDate + " " + currentTime);
+            await transaction.CreateTransactionAsync();
+
+            using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
+            {
+                connection.Open();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = "UPDATE Accounts SET Balance = @Balance WHERE AccountNumber = @AccountNumber";
+                command.Parameters.AddWithValue("@AccountNumber", AccountNumber);
+                command.Parameters.AddWithValue("@Balance", Balance);
+                command.ExecuteNonQuery();
+
+                return true;
+            }
+
+           
+        }
+        public async Task<bool> RemoveMoneyAsync(double amount)
+        {
+
+            DateTime currentDateTime = DateTime.Now;
+
+            string currentDate = currentDateTime.ToString("dd MMMM yyyy");
+            string currentTime = currentDateTime.ToString("HH:mm:ss");
+
+            Transaction transaction = new(AccountNumber, TransactionType.Withdrawal, amount, currentDate + " " + currentTime);
+            await transaction.CreateTransactionAsync();
+
+            Balance = Balance - amount;
+            
+            using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
+            {
+                connection.Open();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = "UPDATE Accounts SET Balance = @Balance WHERE AccountNumber = @AccountNumber";
+                command.Parameters.AddWithValue("@AccountNumber", AccountNumber);
+                command.Parameters.AddWithValue("@Balance", Balance);
+                command.ExecuteNonQuery();
+
+                return true;
+            }
+        }
+        public async Task<bool> TransferMoneyAsync(double amount, int destinationAccountNumber)
+        {
+            DateTime currentDateTime = DateTime.Now;
+
+            string currentDate = currentDateTime.ToString("dd MMMM yyyy");
+            string currentTime = currentDateTime.ToString("HH:mm:ss");
+
+            Transaction transaction = new(AccountNumber, TransactionType.Transfer, amount, currentDate + " " + currentTime, destinationAccountNumber);
+
+            await transaction.CreateTransactionAsync();
+
+            using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
+            {
+                connection.Open();
+
+                // Récupération de la balance du compte de destination
+                double destinationAccountBalance;
+                using var command = connection.CreateCommand();
+                command.CommandText = "SELECT Balance FROM Accounts WHERE AccountNumber = @destinationAccountNumber";
+                command.Parameters.AddWithValue("@destinationAccountNumber", destinationAccountNumber);
+                using var reader = command.ExecuteReader();
+                if (reader.Read())
+                {
+                    destinationAccountBalance = reader.GetDouble(0);
+                }
+                else
+                {
+                    throw new Exception("Le compte de destination n'a pas été trouvé");
+                }
+
+                // Mise à jour de la balance du compte de destination et du compte courant
+                using (var transac = connection.BeginTransaction())
+                {
+                    // Mise à jour de la balance du compte de destination
+                    using var updateCommand = connection.CreateCommand();
+                    updateCommand.CommandText = "UPDATE Accounts SET Balance = @destinationAccountBalance WHERE AccountNumber = @destinationAccountNumber";
+                    updateCommand.Parameters.AddWithValue("@destinationAccountBalance", destinationAccountBalance + amount);
+                    updateCommand.Parameters.AddWithValue("@destinationAccountNumber", destinationAccountNumber);
+                    updateCommand.ExecuteNonQuery();
+
+                    // Mise à jour de la balance du compte courant
+                    Balance = Balance - amount;
+
+                    using var updateCommand2 = connection.CreateCommand();
+                    updateCommand.CommandText = "UPDATE Accounts SET Balance = @Balance WHERE AccountNumber = @AccountNumber";
+                    updateCommand.Parameters.AddWithValue("@Balance", Balance);
+                    updateCommand.Parameters.AddWithValue("@AccountNumber", AccountNumber);
+                    updateCommand.ExecuteNonQuery();
+
+                    transac.Commit();
+                }
+
+                return true;
+            }
+
+        } // Utilisation d'une transaction pour éviter les problèmes de soldes
 
     }
     
@@ -220,7 +315,7 @@ namespace Snout.Modules
             DestinationAccountNumber = destinationAccountNumber;
         }
 
-        public async Task<bool> CreateTransaction() // Create a transaction in the database
+        public async Task<bool> CreateTransactionAsync() // Create a transaction in the database
         {
             using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
             {
