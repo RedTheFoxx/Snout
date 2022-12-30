@@ -244,4 +244,41 @@ class SnoutHandler
 
         await command.RespondWithModalAsync(modal.Build());
     }
+
+    public async Task HandleDepositCommand(SocketSlashCommand command)
+    {
+        var modal = new ModalBuilder();
+
+        modal.WithTitle("Déposer de l'argent")
+            .WithCustomId("deposit_modal")
+            .AddTextInput("Numéro de compte", "deposit_account_textbox", TextInputStyle.Short, placeholder: "N°", required: true)
+            .AddTextInput("Montant", "deposit_amount_textbox", TextInputStyle.Short, placeholder: "123.45", required: true);
+
+        await command.RespondWithModalAsync(modal.Build());
+    }
+
+    public async Task HandleTransferCommand(SocketSlashCommand command)
+    {
+        var modal = new ModalBuilder();
+
+        modal.WithTitle("Transférer de l'argent")
+            .WithCustomId("transfer_modal")
+            .AddTextInput("Numéro de compte source", "transfer_source_textbox", TextInputStyle.Short, placeholder: "N°", required: true)
+            .AddTextInput("Numéro de compte destination", "transfer_destination_textbox", TextInputStyle.Short, placeholder: "N°", required: true)
+            .AddTextInput("Montant", "transfer_amount_textbox", TextInputStyle.Short, placeholder: "123.45", required: true);
+
+        await command.RespondWithModalAsync(modal.Build());
+    }
+
+    public async Task HandleWithdrawCommand(SocketSlashCommand command)
+    {
+        var modal = new ModalBuilder();
+
+        modal.WithTitle("Retirer de l'argent")
+            .WithCustomId("withdraw_modal")
+            .AddTextInput("Numéro de compte", "withdraw_account_textbox", TextInputStyle.Short, placeholder: "N°", required: true)
+            .AddTextInput("Montant", "withdraw_amount_textbox", TextInputStyle.Short, placeholder: "123.45", required: true);
+
+        await command.RespondWithModalAsync(modal.Build());
+    }
 }
