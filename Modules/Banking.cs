@@ -1,7 +1,5 @@
 using Discord;
 using System.Data.SQLite;
-using System.Transactions;
-using static System.Net.WebRequestMethods;
 
 namespace Snout.Modules
 {
