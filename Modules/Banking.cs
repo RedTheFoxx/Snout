@@ -169,6 +169,45 @@ namespace Snout.Modules
 
             return parameters;
         }
+
+        public double GetBalance()
+        {
+            using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
+            {
+                connection.Open();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = "SELECT Balance FROM Accounts WHERE AccountNumber = @AccountNumber";
+                command.Parameters.AddWithValue("@AccountNumber", AccountNumber);
+                using var reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    Balance = reader.GetDouble(0);
+                }
+            }
+
+            return Balance;
+        }
+        public double GetDistantBalance(int destinationAccountNumber)
+        {
+            double distantBalance = 0;
+
+            using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
+            {
+                connection.Open();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = "SELECT Balance FROM Accounts WHERE AccountNumber = @AccountNumber";
+                command.Parameters.AddWithValue("@AccountNumber", destinationAccountNumber);
+                using var reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    distantBalance = reader.GetDouble(0);
+                }
+            }
+
+            return distantBalance;
+        }
         public bool UpdateAccountParameters()
         {
             using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
@@ -188,6 +227,7 @@ namespace Snout.Modules
         }
         public async Task<bool> AddMoneyAsync(double amount)
         {
+            GetBalance();
             Balance = Balance + amount;
 
             DateTime currentDateTime = DateTime.Now;
@@ -215,7 +255,7 @@ namespace Snout.Modules
         }
         public async Task<bool> RemoveMoneyAsync(double amount)
         {
-
+            GetBalance();
             DateTime currentDateTime = DateTime.Now;
 
             string currentDate = currentDateTime.ToString("dd MMMM yyyy");
@@ -241,6 +281,8 @@ namespace Snout.Modules
         }
         public async Task<bool> TransferMoneyAsync(double amount, int destinationAccountNumber)
         {
+            GetBalance();
+            
             DateTime currentDateTime = DateTime.Now;
 
             string currentDate = currentDateTime.ToString("dd MMMM yyyy");
