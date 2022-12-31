@@ -42,7 +42,7 @@ class SnoutHandler
             .AddTextInput("Propriétaire", "new_account_userid_textbox", TextInputStyle.Short, placeholder: "0 (ID DB)", required: true)
             .AddTextInput("Type de compte", "new_account_type_textbox", TextInputStyle.Short, placeholder: "Checkings / Savings / Locked", required: true)
             .AddTextInput("Limite de découvert", "new_account_overdraft_textbox", TextInputStyle.Short, placeholder: "1000", required: true)
-            .AddTextInput("Taux d'intérêt", "new_account_interest_textbox", TextInputStyle.Short, placeholder: "0.02", required: true)
+            .AddTextInput("Taux d'intérêt", "new_account_interest_textbox", TextInputStyle.Short, placeholder: "0,02", required: true)
             .AddTextInput("Frais de service", "new_account_fees_textbox", TextInputStyle.Short, placeholder: "8", required: true);
 
 
@@ -239,7 +239,7 @@ class SnoutHandler
             .WithCustomId("edit_account_modal")
             .AddTextInput("Numéro de compte", "edit_account_textbox", TextInputStyle.Short, placeholder: "N°", required: true)
             .AddTextInput("Nouveau découvert autorisé", "edit_account_overdraft_textbox", TextInputStyle.Short, placeholder: "999", required: false)
-            .AddTextInput("Nouveau taux d'intérêt", "edit_account_interest_textbox", TextInputStyle.Short, placeholder: "0.09", required: false)
+            .AddTextInput("Nouveau taux d'intérêt", "edit_account_interest_textbox", TextInputStyle.Short, placeholder: "0,09", required: false)
             .AddTextInput("Nouveaux frais de service", "edit_account_fees_textbox", TextInputStyle.Short, placeholder: "9", required: false);
 
         await command.RespondWithModalAsync(modal.Build());
@@ -252,7 +252,7 @@ class SnoutHandler
         modal.WithTitle("Déposer de l'argent")
             .WithCustomId("deposit_modal")
             .AddTextInput("Numéro de compte", "deposit_account_textbox", TextInputStyle.Short, placeholder: "N°", required: true)
-            .AddTextInput("Montant", "deposit_amount_textbox", TextInputStyle.Short, placeholder: "123.45", required: true);
+            .AddTextInput("Montant", "deposit_amount_textbox", TextInputStyle.Short, placeholder: "123,45", required: true);
 
         await command.RespondWithModalAsync(modal.Build());
     }
@@ -265,7 +265,7 @@ class SnoutHandler
             .WithCustomId("transfer_modal")
             .AddTextInput("Numéro de compte source", "transfer_source_textbox", TextInputStyle.Short, placeholder: "N°", required: true)
             .AddTextInput("Numéro de compte destination", "transfer_destination_textbox", TextInputStyle.Short, placeholder: "N°", required: true)
-            .AddTextInput("Montant", "transfer_amount_textbox", TextInputStyle.Short, placeholder: "123.45", required: true);
+            .AddTextInput("Montant", "transfer_amount_textbox", TextInputStyle.Short, placeholder: "123,45", required: true);
 
         await command.RespondWithModalAsync(modal.Build());
     }
@@ -277,7 +277,7 @@ class SnoutHandler
         modal.WithTitle("Retirer de l'argent")
             .WithCustomId("withdraw_modal")
             .AddTextInput("Numéro de compte", "withdraw_account_textbox", TextInputStyle.Short, placeholder: "N°", required: true)
-            .AddTextInput("Montant", "withdraw_amount_textbox", TextInputStyle.Short, placeholder: "123.45", required: true);
+            .AddTextInput("Montant", "withdraw_amount_textbox", TextInputStyle.Short, placeholder: "123,45", required: true);
 
         await command.RespondWithModalAsync(modal.Build());
     }
