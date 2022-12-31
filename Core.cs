@@ -136,7 +136,7 @@ public class Program
             try
             {
                 await _client.CreateGlobalApplicationCommandAsync(command.Build());
-                Console.WriteLine(command.Name + " -> Nouvelle Global Command");
+                Console.WriteLine(command.Name + " -> Nouvelle Global Command ajoutée");
             }
             catch (HttpException exception)
             {
