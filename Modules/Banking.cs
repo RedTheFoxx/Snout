@@ -125,11 +125,11 @@ namespace Snout.Modules
                     string interestRateString = interestRate.ToString("0.## %");
                     embedBuilder.AddField("Taux d'intérêt", interestRateString, true);
 
-                    embedBuilder.AddField("Frais de service", reader.GetDouble(7) + " " + reader.GetString(4) + " /mois", true);
+                    embedBuilder.AddField("Frais de service", reader.GetDouble(7) + " " + reader.GetString(4) + " / jour", true);
                     embedBuilder.WithFooter("Snout v1.1");
                     embedBuilder.WithTimestamp(DateTimeOffset.UtcNow);
-                    embedBuilder.WithColor(Color.Gold);
-                    embedBuilder.WithThumbnailUrl("https://cdn-icons-png.flaticon.com/512/2474/2474496.png");
+                    embedBuilder.WithColor(Color.Green);
+                    embedBuilder.WithThumbnailUrl("https://cdn-icons-png.flaticon.com/512/1365/1365895.png");
 
                     embedBuilders.Add(embedBuilder);
                 }
