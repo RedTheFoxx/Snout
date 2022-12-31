@@ -68,12 +68,12 @@ public class Program
     {
         #region Ajout/Suppr. Global Commands
 
-        // POUR SUPPRIMER TOUTES LES GLOBAL COMMMANDS (UNE FOIS) :
+        // SUPPR. DE TOUTES LES GLOBAL COMMANDS :
 
-        // await _client.Rest.DeleteAllGlobalCommandsAsync();
-        // Console.WriteLine("GLOBAL COMMMANDS -> All Deleted");
+        await _client.Rest.DeleteAllGlobalCommandsAsync();
+        Console.WriteLine("GLOBAL COMMMANDS -> All Deleted");
 
-        // POUR AJOUTER UNE GLOBAL COMMAND (UNE FOIS) :
+        // REINSCRIPTION DE TOUTES LES GLOBAL COMMANDS :
 
         var commands = new List<SlashCommandBuilder>
         {
@@ -776,7 +776,7 @@ public class Program
                     }
                     else
                     {
-                        Account targetAccount = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_target_textbox").Value));
+                        Account targetAccount = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_destination_textbox").Value));
                         targetAccount.GetParameters();
 
                         if (targetAccount.Type == "") // On vérifie que le compte existe
@@ -787,7 +787,7 @@ public class Program
                         }
                         else
                         {
-                            if (await account.TransferMoneyAsync(importedAmount, int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_target_textbox").Value)))
+                            if (await account.TransferMoneyAsync(importedAmount, int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_destination_textbox").Value)))
                             {
                                 CustomNotification notif = new CustomNotification(NotificationType.Success, "Banque", $"Transfert de {importedAmount} € effectué");
                                 await modal.RespondAsync(embed: notif.BuildEmbed());
