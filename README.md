@@ -1,5 +1,4 @@
-
-# Snout - Bot utilitaire
+# 🦊 Snout - Bot utilitaire
 
 Snout est un ensemble de fonctionnalités utilitaires et de divertissement destinées à un usage privé déployées sur un bot Discord. 
 Il fonctionne sur la base de .NET 7.0 et implémente la librairie Discord.NET.
@@ -16,14 +15,14 @@ qui facilite ses interactions sans code superflu.
 Il est essentiellement développé de façon asynchrone dans son exécution.
 
 
-## Commandes
+## ℹ️ Commandes
 
-**Commandes généralistes**
+:office: **Commandes généralistes**
 - **/ping** : renvoie le ping de la gateway API Discord.
 - **/register** : inscrit un utilisateur dans la base de données de Snout, utilisée dans les modules.
 - **/unregister** : retire un utilisateur de la base de données de Snout
 
-**Commandes du banking**
+:moneybag: **Commandes du banking**
 - **/account** : créer un nouveau compte bancaire et l'assigne à un utilisateur (/register non requis)
 - **/editaccount** : éditer les paramètres d'un compte bancaire, tels que la limite de découvert, les frais de service ou le taux d'intérêt.
 - **/myaccounts** : afficher le statut de ses comptes bancaires. (résultats en messages privés)
@@ -32,12 +31,12 @@ Il est essentiellement développé de façon asynchrone dans son exécution.
 - **/withdraw** : retirer de l'argent d'un compte bancaire.
 - **/transfer** : faire un virement entre deux comptes.
 
-**Commandes du fetcher** *(Hell Let Loose™ uniquement)*
+:arrow_right: **Commandes du fetcher** *(Hell Let Loose™ uniquement)*
 - **/add** : permet d'ajouter un nouveau serveur à l'auto-fetcher par utilisation de son URL battlemetrics.
 - **/stop** : interrompt l'auto-fetcher de manière globale et purge la liste des canaux de diffusion.
 - **/fetch** : assigne l'auto-fetcher au canal ciblé par la commande (+ déclenche ce premier) et si il était déjà actif, se contente d'ajouter un nouveau canal de diffusion.
 
-## Roadmap
+## 🚧 Roadmap
  
 - **1.2** : Salaires (basés sur des *Discord Actions*) + Intégration DeepL™
 
@@ -46,7 +45,7 @@ Rémunérer les utilisateurs sur leurs comptes virtuels en se basant sur un moni
 - **1.3** : *soon™*
 
 
-## Authentification
+## 🔑 Authentification
 
 | Parameter | Type     | Description                |
 | :-------- | :------- | :------------------------- |
@@ -54,7 +53,7 @@ Rémunérer les utilisateurs sur leurs comptes virtuels en se basant sur un moni
 
 
 
-## Déploiement
+## 🗂️ Déploiement
 
 Snout requiert l'utilisation d'une base de données type SQLITE (*version 3*) dont le générateur est disponible dans le
 dossier :
@@ -72,7 +71,7 @@ Une fois compilé, le bot est exécuté comme un programme Win64 :
   dotnet snout.dll 
 ```
 
-## Développement
+## 🦊 Développement
 
 - [@RedTheFoxx](https://github.com/RedTheFoxx)
 
