@@ -41,7 +41,7 @@ public class Program
 
         _timer.Elapsed += Timer_Elapsed;
 
-        string token = "MTA1MDU4NTA4ODI2MzQ2Mjk2NA.GAiJ0n.pPhPiYoS1wpG_Fg8kkWPjsWJ9w8PSmBGPCHLhw";
+        string token = ""; // A COMPLETER (Application Token -> Discord Developper Portal)
 
         await _client.LoginAsync(TokenType.Bot, token);
         await _client.StartAsync();
