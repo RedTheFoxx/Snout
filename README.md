@@ -36,15 +36,6 @@ Il est essentiellement développé de façon asynchrone dans son exécution.
 - **/stop** : interrompt l'auto-fetcher de manière globale et purge la liste des canaux de diffusion.
 - **/fetch** : assigne l'auto-fetcher au canal ciblé par la commande (+ déclenche ce premier) et si il était déjà actif, se contente d'ajouter un nouveau canal de diffusion.
 
-## 🚧 Roadmap
- 
-- **1.2** : Salaires (basés sur des *Discord Actions*) + Intégration DeepL™
-
-Rémunérer les utilisateurs sur leurs comptes virtuels en se basant sur un monitoring des activités liées à Discord & offrir un service de traduction basé sur l'API DeepL.
-
-- **1.3** : *soon™*
-
-
 ## 🔑 Authentification
 
 | Parameter | Type     | Description                |
@@ -71,7 +62,14 @@ Une fois compilé, le bot est exécuté comme un programme Win64 :
   dotnet snout.dll 
 ```
 
+## 🚧 Roadmap
+ 
+- **1.2** : Salaires (basés sur des *Discord Actions*) + Intégration DeepL™
+
+Rémunérer les utilisateurs sur leurs comptes virtuels en se basant sur un monitoring des activités liées à Discord & offrir un service de traduction basé sur l'API DeepL.
+
+- **1.3** : *soon™*
+
 ## 🦊 Développement
 
 - [@RedTheFoxx](https://github.com/RedTheFoxx)
-
