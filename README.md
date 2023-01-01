@@ -40,9 +40,10 @@ qui facilite ses interactions sans code superflu.
 ## Roadmap
  
 - **1.2** : Salaires (basés sur des *Discord Actions*) + Intégration DeepL™
+
 Rémunérer les utilisateurs sur leurs comptes virtuels en se basant sur un monitoring des activités liées à Discord & offrir un service de traduction basé sur l'API DeepL.
 
-- **1.3** : ???
+- **1.3** : *soon™*
 
 
 ## Authentification
