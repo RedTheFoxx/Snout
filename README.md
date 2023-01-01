@@ -13,7 +13,7 @@ mise à jour.
 Ses fonctions reposent sur l'utilisation du nouveau système de *slash-commands* implémenté par Discord et
 qui facilite ses interactions sans code superflu.
 
-
+Il essentiellement développé de façon asynchrone dans son exécution.
 
 
 ## Commandes
