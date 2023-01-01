@@ -49,7 +49,7 @@ Rémunérer les utilisateurs sur leurs comptes virtuels en se basant sur un moni
 
 | Parameter | Type     | Description                |
 | :-------- | :------- | :------------------------- |
-| `./core.cs/L:44[token]` | `string` | **Requis**. Token d'application Discord  |
+| `./core.cs/L:44[token]` | `string` | **Requis**. Token de bot Discord  |
 
 
 
