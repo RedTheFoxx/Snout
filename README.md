@@ -36,13 +36,20 @@ Il est essentiellement développé de façon asynchrone dans son exécution.
 - **/stop** : interrompt l'auto-fetcher de manière globale et purge la liste des canaux de diffusion.
 - **/fetch** : assigne l'auto-fetcher au canal ciblé par la commande (+ déclenche ce premier) et si il était déjà actif, se contente d'ajouter un nouveau canal de diffusion.
 
-## 🔑 Authentification
+## 🔑 Authentification & Droits
 
 | Parameter | Type     | Description                |
 | :-------- | :------- | :------------------------- |
 | `./core.cs/L:44[token]` | `string` | **Requis**. Token de bot Discord  |
 
-
+⚠ **Commandes réservées aux admins** (à définir dans les paramètres de l'application)⚠️:
+```
+/account
+/unregister
+/editaccount
+/checkaccounts
+/deposit
+```
 
 ## 🗂️ Déploiement
 
