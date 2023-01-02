@@ -41,10 +41,20 @@ public class Program
 
         _timer.Elapsed += Timer_Elapsed;
 
-        string token = "MTA1MTYwNjQzOTc3NDM5NjQxNg.Gg63-5.ylxuQsIIJ8hvg54eak5rLHHC486du-680qK2B0"; // Token de bot Discord (Discord developper portal -> Bot -> Token)
-
-        await _client.LoginAsync(TokenType.Bot, token);
-        await _client.StartAsync();
+        // Check if file "token.txt" exist at the root of the project
+        
+        if (!File.Exists("token.txt"))
+        {
+            Console.WriteLine("Le fichier token.txt n'existe pas. Veuillez le créer à la racine du programme et y insérer votre token.");
+            Console.ReadLine();
+            return;
+        }
+        else
+        {
+            string token = File.ReadAllText("token.txt");
+            await _client.LoginAsync(TokenType.Bot, token);
+            await _client.StartAsync();
+        }
 
         _listUrl.Add("https://www.battlemetrics.com/servers/hll/17380658");
         _listUrl.Add("https://www.battlemetrics.com/servers/hll/10626575");
@@ -68,6 +78,7 @@ public class Program
     {
         #region Ajout/Suppr. Global Commands
 
+        /*
         // SUPPR. DE TOUTES LES GLOBAL COMMANDS :
 
         await _client.Rest.DeleteAllGlobalCommandsAsync();
@@ -143,7 +154,7 @@ public class Program
                 var json = JsonConvert.SerializeObject(exception.Errors, Formatting.Indented);
                 Console.WriteLine(json);
             }
-        }
+        }*/
 
         #endregion
 
