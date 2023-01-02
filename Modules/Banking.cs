@@ -86,6 +86,8 @@ namespace Snout.Modules
         }
         public List<EmbedBuilder> GetAccountInfoEmbedBuilders()
         {
+            bool isOverdraftLimitHit = CheckOverdraftLimit();
+
             List<EmbedBuilder> embedBuilders = new();
 
             using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
@@ -119,13 +121,22 @@ namespace Snout.Modules
                      
                     embedBuilder.WithTitle($"Solde : {reader.GetDouble(3)} {reader.GetString(4)}");
                     embedBuilder.WithDescription("● Paramètres :");
-                    embedBuilder.AddField("Découvert autorisé", reader.GetDouble(5) + " " + reader.GetString(4), true);
-
+                    
+                    if (isOverdraftLimitHit)
+                    {
+                        embedBuilder.AddField("Découvert autorisé", ":warning: " + reader.GetDouble(5) + " " + reader.GetString(4) + " (atteint)", true);
+                    }
+                    else
+                    {
+                        embedBuilder.AddField("Découvert autorisé", reader.GetDouble(5) + " " + reader.GetString(4), true);
+                    }
+                    
                     double interestRate = reader.GetDouble(6);
                     string interestRateString = interestRate.ToString("0.## %");
                     embedBuilder.AddField("Taux d'intérêt", interestRateString, true);
-
+                    
                     embedBuilder.AddField("Frais de service", reader.GetDouble(7) + " " + reader.GetString(4) + " / jour", true);
+                    
                     embedBuilder.WithFooter("Snout v1.1");
                     embedBuilder.WithTimestamp(DateTimeOffset.UtcNow);
                     embedBuilder.WithColor(Color.Green);
@@ -167,7 +178,6 @@ namespace Snout.Modules
 
             return parameters;
         }
-
         public double GetBalance()
         {
             using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
@@ -338,7 +348,23 @@ namespace Snout.Modules
             }
 
         } // Utilisation d'une transaction pour éviter les problèmes de soldes
-
+        
+        
+        /// Méthodes privées
+        private bool CheckOverdraftLimit()
+        {
+            GetBalance();
+            GetParameters();
+            
+            if (Balance < 0 && Balance < -OverdraftLimit)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
     }
     
     public class Transaction
@@ -388,12 +414,5 @@ namespace Snout.Modules
 
         }
 
-    }
-
-    public enum TransactionType
-    {
-        Deposit,
-        Withdrawal,
-        Transfer
     }
 }
