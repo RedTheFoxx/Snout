@@ -37,6 +37,7 @@ Il est essentiellement développé de façon asynchrone dans son exécution.
 - **/fetch** : assigne l'auto-fetcher au canal ciblé par la commande (+ déclenche ce premier) et si il était déjà actif, se contente d'ajouter un nouveau canal de diffusion.
 
 ## 🔑 Authentification & Droits
+*Cette section évoluera en 1.2 afin de sécuriser l'utilisation du token*
 
 | Parameter | Type     | Description                |
 | :-------- | :------- | :------------------------- |
