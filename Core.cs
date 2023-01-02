@@ -3,6 +3,7 @@ using Discord.Net;
 using Discord.WebSocket;
 using Newtonsoft.Json;
 using Snout.Modules;
+using System.Data.SqlClient;
 using System.Data.SQLite;
 using System.Globalization;
 
@@ -76,9 +77,10 @@ public class Program
 
     private async Task ClientReady()
     {
+        /*
         #region Ajout/Suppr. Global Commands
 
-        /*
+        
         // SUPPR. DE TOUTES LES GLOBAL COMMANDS :
 
         await _client.Rest.DeleteAllGlobalCommandsAsync();
@@ -154,90 +156,75 @@ public class Program
                 var json = JsonConvert.SerializeObject(exception.Errors, Formatting.Indented);
                 Console.WriteLine(json);
             }
-        }*/
+        }
 
         #endregion
+        */
+        
+        #region Génération de la base de donnée
+        // Vérification de l'existence de la DB, sinon création par appel de "GenerateDB.sql"
 
-        // Injecte les URLs pré-programées dans la db "dynamic_data" si elles n'y sont pas déjà et dispose de l'objet connecteur.
 
-        if (File.Exists("dynamic_data.db")) // Si la DB existe déjà, on cherchera à ajouter les URLs préprogrammées dedans (en vérifiant qu'elles n'y soient pas déjà)
+        // Création de la chaîne de connexion à la base de données
+        string connectionString = "Data Source=dynamic_data.db; Version=3;";
+
+        // Création de la base de données s'il n'existe pas déjà
+        if (!File.Exists("dynamic_data.db"))
         {
-            Console.Write("DATA : La DB existe. Vérification des données ...\n");
-
-            SQLiteConnection connexion = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;");
-            await connexion.OpenAsync();
-
-            Console.Write("DATA : DB ouverte\n");
-
-            SQLiteCommand sqlCommand = connexion.CreateCommand();
-            sqlCommand.CommandText = "INSERT INTO urls (url) VALUES (@url)";
-
-            foreach (string url in _listUrl)
-            {
-                // Vérifiez si l'URL existe déjà dans la table "urls"
-                SQLiteCommand selectCommand = connexion.CreateCommand();
-                selectCommand.CommandText = "SELECT COUNT(*) FROM urls WHERE url = @url";
-                selectCommand.Parameters.AddWithValue("@url", url);
-                int count = Convert.ToInt32(await selectCommand.ExecuteScalarAsync());
-
-                // Si l'URL n'existe pas, insérez-la dans la table
-                if (count == 0)
-                {
-                    SQLiteCommand insertCommand = connexion.CreateCommand();
-                    insertCommand.CommandText = "INSERT INTO urls (url) VALUES (@url)";
-                    insertCommand.Parameters.AddWithValue("@url", url);
-                    await insertCommand.ExecuteNonQueryAsync();
-
-                    Console.Write($"DATA : {url} => Ajouté\n");
-                }
-                else
-                {
-                    Console.Write("DATA : Une URL existe déjà\n");
-                }
-            }
-
-            await connexion.CloseAsync();
-            await connexion.DisposeAsync();
-            Console.Write("DATA : DB libérée !\n");
-        }
-        else // Si elle n'existe pas, on la crée et on ajoute les données d'URL pré-programmées
-        {
-            Console.Write("DATA : DB introuvable. Création ...\n");
-
-            SQLiteConnection connexion = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;");
-
-            // Créez la base de données
             SQLiteConnection.CreateFile("dynamic_data.db");
-
-            // Ouvrez la connexion à la base de données
-            await connexion.OpenAsync();
-
-            Console.Write("DATA : DB ouverte\n");
-
-            // Créez la table "urls"
-            SQLiteCommand command = connexion.CreateCommand();
-            command.CommandText = "CREATE TABLE urls (id INTEGER PRIMARY KEY, url TEXT)";
-            await command.ExecuteNonQueryAsync();
-
-            Console.Write("DATA : Table d'URL crée\n");
-
-            // Remplir cette table avec les URLs
-            foreach (string url in _listUrl)
-            {
-                SQLiteCommand insertCommand = connexion.CreateCommand();
-                insertCommand.CommandText = "INSERT INTO urls (url) VALUES (@url)";
-                insertCommand.Parameters.AddWithValue("@url", url);
-                await insertCommand.ExecuteNonQueryAsync();
-
-                Console.Write($"DATA : {url} => Ajouté\n");
-            }
-
-            // Fermez la connexion à la base de données
-            await connexion.CloseAsync();
-            await connexion.DisposeAsync();
-
-            Console.Write("DATA : DB libérée ! (Attention : la base n'est exploitable que par le Sniffer HLL)\n");
+            Console.WriteLine("DATABASE : Base de données créée = dynamic_data.db");
         }
+        else
+        {
+            Console.WriteLine("DATABASE : Base de données déjà existante. Contrôle structurel ...");
+        }
+
+        // Ouvre une connexion à la base de données
+        using (SQLiteConnection connection = new SQLiteConnection(connectionString))
+        {
+            await connection.OpenAsync();
+            Console.WriteLine("DATABASE : Connexion à la base de données ouverte");
+
+            // Lit et exécute le contenu du fichier GenerateDB.sql
+            string sql = await File.ReadAllTextAsync("GenerateDB.sql");
+
+            using (SQLiteCommand command = new SQLiteCommand(sql, connection))
+            {
+                await command.ExecuteNonQueryAsync();
+                Console.WriteLine("DATABASE : Requêtes SQL exécutées : la structure est à jour");
+
+                foreach (string url in _listUrl)
+                {
+                    // Vérifiez si l'URL existe déjà dans la table
+                    string selectSql = "SELECT COUNT(*) FROM urls WHERE url = @url";
+                    using (SQLiteCommand selectCommand = new SQLiteCommand(selectSql, connection))
+                    {
+                        selectCommand.Parameters.AddWithValue("@url", url);
+                        Int64 count = (Int64)selectCommand.ExecuteScalar();
+                        if (count == 0)
+                        {
+                            // L'URL n'existe pas encore dans la table, ajoutez-la
+                            string insertSql = "INSERT INTO urls (url) VALUES (@url)";
+                            using (SQLiteCommand insertCommand = new SQLiteCommand(insertSql, connection))
+                            {
+                                insertCommand.Parameters.AddWithValue("@url", url);
+                                await insertCommand.ExecuteNonQueryAsync();
+                                Console.WriteLine("DATABASE : " + url + " -> Ajouté");
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("DATABASE : " + url + " // existait déjà.");
+                        }
+                    }
+                }
+            }
+            
+            // Ferme la connexion à la base de données
+            connection.Close();
+            Console.WriteLine("DATABASE : Connexion fermée");
+        }
+        #endregion
     }
 
     private async void Timer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
