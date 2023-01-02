@@ -53,6 +53,7 @@ Il est essentiellement développé de façon asynchrone dans son exécution.
 ```
 
 ## 🗂️ Déploiement
+*Cette section évoluera en 1.2 avec l'automatisation de la database*
 
 Snout requiert l'utilisation d'une base de données type SQLITE (*version 3*) dont le générateur est disponible dans le
 dossier :
