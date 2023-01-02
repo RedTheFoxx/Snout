@@ -4,13 +4,6 @@ namespace Snout;
 
 // Cette classe permet l'utilisation des notifications personnalisées sous un format plus esthéthique. Elle retourne un embed.
 
-public enum NotificationType
-{
-    Error,
-    Info,
-    Success
-}
-
 public class CustomNotification
 {
     private readonly NotificationType _type;
