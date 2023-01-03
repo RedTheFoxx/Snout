@@ -74,6 +74,7 @@ namespace Snout.Modules
                 command.Parameters.AddWithValue("@AccountNumber", AccountNumber);
                 command.Parameters.AddWithValue("@UserId", AccountHolder.UserId);
                 
+                // Traduire le type de compte en string pour le stockage en DB
                 switch (Type)
                 {
                     case AccountType.Checkings:
