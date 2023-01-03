@@ -6,7 +6,7 @@ namespace Snout.Modules
     public class Account
     {
         public int AccountNumber { get; set; }
-        public string? Type { get; set; }
+        public AccountType Type { get; set; }
         public SnoutUser? AccountHolder { get; set; }
         public double Balance { get; set; }
         public string? Currency { get; set; }
@@ -14,9 +14,8 @@ namespace Snout.Modules
         public double InterestRate { get; set; }
         public double AccountFees { get; set; }
 
-        // CONSTRUCTEURS : CREATE / GET
         // CONSTRUCT  1 : usage CREATE
-        public Account(int accountNumber, string type, SnoutUser accountHolder, double balance, string currency, double overdraftLimit, double interestRate, double accountFees)
+        public Account(int accountNumber, AccountType type, SnoutUser accountHolder, double balance, string currency, double overdraftLimit, double interestRate, double accountFees)
         {
             AccountNumber = accountNumber;
             Type = type;
@@ -32,7 +31,7 @@ namespace Snout.Modules
         public Account(SnoutUser accountHolder)
         {
             AccountNumber = 0;
-            Type = "";
+            Type = AccountType.Unknown;
             AccountHolder = accountHolder ?? throw new ArgumentNullException(nameof(accountHolder));
             Balance = 0.0;
             Currency = "";
@@ -45,7 +44,7 @@ namespace Snout.Modules
         public Account(int accountNumber)
         {
             AccountNumber = accountNumber;
-            Type = "";
+            Type = AccountType.Unknown;
             AccountHolder = null;
             Balance = 0.0;
             Currency = "";
@@ -74,7 +73,23 @@ namespace Snout.Modules
                 command.CommandText = "INSERT INTO Accounts (AccountNumber, UserId, Type, Balance, Currency, OverdraftLimit, InterestRate, AccountFees) VALUES (@AccountNumber, @UserId, @Type, @Balance, @Currency, @OverdraftLimit, @InterestRate, @AccountFees)";
                 command.Parameters.AddWithValue("@AccountNumber", AccountNumber);
                 command.Parameters.AddWithValue("@UserId", AccountHolder.UserId);
-                command.Parameters.AddWithValue("@Type", Type);
+                
+                switch (Type)
+                {
+                    case AccountType.Checkings:
+                        command.Parameters.AddWithValue("@Type", "checkings");
+                        break;
+                    case AccountType.Savings:
+                        command.Parameters.AddWithValue("@Type", "savings");
+                        break;
+                    case AccountType.Locked:
+                        command.Parameters.AddWithValue("@Type", "locked");
+                        break;
+                    default:
+                        command.Parameters.AddWithValue("@Type", "unknown");
+                        break;
+                }
+
                 command.Parameters.AddWithValue("@Balance", Balance);
                 command.Parameters.AddWithValue("@Currency", Currency);
                 command.Parameters.AddWithValue("@OverdraftLimit", OverdraftLimit);
@@ -149,6 +164,9 @@ namespace Snout.Modules
             return embedBuilders;
             
         }
+        
+        // Getters methods
+        
         public List<double> GetParameters()
         {
             List<double> parameters = new();
@@ -163,8 +181,6 @@ namespace Snout.Modules
                 using var reader = command.ExecuteReader();
                 while (reader.Read())
                 {
-                    
-                    Type = reader.GetString(2);
                     
                     parameters.Add(reader.GetDouble(5));
                     OverdraftLimit = reader.GetDouble(5);
@@ -196,6 +212,43 @@ namespace Snout.Modules
 
             return Balance;
         }
+        public AccountType GetAccountType() 
+        {
+
+            string stringType = "";
+
+            using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
+            {
+                connection.Open();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = "SELECT Type FROM Accounts WHERE AccountNumber = @AccountNumber";
+                command.Parameters.AddWithValue("@AccountNumber", AccountNumber);
+                using var reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    stringType = reader.GetString(0);
+                }
+            }
+
+            switch (stringType)
+            {
+                case "savings":
+                    Type = AccountType.Savings;
+                    break;
+                case "checkings":
+                    Type = AccountType.Checkings;
+                    break;
+                case "locked":
+                    Type = AccountType.Locked;
+                    break;
+                default:
+                    Type = AccountType.Unknown;
+                    break;
+            }
+
+            return Type;
+        }
         public double GetDistantBalance(int destinationAccountNumber)
         {
             double distantBalance = 0;
@@ -216,6 +269,45 @@ namespace Snout.Modules
 
             return distantBalance;
         }
+        public AccountType GetDistantAccountType(AccountType destinationAccountType, int destinationAccountNumber)
+        {
+            string stringType = "";
+
+            using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
+            {
+                connection.Open();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = "SELECT Type FROM Accounts WHERE AccountNumber = @AccountNumber";
+                command.Parameters.AddWithValue("@AccountNumber", destinationAccountNumber);
+                using var reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    stringType = reader.GetString(0);
+                }
+            }
+
+            switch (stringType)
+            {
+                case "savings":
+                    destinationAccountType = AccountType.Savings;
+                    break;
+                case "checkings":
+                    destinationAccountType = AccountType.Checkings;
+                    break;
+                case "locked":
+                    destinationAccountType = AccountType.Locked;
+                    break;
+                default:
+                    destinationAccountType = AccountType.Unknown;
+                    break;
+            }
+
+            return destinationAccountType;
+        }
+
+        // Setters methods
+
         public bool UpdateAccountParameters()
         {
             using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
@@ -236,7 +328,13 @@ namespace Snout.Modules
         public async Task<bool> AddMoneyAsync(double amount)
         {
             GetBalance();
-            
+            GetAccountType();
+
+            if (Type == AccountType.Locked)
+            {
+                return false;
+            }
+
             Balance = Balance + amount;
 
             DateTime currentDateTime = DateTime.Now;
@@ -264,36 +362,58 @@ namespace Snout.Modules
         }
         public async Task<bool> RemoveMoneyAsync(double amount)
         {
+
+            GetAccountType();
             GetBalance();
-            
-            
-            DateTime currentDateTime = DateTime.Now;
 
-            string currentDate = currentDateTime.ToString("dd MMMM yyyy");
-            string currentTime = currentDateTime.ToString("HH:mm:ss");
-
-            Transaction transaction = new(AccountNumber, TransactionType.Withdrawal, amount, currentDate + " " + currentTime);
-            await transaction.CreateTransactionAsync();
-
-            Balance = Balance - amount;
-            
-            using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
+            if (Type == AccountType.Savings || Type == AccountType.Locked)
             {
-                connection.Open();
+                return false;
+            }
+            else
+            {
 
-                using var command = connection.CreateCommand();
-                command.CommandText = "UPDATE Accounts SET Balance = @Balance WHERE AccountNumber = @AccountNumber";
-                command.Parameters.AddWithValue("@AccountNumber", AccountNumber);
-                command.Parameters.AddWithValue("@Balance", Balance);
-                command.ExecuteNonQuery();
+                DateTime currentDateTime = DateTime.Now;
 
+                string currentDate = currentDateTime.ToString("dd MMMM yyyy");
+                string currentTime = currentDateTime.ToString("HH:mm:ss");
+
+                Transaction transaction = new(AccountNumber, TransactionType.Withdrawal, amount, currentDate + " " + currentTime);
+                await transaction.CreateTransactionAsync();
+
+                Balance = Balance - amount;
+
+                using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
+                {
+                    connection.Open();
+
+                    using var command = connection.CreateCommand();
+                    command.CommandText = "UPDATE Accounts SET Balance = @Balance WHERE AccountNumber = @AccountNumber";
+                    command.Parameters.AddWithValue("@AccountNumber", AccountNumber);
+                    command.Parameters.AddWithValue("@Balance", Balance);
+                    command.ExecuteNonQuery();
+
+                   
+                }
+                
                 return true;
             }
         }
         public async Task<bool> TransferMoneyAsync(double amount, int destinationAccountNumber)
         {
             GetBalance();
-            
+            GetAccountType();
+
+            if (Type == AccountType.Locked || Type == AccountType.Savings)
+            {
+                return false;
+            }
+
+            if (GetDistantAccountType(Type, destinationAccountNumber) == AccountType.Locked)
+            {
+                return false;
+            }
+
             DateTime currentDateTime = DateTime.Now;
 
             string currentDate = currentDateTime.ToString("dd MMMM yyyy");
