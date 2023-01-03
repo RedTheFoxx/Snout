@@ -11,3 +11,11 @@ public enum NotificationType
     Info,
     Success
 }
+
+public enum AccountType
+{
+    Checkings,
+    Savings,
+    Locked,
+    Unknown
+}
