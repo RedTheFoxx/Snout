@@ -440,20 +440,23 @@ public class Program
 
             // 2. On switch sur le type de compte renseigné et on élimine les autres cas par une erreur
 
-            string importedAccountType = "";
+            AccountType importedAccountType;
 
             switch (components.First(x => x.CustomId == "new_account_type_textbox").Value.ToLower())
             {
                 case "checkings":
-                    importedAccountType = components.First(x => x.CustomId == "new_account_type_textbox").Value.ToLower();
+                    // importedAccountType = components.First(x => x.CustomId == "new_account_type_textbox").Value.ToLower();
+                    importedAccountType = AccountType.Checkings;
                     break;
 
                 case "savings":
-                    importedAccountType = components.First(x => x.CustomId == "new_account_type_textbox").Value.ToLower();
+                    // importedAccountType = components.First(x => x.CustomId == "new_account_type_textbox").Value.ToLower();
+                    importedAccountType = AccountType.Savings;
                     break;
 
                 case "locked":
-                    importedAccountType = components.First(x => x.CustomId == "new_account_type_textbox").Value.ToLower();
+                    // importedAccountType = components.First(x => x.CustomId == "new_account_type_textbox").Value.ToLower();
+                    importedAccountType = AccountType.Locked;
                     break;
 
                 default:
@@ -555,12 +558,13 @@ public class Program
             Account account = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "edit_account_textbox").Value));
             account.GetParameters();
 
-            if (account.Type == "")
+            if (account.Type is AccountType.Unknown)
             {
                 CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Ce compte n'existe pas");
                 await modal.RespondAsync(embed: notif.BuildEmbed());
                 return;
             }
+            
             else
             {
                 // Récupérer les données du formulaire
@@ -639,7 +643,7 @@ public class Program
             Account account = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "deposit_account_textbox").Value));
             account.GetParameters();
 
-            if (account.Type == "") // On vérifie que le compte existe
+            if (account.Type == AccountType.Unknown) // On vérifie que le compte existe
             {
                 CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Ce compte n'existe pas");
                 await modal.RespondAsync(embed: notif.BuildEmbed());
@@ -692,7 +696,7 @@ public class Program
             Account account = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "withdraw_account_textbox").Value));
             account.GetParameters();
 
-            if (account.Type == "") // On vérifie que le compte existe
+            if (account.Type == AccountType.Unknown) // On vérifie que le compte existe
             {
                 CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Ce compte n'existe pas");
                 await modal.RespondAsync(embed: notif.BuildEmbed());
@@ -745,7 +749,7 @@ public class Program
             Account account = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_source_textbox").Value));
             account.GetParameters();
 
-            if (account.Type == "") // On vérifie que le compte existe
+            if (account.Type == AccountType.Unknown) // On vérifie que le compte existe
             {
                 CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Ce compte n'existe pas");
                 await modal.RespondAsync(embed: notif.BuildEmbed());
@@ -777,7 +781,7 @@ public class Program
                         Account targetAccount = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_destination_textbox").Value));
                         targetAccount.GetParameters();
 
-                        if (targetAccount.Type == "") // On vérifie que le compte existe
+                        if (targetAccount.Type == AccountType.Unknown) // On vérifie que le compte existe
                         {
                             CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Ce compte n'existe pas");
                             await modal.RespondAsync(embed: notif.BuildEmbed());
