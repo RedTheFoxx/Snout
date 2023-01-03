@@ -166,11 +166,12 @@ namespace Snout.Modules
             
         }
         
-        // Getters methods
+        // Méthodes getters
         
         public List<double> GetParameters()
         {
             List<double> parameters = new();
+            string stringType = "";
 
             using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
             {
@@ -182,6 +183,24 @@ namespace Snout.Modules
                 using var reader = command.ExecuteReader();
                 while (reader.Read())
                 {
+                    
+                    stringType = reader.GetString(2);
+                    
+                    switch (stringType)
+                    {
+                        case "savings":
+                            Type = AccountType.Savings;
+                            break;
+                        case "checkings":
+                            Type = AccountType.Checkings;
+                            break;
+                        case "locked":
+                            Type = AccountType.Locked;
+                            break;
+                        default:
+                            Type = AccountType.Unknown;
+                            break;
+                    }
                     
                     parameters.Add(reader.GetDouble(5));
                     OverdraftLimit = reader.GetDouble(5);
@@ -212,43 +231,6 @@ namespace Snout.Modules
             }
 
             return Balance;
-        }
-        public AccountType GetAccountType() 
-        {
-
-            string stringType = "";
-
-            using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
-            {
-                connection.Open();
-
-                using var command = connection.CreateCommand();
-                command.CommandText = "SELECT Type FROM Accounts WHERE AccountNumber = @AccountNumber";
-                command.Parameters.AddWithValue("@AccountNumber", AccountNumber);
-                using var reader = command.ExecuteReader();
-                while (reader.Read())
-                {
-                    stringType = reader.GetString(0);
-                }
-            }
-
-            switch (stringType)
-            {
-                case "savings":
-                    Type = AccountType.Savings;
-                    break;
-                case "checkings":
-                    Type = AccountType.Checkings;
-                    break;
-                case "locked":
-                    Type = AccountType.Locked;
-                    break;
-                default:
-                    Type = AccountType.Unknown;
-                    break;
-            }
-
-            return Type;
         }
         public double GetDistantBalance(int destinationAccountNumber)
         {
@@ -307,7 +289,7 @@ namespace Snout.Modules
             return destinationAccountType;
         }
 
-        // Setters methods
+        // Méthodes setters
 
         public bool UpdateAccountParameters()
         {
@@ -329,7 +311,7 @@ namespace Snout.Modules
         public async Task<bool> AddMoneyAsync(double amount)
         {
             GetBalance();
-            GetAccountType();
+            GetParameters();
 
             if (Type == AccountType.Locked)
             {
@@ -364,7 +346,7 @@ namespace Snout.Modules
         public async Task<bool> RemoveMoneyAsync(double amount)
         {
 
-            GetAccountType();
+            GetParameters();
             GetBalance();
 
             if (Type == AccountType.Savings || Type == AccountType.Locked)
@@ -403,7 +385,7 @@ namespace Snout.Modules
         public async Task<bool> TransferMoneyAsync(double amount, int destinationAccountNumber)
         {
             GetBalance();
-            GetAccountType();
+            GetParameters();
 
             if (Type == AccountType.Locked || Type == AccountType.Savings)
             {
