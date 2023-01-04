@@ -184,13 +184,15 @@ class SnoutHandler
 
     public async Task HandleMyAccountsCommand(SocketSlashCommand command, DiscordSocketClient client)
     {
+        CustomNotification notifProcess = new CustomNotification(NotificationType.Info, "Banque", "Votre requête est en cours de traitement");
+        await command.RespondAsync(embed: notifProcess.BuildEmbed());
 
         var commandUser = command.User.Username + "#" + command.User.Discriminator;
 
         SnoutUser requestor = new SnoutUser(discordId: commandUser);
-        await requestor.GetUserId();
+        bool userExists = await requestor.GetUserIdAsync();
 
-        if (requestor.UserId == 0)
+        if (!userExists)
         {
             CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Snout ne vous connaît pas. Contactez un administrateur.");
             await command.RespondAsync(embed: notif.BuildEmbed());
@@ -198,7 +200,7 @@ class SnoutHandler
         }
 
         Account account = new Account(requestor);
-        var listedAccounts = account.GetAccountInfoEmbedBuilders();
+        var listedAccounts = await account.GetAccountInfoEmbedBuilders();
 
         if (listedAccounts.Count > 0)
         {
@@ -208,13 +210,13 @@ class SnoutHandler
             }
 
             CustomNotification accountNotif = new CustomNotification(NotificationType.Success, "Banque", "Résultats envoyés en messages privés");
-            await command.RespondAsync(embed: accountNotif.BuildEmbed());
+            await command.Channel.SendMessageAsync(embed: accountNotif.BuildEmbed());
         }
         else
         {
             CustomNotification noAccountNotif = new CustomNotification(NotificationType.Error, "Banque", "Vous ne disposez d'aucun compte");
             var channel = await command.GetChannelAsync();
-            await command.RespondAsync(embed: noAccountNotif.BuildEmbed());
+            await command.Channel.SendMessageAsync(embed: noAccountNotif.BuildEmbed());
         }
 
     }
