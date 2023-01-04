@@ -40,7 +40,7 @@ Il est essentiellement développé de façon asynchrone dans son exécution.
 
 | Parameter | Type     | Description                |
 | :-------- | :------- | :------------------------- |
-| `token.txt` | `string` | **Requis**. Fichier requis à la racine du bot |
+| `token.txt` | `string` | **Requis**. Fichier à placer à la racine contenant un token de bot |
 
 ⚠ **Commandes réservées aux admins** (à définir dans les paramètres de l'application)⚠️:
 ```
