@@ -20,6 +20,11 @@ public class Program
 
     readonly System.Timers.Timer _timer = new System.Timers.Timer();
 
+    public static class GlobalConstants
+    {
+        public const string globalSnoutVersion = "Snout v1.1a";
+    }
+    
     public static void Main(string[] args)
         => new Program().MainAsync().GetAwaiter().GetResult();
 
@@ -71,7 +76,7 @@ public class Program
 
     private Task Log(LogMessage msg)
     {
-        Console.WriteLine(msg.ToString());
+        Console.WriteLine("CORE : " + msg.ToString());
         return Task.CompletedTask;
     }
 
@@ -467,6 +472,14 @@ public class Program
             // 3. On construit un SnoutUser sur la base de son UserID (et pas son DiscordID)
 
             SnoutUser importedSnoutUser = new SnoutUser(userId: int.Parse(components.First(x => x.CustomId == "new_account_userid_textbox").Value));
+            
+            // Check if this user exists in the database
+            
+            if (!await importedSnoutUser.GetDiscordIdAsync())
+            {
+                await modal.RespondAsync(embed: ajoutNok.BuildEmbed());
+                throw new Exception("L'utilisateur n'existe pas dans la base de données !");
+            }
 
             // 4. Prendre l'overdraft
 
@@ -516,12 +529,15 @@ public class Program
 
         if (modal.Data.CustomId == "check_accounts_modal")
         {
+
+            await modal.RespondAsync(embed: new CustomNotification(NotificationType.Info, "Banque", "Votre demande est en cours de traitement").BuildEmbed());
+
             var modalUser = modal.Data.Components.First(x => x.CustomId == "check_accounts_textbox").Value;
 
             SnoutUser requested = new SnoutUser(discordId: modalUser);
-            await requested.GetUserId();
+            bool userExists = await requested.GetUserIdAsync();
 
-            if (requested.UserId == 0)
+            if (!userExists)
             {
                 CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Cet utilisateur n'existe pas");
                 await modal.RespondAsync(embed: notif.BuildEmbed());
@@ -529,7 +545,7 @@ public class Program
             }
 
             Account account = new Account(requested);
-            var listedAccounts = account.GetAccountInfoEmbedBuilders();
+            var listedAccounts = await account.GetAccountInfoEmbedBuilders();
 
             if (listedAccounts.Count > 0)
             {
@@ -539,13 +555,13 @@ public class Program
                 }
 
                 CustomNotification accountNotif = new CustomNotification(NotificationType.Success, "Banque", "Résultats envoyés en messages privés");
-                await modal.RespondAsync(embed: accountNotif.BuildEmbed());
+                await modal.Channel.SendMessageAsync(embed: accountNotif.BuildEmbed());
             }
             else
             {
                 CustomNotification noAccountNotif = new CustomNotification(NotificationType.Error, "Banque", "L'utilisateur ne dispose d'aucun compte");
                 var channel = await modal.GetChannelAsync();
-                await modal.RespondAsync(embed: noAccountNotif.BuildEmbed());
+                await modal.Channel.SendMessageAsync(embed: noAccountNotif.BuildEmbed());
             }
         }
 
@@ -556,7 +572,7 @@ public class Program
         {
 
             Account account = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "edit_account_textbox").Value));
-            account.GetParameters();
+            account.GetParameters(int.Parse(modal.Data.Components.First(x => x.CustomId == "edit_account_textbox").Value));
 
             if (account.Type is AccountType.Unknown)
             {
@@ -641,7 +657,7 @@ public class Program
         if (modal.Data.CustomId == "deposit_modal")
         {
             Account account = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "deposit_account_textbox").Value));
-            account.GetParameters();
+            account.GetParameters(int.Parse(modal.Data.Components.First(x => x.CustomId == "deposit_account_textbox").Value));
 
             if (account.Type == AccountType.Unknown) // On vérifie que le compte existe
             {
@@ -694,7 +710,7 @@ public class Program
         if (modal.Data.CustomId == "withdraw_modal")
         {
             Account account = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "withdraw_account_textbox").Value));
-            account.GetParameters();
+            account.GetParameters(int.Parse(modal.Data.Components.First(x => x.CustomId == "withdraw_account_textbox").Value));
 
             if (account.Type == AccountType.Unknown) // On vérifie que le compte existe
             {
@@ -747,7 +763,7 @@ public class Program
         if (modal.Data.CustomId == "transfer_modal")
         {
             Account account = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_source_textbox").Value));
-            account.GetParameters();
+            account.GetParameters(int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_source_textbox").Value));
 
             if (account.Type == AccountType.Unknown) // On vérifie que le compte existe
             {
@@ -779,7 +795,7 @@ public class Program
                     else
                     {
                         Account targetAccount = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_destination_textbox").Value));
-                        targetAccount.GetParameters();
+                        targetAccount.GetParameters(int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_destination_textbox").Value));
 
                         if (targetAccount.Type == AccountType.Unknown) // On vérifie que le compte existe
                         {
@@ -849,5 +865,5 @@ public class Program
         // Envoyez le message privé
         await user.SendMessageAsync(embed: embedBuilder.Build());
     }
-
+    
 }
