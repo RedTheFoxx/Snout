@@ -33,7 +33,7 @@ public class Program
     {
         _client = new DiscordSocketClient();
 
-        _timer.Interval = 300000; // Vitesse de l'auto-updater (= 5 minutes entre chaque Fetch vers Battlemetrics)
+        _timer.Interval = 300000; // Vitesse de l'auto-updater (=5 minutes entre chaque Fetch vers Battlemetrics)
         _timer.AutoReset = true;
 
         _liveSniffer = new HllSniffer();
