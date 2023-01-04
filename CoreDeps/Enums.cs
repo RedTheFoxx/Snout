@@ -2,7 +2,10 @@
 {
     Deposit,
     Withdrawal,
-    Transfer
+    Transfer,
+    DailyUpdate,
+    LockAction,
+    Unknown
 }
 
 public enum NotificationType
