@@ -8,11 +8,12 @@ namespace Snout.Modules
         public int AccountNumber { get; set; }
         public AccountType Type { get; set; }
         public SnoutUser? AccountHolder { get; set; }
-        public double Balance { get; set; }
-        public string? Currency { get; set; }
-        public double OverdraftLimit { get; set; }
-        public double InterestRate { get; set; }
-        public double AccountFees { get; set; }
+        
+        private double Balance { get; set; }
+        private string? Currency { get; set; }
+        private double OverdraftLimit { get; set; }
+        private double InterestRate { get; set; }
+        private double AccountFees { get; set; }
 
         // CONSTRUCT  1 : usage CREATE
         public Account(int accountNumber, AccountType type, SnoutUser accountHolder, double balance, string currency, double overdraftLimit, double interestRate, double accountFees)
