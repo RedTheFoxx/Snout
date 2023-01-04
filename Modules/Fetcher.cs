@@ -37,6 +37,22 @@ public class HllSniffer {
                         if (title != null)
                         {
                             var answer = title.InnerText + "_" + playerCount.InnerText + "_" + status.InnerText + "_" + ipPort.InnerText;
+
+                            if (answer == null || answer == "")
+                            {
+                                // Le site est accessible mais il n'y a pas de contenu (anti-ddos actif ?)
+                                EmbedBuilder emptyAnswerEmbed = new EmbedBuilder();
+                                emptyAnswerEmbed.WithTitle("🇫🇷 Hell Let Loose - Serveurs de la communauté");
+                                emptyAnswerEmbed.WithDescription(":x: Protections DDOS actives. Les résultats peuvent être *incomplets* ou *indisponibles*.");
+                                emptyAnswerEmbed.WithThumbnailUrl("https://static.wixstatic.com/media/da3421_111b24ae66f64f73aa94efeb80b08f58~mv2.png/v1/fit/w_2500,h_1330,al_c/da3421_111b24ae66f64f73aa94efeb80b08f58~mv2.png");
+                                emptyAnswerEmbed.WithColor(new Color(0, 0, 255));
+                                emptyAnswerEmbed.WithFooter(Program.GlobalConstants.globalSnoutVersion + " | Source : Battlemetrics.com");
+                                emptyAnswerEmbed.WithTimestamp(DateTimeOffset.UtcNow);
+
+                                return emptyAnswerEmbed.Build();
+
+                            }
+
                             endAnswer += " ~ " + answer;
                         }
 
@@ -60,13 +76,13 @@ public class HllSniffer {
         var splitted = endAnswer.Split('~');
         var listed = splitted.ToList();
         listed.RemoveAt(0);
-
+        
         var embed = new EmbedBuilder()
             .WithTitle("🇫🇷 Hell Let Loose - Serveurs de la communauté")
             .WithDescription("---")
             .WithThumbnailUrl("https://static.wixstatic.com/media/da3421_111b24ae66f64f73aa94efeb80b08f58~mv2.png/v1/fit/w_2500,h_1330,al_c/da3421_111b24ae66f64f73aa94efeb80b08f58~mv2.png")
             .WithColor(new Color(0, 0, 255))
-            .WithFooter("Snout v1.1 | Source : Battlemetrics")
+            .WithFooter(Program.GlobalConstants.globalSnoutVersion + " | Source : Battlemetrics")
             .WithTimestamp(DateTimeOffset.UtcNow);
 
         var sortedFields = listed
