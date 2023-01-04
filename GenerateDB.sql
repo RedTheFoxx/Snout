@@ -1,0 +1,29 @@
+
+CREATE TABLE IF NOT EXISTS Accounts (
+    AccountNumber INTEGER PRIMARY KEY AUTOINCREMENT,
+    "UserId" INTEGER NOT NULL,
+    Type TEXT NOT NULL,
+    Balance REAL NOT NULL,
+    Currency TEXT NOT NULL,
+    OverdraftLimit REAL NOT NULL,
+    InterestRate REAL NOT NULL,
+    AccountFees REAL NOT NULL,
+    FOREIGN KEY ("UserId") REFERENCES Users(UserId)
+);
+
+CREATE TABLE IF NOT EXISTS Transactions (
+    TransactionId INTEGER PRIMARY KEY AUTOINCREMENT,
+    AccountNumber INTEGER NOT NULL,
+    Type TEXT NOT NULL,
+    Amount REAL NOT NULL,
+    "DestinationAccountNumber" INTEGER NULL, "Date" TEXT NULL DEFAULT NULL,
+    FOREIGN KEY (AccountNumber) REFERENCES Accounts(AccountNumber)
+);
+
+CREATE TABLE IF NOT EXISTS urls (id INTEGER PRIMARY KEY, url TEXT);
+
+
+CREATE TABLE IF NOT EXISTS Users (
+    UserId INTEGER PRIMARY KEY AUTOINCREMENT,
+    DiscordId TEXT UNIQUE NOT NULL
+);

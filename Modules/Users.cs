@@ -83,7 +83,7 @@ public class SnoutUser
         }
     }
 
-    public async Task GetUserId()
+    public async Task<bool> GetUserIdAsync()
 
     {
         // Trouve l'userID en fonction du DiscordID renseigné et retourne le.
@@ -103,16 +103,17 @@ public class SnoutUser
             {
                 // count est un long non-null
                 UserId = (int)count.Value;
+                return true;
             }
             else
             {
                 // count est null
-                UserId = 0;
+                return false;
             }
         }
     }
 
-    public async Task GetDiscordId()
+    public async Task<bool> GetDiscordIdAsync()
     {
         // Trouve le DiscordID en fonction de l'userID renseigné et retourne le.
 
@@ -131,11 +132,12 @@ public class SnoutUser
             {
                 // count est un string non-null
                 DiscordId = count;
+                return true;
             }
             else
             {
                 // count est null
-                DiscordId = null;
+                return false;
             }
         }
     }

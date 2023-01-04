@@ -3,6 +3,7 @@ using Discord.Net;
 using Discord.WebSocket;
 using Newtonsoft.Json;
 using Snout.Modules;
+using System.Data.SqlClient;
 using System.Data.SQLite;
 using System.Globalization;
 
@@ -19,6 +20,11 @@ public class Program
 
     readonly System.Timers.Timer _timer = new System.Timers.Timer();
 
+    public static class GlobalConstants
+    {
+        public const string globalSnoutVersion = "Snout v1.1a";
+    }
+    
     public static void Main(string[] args)
         => new Program().MainAsync().GetAwaiter().GetResult();
 
@@ -27,7 +33,7 @@ public class Program
     {
         _client = new DiscordSocketClient();
 
-        _timer.Interval = 300000; // Vitesse de l'auto-updater (= 5 minutes entre chaque Fetch vers Battlemetrics)
+        _timer.Interval = 300000; // Vitesse de l'auto-updater (=5 minutes entre chaque Fetch vers Battlemetrics)
         _timer.AutoReset = true;
 
         _liveSniffer = new HllSniffer();
@@ -41,10 +47,20 @@ public class Program
 
         _timer.Elapsed += Timer_Elapsed;
 
-        string token = ""; // Token de bot Discord (Discord developper portal -> Bot -> Token)
-
-        await _client.LoginAsync(TokenType.Bot, token);
-        await _client.StartAsync();
+        // Check if file "token.txt" exist at the root of the project
+        
+        if (!File.Exists("token.txt"))
+        {
+            Console.WriteLine("Le fichier token.txt n'existe pas. Veuillez le créer à la racine du programme et y insérer votre token.");
+            Console.ReadLine();
+            return;
+        }
+        else
+        {
+            string token = File.ReadAllText("token.txt");
+            await _client.LoginAsync(TokenType.Bot, token);
+            await _client.StartAsync();
+        }
 
         _listUrl.Add("https://www.battlemetrics.com/servers/hll/17380658");
         _listUrl.Add("https://www.battlemetrics.com/servers/hll/10626575");
@@ -60,14 +76,16 @@ public class Program
 
     private Task Log(LogMessage msg)
     {
-        Console.WriteLine(msg.ToString());
+        Console.WriteLine("CORE : " + msg.ToString());
         return Task.CompletedTask;
     }
 
     private async Task ClientReady()
     {
+        /*
         #region Ajout/Suppr. Global Commands
 
+        
         // SUPPR. DE TOUTES LES GLOBAL COMMANDS :
 
         await _client.Rest.DeleteAllGlobalCommandsAsync();
@@ -146,87 +164,72 @@ public class Program
         }
 
         #endregion
+        */
+        
+        #region Génération de la base de donnée
+        // Vérification de l'existence de la DB, sinon création par appel de "GenerateDB.sql"
 
-        // Injecte les URLs pré-programées dans la db "dynamic_data" si elles n'y sont pas déjà et dispose de l'objet connecteur.
 
-        if (File.Exists("dynamic_data.db")) // Si la DB existe déjà, on cherchera à ajouter les URLs préprogrammées dedans (en vérifiant qu'elles n'y soient pas déjà)
+        // Création de la chaîne de connexion à la base de données
+        string connectionString = "Data Source=dynamic_data.db; Version=3;";
+
+        // Création de la base de données s'il n'existe pas déjà
+        if (!File.Exists("dynamic_data.db"))
         {
-            Console.Write("DATA : La DB existe. Vérification des données ...\n");
-
-            SQLiteConnection connexion = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;");
-            await connexion.OpenAsync();
-
-            Console.Write("DATA : DB ouverte\n");
-
-            SQLiteCommand sqlCommand = connexion.CreateCommand();
-            sqlCommand.CommandText = "INSERT INTO urls (url) VALUES (@url)";
-
-            foreach (string url in _listUrl)
-            {
-                // Vérifiez si l'URL existe déjà dans la table "urls"
-                SQLiteCommand selectCommand = connexion.CreateCommand();
-                selectCommand.CommandText = "SELECT COUNT(*) FROM urls WHERE url = @url";
-                selectCommand.Parameters.AddWithValue("@url", url);
-                int count = Convert.ToInt32(await selectCommand.ExecuteScalarAsync());
-
-                // Si l'URL n'existe pas, insérez-la dans la table
-                if (count == 0)
-                {
-                    SQLiteCommand insertCommand = connexion.CreateCommand();
-                    insertCommand.CommandText = "INSERT INTO urls (url) VALUES (@url)";
-                    insertCommand.Parameters.AddWithValue("@url", url);
-                    await insertCommand.ExecuteNonQueryAsync();
-
-                    Console.Write($"DATA : {url} => Ajouté\n");
-                }
-                else
-                {
-                    Console.Write("DATA : Une URL existe déjà\n");
-                }
-            }
-
-            await connexion.CloseAsync();
-            await connexion.DisposeAsync();
-            Console.Write("DATA : DB libérée !\n");
-        }
-        else // Si elle n'existe pas, on la crée et on ajoute les données d'URL pré-programmées
-        {
-            Console.Write("DATA : DB introuvable. Création ...\n");
-
-            SQLiteConnection connexion = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;");
-
-            // Créez la base de données
             SQLiteConnection.CreateFile("dynamic_data.db");
-
-            // Ouvrez la connexion à la base de données
-            await connexion.OpenAsync();
-
-            Console.Write("DATA : DB ouverte\n");
-
-            // Créez la table "urls"
-            SQLiteCommand command = connexion.CreateCommand();
-            command.CommandText = "CREATE TABLE urls (id INTEGER PRIMARY KEY, url TEXT)";
-            await command.ExecuteNonQueryAsync();
-
-            Console.Write("DATA : Table d'URL crée\n");
-
-            // Remplir cette table avec les URLs
-            foreach (string url in _listUrl)
-            {
-                SQLiteCommand insertCommand = connexion.CreateCommand();
-                insertCommand.CommandText = "INSERT INTO urls (url) VALUES (@url)";
-                insertCommand.Parameters.AddWithValue("@url", url);
-                await insertCommand.ExecuteNonQueryAsync();
-
-                Console.Write($"DATA : {url} => Ajouté\n");
-            }
-
-            // Fermez la connexion à la base de données
-            await connexion.CloseAsync();
-            await connexion.DisposeAsync();
-
-            Console.Write("DATA : DB libérée ! (Attention : la base n'est exploitable que par le Sniffer HLL)\n");
+            Console.WriteLine("DATABASE : Base de données créée = dynamic_data.db");
         }
+        else
+        {
+            Console.WriteLine("DATABASE : Base de données déjà existante. Contrôle structurel ...");
+        }
+
+        // Ouvre une connexion à la base de données
+        using (SQLiteConnection connection = new SQLiteConnection(connectionString))
+        {
+            await connection.OpenAsync();
+            Console.WriteLine("DATABASE : Connexion à la base de données ouverte");
+
+            // Lit et exécute le contenu du fichier GenerateDB.sql
+            string sql = await File.ReadAllTextAsync("GenerateDB.sql");
+
+            using (SQLiteCommand command = new SQLiteCommand(sql, connection))
+            {
+                await command.ExecuteNonQueryAsync();
+                Console.WriteLine("DATABASE : Requêtes SQL exécutées : la structure est à jour");
+
+                foreach (string url in _listUrl)
+                {
+                    // Vérifiez si l'URL existe déjà dans la table
+                    string selectSql = "SELECT COUNT(*) FROM urls WHERE url = @url";
+                    using (SQLiteCommand selectCommand = new SQLiteCommand(selectSql, connection))
+                    {
+                        selectCommand.Parameters.AddWithValue("@url", url);
+                        Int64 count = (Int64)selectCommand.ExecuteScalar();
+                        if (count == 0)
+                        {
+                            // L'URL n'existe pas encore dans la table, ajoutez-la
+                            string insertSql = "INSERT INTO urls (url) VALUES (@url)";
+                            using (SQLiteCommand insertCommand = new SQLiteCommand(insertSql, connection))
+                            {
+                                insertCommand.Parameters.AddWithValue("@url", url);
+                                await insertCommand.ExecuteNonQueryAsync();
+                                Console.WriteLine("DATABASE : " + url + " -> Ajouté");
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("DATABASE : " + url + " // existait déjà.");
+                        }
+                    }
+                }
+            }
+            
+            // Ferme la connexion à la base de données
+            connection.Close();
+            Console.WriteLine("DATABASE : Connexion fermée");
+        }
+        #endregion
     }
 
     private async void Timer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
@@ -442,20 +445,23 @@ public class Program
 
             // 2. On switch sur le type de compte renseigné et on élimine les autres cas par une erreur
 
-            string importedAccountType = "";
+            AccountType importedAccountType;
 
             switch (components.First(x => x.CustomId == "new_account_type_textbox").Value.ToLower())
             {
                 case "checkings":
-                    importedAccountType = components.First(x => x.CustomId == "new_account_type_textbox").Value.ToLower();
+                    // importedAccountType = components.First(x => x.CustomId == "new_account_type_textbox").Value.ToLower();
+                    importedAccountType = AccountType.Checkings;
                     break;
 
                 case "savings":
-                    importedAccountType = components.First(x => x.CustomId == "new_account_type_textbox").Value.ToLower();
+                    // importedAccountType = components.First(x => x.CustomId == "new_account_type_textbox").Value.ToLower();
+                    importedAccountType = AccountType.Savings;
                     break;
 
                 case "locked":
-                    importedAccountType = components.First(x => x.CustomId == "new_account_type_textbox").Value.ToLower();
+                    // importedAccountType = components.First(x => x.CustomId == "new_account_type_textbox").Value.ToLower();
+                    importedAccountType = AccountType.Locked;
                     break;
 
                 default:
@@ -466,6 +472,14 @@ public class Program
             // 3. On construit un SnoutUser sur la base de son UserID (et pas son DiscordID)
 
             SnoutUser importedSnoutUser = new SnoutUser(userId: int.Parse(components.First(x => x.CustomId == "new_account_userid_textbox").Value));
+            
+            // Check if this user exists in the database
+            
+            if (!await importedSnoutUser.GetDiscordIdAsync())
+            {
+                await modal.RespondAsync(embed: ajoutNok.BuildEmbed());
+                throw new Exception("L'utilisateur n'existe pas dans la base de données !");
+            }
 
             // 4. Prendre l'overdraft
 
@@ -515,12 +529,15 @@ public class Program
 
         if (modal.Data.CustomId == "check_accounts_modal")
         {
+
+            await modal.RespondAsync(embed: new CustomNotification(NotificationType.Info, "Banque", "Votre demande est en cours de traitement").BuildEmbed());
+
             var modalUser = modal.Data.Components.First(x => x.CustomId == "check_accounts_textbox").Value;
 
             SnoutUser requested = new SnoutUser(discordId: modalUser);
-            await requested.GetUserId();
+            bool userExists = await requested.GetUserIdAsync();
 
-            if (requested.UserId == 0)
+            if (!userExists)
             {
                 CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Cet utilisateur n'existe pas");
                 await modal.RespondAsync(embed: notif.BuildEmbed());
@@ -528,7 +545,7 @@ public class Program
             }
 
             Account account = new Account(requested);
-            var listedAccounts = account.GetAccountInfoEmbedBuilders();
+            var listedAccounts = await account.GetAccountInfoEmbedBuilders();
 
             if (listedAccounts.Count > 0)
             {
@@ -538,13 +555,13 @@ public class Program
                 }
 
                 CustomNotification accountNotif = new CustomNotification(NotificationType.Success, "Banque", "Résultats envoyés en messages privés");
-                await modal.RespondAsync(embed: accountNotif.BuildEmbed());
+                await modal.Channel.SendMessageAsync(embed: accountNotif.BuildEmbed());
             }
             else
             {
                 CustomNotification noAccountNotif = new CustomNotification(NotificationType.Error, "Banque", "L'utilisateur ne dispose d'aucun compte");
                 var channel = await modal.GetChannelAsync();
-                await modal.RespondAsync(embed: noAccountNotif.BuildEmbed());
+                await modal.Channel.SendMessageAsync(embed: noAccountNotif.BuildEmbed());
             }
         }
 
@@ -555,14 +572,15 @@ public class Program
         {
 
             Account account = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "edit_account_textbox").Value));
-            account.GetParameters();
+            account.GetParameters(int.Parse(modal.Data.Components.First(x => x.CustomId == "edit_account_textbox").Value));
 
-            if (account.Type == "")
+            if (account.Type is AccountType.Unknown)
             {
                 CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Ce compte n'existe pas");
                 await modal.RespondAsync(embed: notif.BuildEmbed());
                 return;
             }
+            
             else
             {
                 // Récupérer les données du formulaire
@@ -639,9 +657,9 @@ public class Program
         if (modal.Data.CustomId == "deposit_modal")
         {
             Account account = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "deposit_account_textbox").Value));
-            account.GetParameters();
+            account.GetParameters(int.Parse(modal.Data.Components.First(x => x.CustomId == "deposit_account_textbox").Value));
 
-            if (account.Type == "") // On vérifie que le compte existe
+            if (account.Type == AccountType.Unknown) // On vérifie que le compte existe
             {
                 CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Ce compte n'existe pas");
                 await modal.RespondAsync(embed: notif.BuildEmbed());
@@ -692,9 +710,9 @@ public class Program
         if (modal.Data.CustomId == "withdraw_modal")
         {
             Account account = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "withdraw_account_textbox").Value));
-            account.GetParameters();
+            account.GetParameters(int.Parse(modal.Data.Components.First(x => x.CustomId == "withdraw_account_textbox").Value));
 
-            if (account.Type == "") // On vérifie que le compte existe
+            if (account.Type == AccountType.Unknown) // On vérifie que le compte existe
             {
                 CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Ce compte n'existe pas");
                 await modal.RespondAsync(embed: notif.BuildEmbed());
@@ -745,9 +763,9 @@ public class Program
         if (modal.Data.CustomId == "transfer_modal")
         {
             Account account = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_source_textbox").Value));
-            account.GetParameters();
+            account.GetParameters(int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_source_textbox").Value));
 
-            if (account.Type == "") // On vérifie que le compte existe
+            if (account.Type == AccountType.Unknown) // On vérifie que le compte existe
             {
                 CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Ce compte n'existe pas");
                 await modal.RespondAsync(embed: notif.BuildEmbed());
@@ -777,9 +795,9 @@ public class Program
                     else
                     {
                         Account targetAccount = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_destination_textbox").Value));
-                        targetAccount.GetParameters();
+                        targetAccount.GetParameters(int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_destination_textbox").Value));
 
-                        if (targetAccount.Type == "") // On vérifie que le compte existe
+                        if (targetAccount.Type == AccountType.Unknown) // On vérifie que le compte existe
                         {
                             CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Ce compte n'existe pas");
                             await modal.RespondAsync(embed: notif.BuildEmbed());
@@ -847,5 +865,5 @@ public class Program
         // Envoyez le message privé
         await user.SendMessageAsync(embed: embedBuilder.Build());
     }
-
+    
 }
