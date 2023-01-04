@@ -37,11 +37,10 @@ Il est essentiellement développé de façon asynchrone dans son exécution.
 - **/fetch** : assigne l'auto-fetcher au canal ciblé par la commande (+ déclenche ce premier) et si il était déjà actif, se contente d'ajouter un nouveau canal de diffusion.
 
 ## 🔑 Authentification & Droits
-*Cette section évoluera en 1.2 afin de sécuriser l'utilisation du token*
 
 | Parameter | Type     | Description                |
 | :-------- | :------- | :------------------------- |
-| `./core.cs/L:44[token]` | `string` | **Requis**. Token de bot Discord  |
+| `token.txt` | `string` | **Requis**. Fichier requis à la racine du bot |
 
 ⚠ **Commandes réservées aux admins** (à définir dans les paramètres de l'application)⚠️:
 ```
@@ -53,12 +52,10 @@ Il est essentiellement développé de façon asynchrone dans son exécution.
 ```
 
 ## 🗂️ Déploiement
-*Cette section évoluera en 1.2 avec l'automatisation de la database*
 
-Snout requiert l'utilisation d'une base de données type SQLITE (*version 3*) dont le générateur est disponible dans le
-dossier :
+Snout requiert la présence d'un fichier SQL à la racine du bot, il génère et contrôle l'intégrité de sa base de données à chaque lancement :
 ```bash
-  ./SQL
+  ./GenerateDB.sql
 ```
 Le runtime .NET 7.0 doit être installé sur la machine hôte.
 
