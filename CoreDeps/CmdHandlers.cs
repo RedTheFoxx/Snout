@@ -5,6 +5,7 @@ using System.Data.SQLite;
 using System.Net.NetworkInformation;
 using Snout.Modules;
 
+namespace Snout.CoreDeps;
 class SnoutHandler
 
 {
