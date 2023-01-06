@@ -2,6 +2,7 @@ using Discord;
 using Discord.Net;
 using Discord.WebSocket;
 using Newtonsoft.Json;
+using Snout.CoreDeps;
 using Snout.Modules;
 using System.Data.SqlClient;
 using System.Data.SQLite;
@@ -44,6 +45,9 @@ public class Program
         _client.SlashCommandExecuted += SlashCommandHandler;
         _client.ModalSubmitted += ModalHandler;
         _client.SelectMenuExecuted += SelectMenuHandler;
+        
+        // >> Pour la v1.2, penser à régler les paramètres du client dont le cache afin de pouvoir lire dans les message des users et gérer d'autres évènements.
+        // >> Penser aux globalswitches pour désactiver le Paycheck system (car il génère un traffic important potentiel)
 
         _timer.Elapsed += Timer_Elapsed;
 
