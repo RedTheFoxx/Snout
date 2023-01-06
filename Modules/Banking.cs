@@ -73,7 +73,7 @@ namespace Snout.Modules
                 command.CommandText = "INSERT INTO Accounts (AccountNumber, UserId, Type, Balance, Currency, OverdraftLimit, InterestRate, AccountFees) VALUES (@AccountNumber, @UserId, @Type, @Balance, @Currency, @OverdraftLimit, @InterestRate, @AccountFees)";
                 command.Parameters.AddWithValue("@AccountNumber", AccountNumber);
                 command.Parameters.AddWithValue("@UserId", AccountHolder.UserId);
-                
+
                 // Traduire le type de compte en string pour le stockage en DB
                 switch (Type)
                 {
@@ -102,7 +102,7 @@ namespace Snout.Modules
         }
         public async Task<List<EmbedBuilder>> GetAccountInfoEmbedBuilders()
         {
-            
+
             List<EmbedBuilder> embedBuilders = new();
 
             using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
@@ -115,7 +115,7 @@ namespace Snout.Modules
                 using var reader = await command.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {
-                    
+
                     EmbedBuilder accountInfoEmbedBuilder = new();
 
                     string accountType = reader.GetString(2);
@@ -134,12 +134,12 @@ namespace Snout.Modules
                             accountInfoEmbedBuilder.WithAuthor("Compte inconnu n°" + reader.GetInt32(0), iconUrl: "https://cdn.discordapp.com/app-icons/1050585088263462964/d6fe497e0cb854d8db041a81264eb31b.png?size=512");
                             break;
                     }
-                     
+
                     accountInfoEmbedBuilder.WithTitle($"Solde : {reader.GetDouble(3)} {reader.GetString(4)}");
                     accountInfoEmbedBuilder.WithDescription("● Paramètres :");
 
                     bool isOverdraftLimitHit = CheckOverdraftLimit(reader.GetInt32(0));
-                    
+
                     if (isOverdraftLimitHit)
                     {
                         accountInfoEmbedBuilder.AddField("Découvert autorisé", ":warning: " + reader.GetDouble(5) + " " + reader.GetString(4) + " (atteint)", true);
@@ -148,13 +148,13 @@ namespace Snout.Modules
                     {
                         accountInfoEmbedBuilder.AddField("Découvert autorisé", reader.GetDouble(5) + " " + reader.GetString(4), true);
                     }
-                    
+
                     double interestRate = reader.GetDouble(6);
                     string interestRateString = interestRate.ToString("0.## %");
                     accountInfoEmbedBuilder.AddField("Taux d'intérêt", interestRateString, true);
-                    
+
                     accountInfoEmbedBuilder.AddField("Frais de service", reader.GetDouble(7) + " " + reader.GetString(4) + " / jour", true);
-                    
+
                     accountInfoEmbedBuilder.WithFooter(Program.GlobalConstants.globalSnoutVersion);
                     accountInfoEmbedBuilder.WithTimestamp(DateTimeOffset.UtcNow);
                     accountInfoEmbedBuilder.WithColor(Color.Green);
@@ -169,13 +169,13 @@ namespace Snout.Modules
             }
 
             return embedBuilders;
-            
+
         }
         private async Task<EmbedBuilder> GetAccountLastFiveTransactionsEmbedBuilder()
         {
             EmbedBuilder transactionEmbedBuilder = new EmbedBuilder();
             List<string> convertedToStringTransactions = new();
-            
+
 
             using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
             {
@@ -188,7 +188,7 @@ namespace Snout.Modules
                 while (await reader.ReadAsync())
                 {
                     TransactionType convertedType = TransactionType.Unknown;
-                    
+
                     switch (reader.GetString(2))
                     {
                         case "Deposit":
@@ -220,14 +220,14 @@ namespace Snout.Modules
                     {
                         existingDestinationAccountNumber = reader.GetInt32(4);
                     }
-                    
+
                     Transaction selectedTransaction = new Transaction(
                        accountNumber: AccountNumber,
                        type: convertedType,
                        amount: reader.GetDouble(3),
                        destinationAccountNumber: existingDestinationAccountNumber,
                        date: reader.GetString(5)
-                       
+
                        );
 
                     string toStringType = "";
@@ -264,18 +264,18 @@ namespace Snout.Modules
                     {
                         destinationAccount = selectedTransaction.DestinationAccountNumber.ToString();
                     }
-                    
+
                     convertedToStringTransactions.Add($"# ID {reader.GetInt32(0)} | {selectedTransaction.Date} - **{toStringType}** {destinationAccount} : {selectedTransaction.Amount} €");
 
                 }
 
                 string concatDescriptionFromList = "";
-                
+
                 foreach (string element in convertedToStringTransactions)
                 {
                     concatDescriptionFromList = concatDescriptionFromList + "► " + element + "\n";
                 }
-                
+
                 transactionEmbedBuilder.WithTitle($"Transactions récentes du compte n°{AccountNumber}");
                 transactionEmbedBuilder.WithDescription(concatDescriptionFromList);
                 transactionEmbedBuilder.WithFooter(Program.GlobalConstants.globalSnoutVersion);
@@ -285,9 +285,9 @@ namespace Snout.Modules
 
             return transactionEmbedBuilder;
         }
-        
+
         // Méthodes getters
-        
+
         public List<double> GetParameters(int accountNumber)
         {
             List<double> parameters = new();
@@ -303,9 +303,9 @@ namespace Snout.Modules
                 using var reader = command.ExecuteReader();
                 while (reader.Read())
                 {
-                    
+
                     stringType = reader.GetString(2);
-                    
+
                     switch (stringType)
                     {
                         case "savings":
@@ -321,14 +321,14 @@ namespace Snout.Modules
                             Type = AccountType.Unknown;
                             break;
                     }
-                    
+
                     parameters.Add(reader.GetDouble(5));
                     OverdraftLimit = reader.GetDouble(5);
                     parameters.Add(reader.GetDouble(6));
                     InterestRate = reader.GetDouble(6);
                     parameters.Add(reader.GetDouble(7));
                     AccountFees = reader.GetDouble(7);
-                    
+
                 }
             }
 
@@ -461,7 +461,7 @@ namespace Snout.Modules
                 return true;
             }
 
-           
+
         }
         public async Task<bool> RemoveMoneyAsync(double amount)
         {
@@ -496,9 +496,9 @@ namespace Snout.Modules
                     command.Parameters.AddWithValue("@Balance", Balance);
                     command.ExecuteNonQuery();
 
-                   
+
                 }
-                
+
                 return true;
             }
         }
@@ -573,16 +573,16 @@ namespace Snout.Modules
             }
 
         } // Utilisation d'une transaction pour éviter les problèmes de soldes
-        
-        
+
+
         /// Méthodes privées
         public bool CheckOverdraftLimit(int accountNumber)
         {
             GetParameters(accountNumber);
             GetBalance(accountNumber);
-            
+
             if (Balance < 0 && Balance < (1 - OverdraftLimit))
-            
+
             {
                 return true;
             }
@@ -590,10 +590,10 @@ namespace Snout.Modules
             {
                 return false;
             }
-            
+
         }
     }
-    
+
     public class Transaction
     {
         public int TransactionId { get; set; }
@@ -641,5 +641,49 @@ namespace Snout.Modules
 
         }
 
+    }
+
+    // Un objet paycheck est, via le systeme EntityFramework, une correspondance à un tuple Action_logs dans la DB. Il est crée et stocké immédiatement.
+    public class Paycheck
+    {
+        public int PaycheckId { get; set; }
+        public int User { get; set; }
+        public int? TargetUser { get; set; }
+        public string InvokedAction { get; set; }
+        public string Date { get; set; }
+
+        public Paycheck(int user, string invokedAction, string date, int? targetUser = null)
+        {
+            User = user;
+            InvokedAction = invokedAction;
+            Date = date;
+            TargetUser = targetUser;
+        }
+
+        public async Task<bool> CreatePaycheckAsync() // Create a paycheck (Action_logs) in the database
+        {
+            using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
+            {
+                await connection.OpenAsync();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = "INSERT INTO Paychecks (user, targetUser, invokedAction, date) VALUES (@user, @targetUser, @invokedAction, @date)";
+                command.Parameters.AddWithValue("@user", User);
+                if (TargetUser != 0)
+                {
+                    command.Parameters.AddWithValue("@targetUser", TargetUser);
+                }
+                else
+                {
+                    command.Parameters.AddWithValue("@targetUser", DBNull.Value);
+                }
+                command.Parameters.AddWithValue("@invokedAction", InvokedAction);
+                command.Parameters.AddWithValue("@date", Date);
+
+                await command.ExecuteNonQueryAsync();
+
+                return true;
+            }
+        }
     }
 }
