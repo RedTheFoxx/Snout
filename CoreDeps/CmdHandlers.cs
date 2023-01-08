@@ -4,6 +4,7 @@ using Snout;
 using System.Data.SQLite;
 using System.Net.NetworkInformation;
 using Snout.Modules;
+using static Snout.Program;
 
 namespace Snout.CoreDeps;
 class SnoutHandler
@@ -283,5 +284,60 @@ class SnoutHandler
             .AddTextInput("Montant", "withdraw_amount_textbox", TextInputStyle.Short, placeholder: "123,45", required: true);
 
         await command.RespondWithModalAsync(modal.Build());
+    }
+
+    public async Task HandleTCommand(SocketSlashCommand command) 
+    {
+
+        var modal = new ModalBuilder();
+        
+        modal.WithTitle("Traduire un texte")
+            .WithCustomId("translate_modal")
+            .AddTextInput("Texte à traduire", "translate_textbox", TextInputStyle.Paragraph, placeholder: "Texte à traduire", required: true, maxLength: 2999)
+            .AddTextInput("Langue cible", "translate_language_to_textbox", TextInputStyle.Short, placeholder: "BG,CS,DA,DE,EL,EN-GB,EN-US,ES,ET,FI,FR,HU,ID,IT,JA,LT,LV,NL,PL,PT-BR,PT-PT,RO,RU,SK,SL,SV,TR,UK,ZH", required: true);
+
+        await command.RespondWithModalAsync(modal.Build());
+    }
+
+    public async Task HandleThelpCommand(SocketSlashCommand command, string deepl)
+    
+    {
+        // check if deepl exists 
+        if (deepl == "null" && deepl == "")
+        {
+            
+            var embed = new EmbedBuilder();
+            embed.WithTitle("Traducteur de texte (/t)")
+                .WithAuthor("Snout", "https://cdn-icons-png.flaticon.com/512/5828/5828450.png")
+                .WithDescription("Ce service gratuit est fourni par DeepL. La limitation gratuite est de 3000 caractères par requête et de 500.000 caractères par mois.")
+                .AddField("➡️ Comment l'utiliser ?", "La langue source est automatiquement détectée. La langue cible est à spécifier en deux lettres (ex: FR pour le français).")
+                .AddField("🗃 Langues cibles disponibles", "BG,CS,DA,DE,EL,EN-GB,EN-US,ES,ET,FI,FR,HU,ID,IT,JA,LT,LV,NL,PL,PT-BR,PT-PT,RO,RU,SK,SL,SV,TR,UK,ZH")
+                .AddField("📝 Caractères utilisés ce mois-ci", "*Affichage impossible - Aucun token DeepL n'a été renseigné*")
+                .WithColor(Color.Blue)
+                .WithFooter(Program.GlobalConstants.globalSnoutVersion + " & DeepL API v2.0")
+                .WithTimestamp(DateTimeOffset.UtcNow);
+
+            await command.RespondAsync(ephemeral: true, embed: embed.Build());
+        }
+        else
+        {
+            SnoutTranslator translator = new SnoutTranslator(deepl, "api-free.deepl.com", GlobalConstants.globalSnoutVersion, "application/x-www-form-urlencoded");
+            int remainingCharacters = await translator.GetRemainingCharactersAsync();
+            
+            var embed = new EmbedBuilder();
+            embed.WithTitle("Traducteur de texte (/t)")
+                .WithAuthor("Snout", "https://cdn-icons-png.flaticon.com/512/5828/5828450.png")
+                .WithDescription("Ce service gratuit est fourni par DeepL. La limitation gratuite est de 3000 caractères par requête et de 500.000 caractères par mois.")
+                .AddField("➡️ Comment l'utiliser ?", "La langue source est automatiquement détectée. La langue cible est à spécifier en deux lettres (ex: FR pour le français).")
+                .AddField("🗃 Langues cibles disponibles", "BG,CS,DA,DE,EL,EN-GB,EN-US,ES,ET,FI,FR,HU,ID,IT,JA,LT,LV,NL,PL,PT-BR,PT-PT,RO,RU,SK,SL,SV,TR,UK,ZH")
+                .AddField("📝 Caractères utilisés ce mois-ci", remainingCharacters + " / 500.000")
+                .WithColor(Color.Blue)
+                .WithFooter(Program.GlobalConstants.globalSnoutVersion + " & DeepL API v2.0")
+                .WithTimestamp(DateTimeOffset.UtcNow);
+
+            await command.RespondAsync(ephemeral: true, embed: embed.Build());
+
+        }
+            
     }
 }
