@@ -1,4 +1,4 @@
-# 🦊 Snout - Bot utilitaire
+# 🦊 Snout - Outils et utils
 
 Snout est un ensemble de fonctionnalités utilitaires et de divertissement destinées à un usage privé déployées sur un bot Discord. 
 Il fonctionne sur la base de .NET 7.0 et implémente la librairie Discord.NET.
