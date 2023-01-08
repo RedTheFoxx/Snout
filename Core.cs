@@ -18,8 +18,10 @@ public class Program
     private HllSniffer? _liveSniffer;
     private List<IMessageChannel> _liveChannels;
     private readonly List<string> _listUrl = new();
+    private string deepl;
 
     readonly System.Timers.Timer _timer = new System.Timers.Timer();
+    
 
     public static class GlobalConstants
     {
@@ -62,8 +64,26 @@ public class Program
         else
         {
             string token = File.ReadAllText("token.txt");
+            Console.WriteLine("CORE : Token Discord enregistré");
+            Console.WriteLine("CORE : " + token);
             await _client.LoginAsync(TokenType.Bot, token);
             await _client.StartAsync();
+        }
+
+        // Check DeepL API key at the root & care about API domain (https://www.deepl.com/fr/account/summary)
+        
+        if (!File.Exists("deepl.txt"))
+        {
+            Console.WriteLine("TRANSLATOR : Le fichier deepl.txt n'existe pas. Veuillez le créer à la racine du programme et y insérer votre clé API.");
+            Console.ReadLine();
+            deepl = "null";
+            return;
+        }
+        else
+        {
+            deepl = File.ReadAllText("deepl.txt");
+            Console.WriteLine("TRANSLATOR : Clé API DeepL enregistrée");
+            Console.WriteLine("TRANSLATOR : " + deepl);
         }
 
         _listUrl.Add("https://www.battlemetrics.com/servers/hll/17380658");
@@ -86,7 +106,7 @@ public class Program
 
     private async Task ClientReady()
     {
-        /*
+        
         #region Ajout/Suppr. Global Commands
 
         
@@ -151,6 +171,15 @@ public class Program
             new SlashCommandBuilder()
                 .WithName("transfer")
                 .WithDescription("Transférer de l'argent d'un compte bancaire à un autre"),
+
+            new SlashCommandBuilder()
+                .WithName("t")
+                .WithDescription("Permet de traduire un texte vers une langue cible"),
+
+            new SlashCommandBuilder()
+                .WithName("thelp")
+                .WithDescription("Afficher l'aide du traducteur de texte et les utilisations restantes"),
+
         };
 
         foreach (var command in commands)
@@ -168,7 +197,7 @@ public class Program
         }
 
         #endregion
-        */
+        
         
         #region Génération de la base de donnée
         // Vérification de l'existence de la DB, sinon création par appel de "GenerateDB.sql"
@@ -336,6 +365,16 @@ public class Program
             case "transfer":
                 SnoutHandler transferHandlerReference = new SnoutHandler();
                 await transferHandlerReference.HandleTransferCommand(command);
+                break;
+
+            case "t":
+                SnoutHandler tHandlerReference = new SnoutHandler();
+                await tHandlerReference.HandleTCommand(command);
+                break;
+
+            case "thelp":
+                SnoutHandler thelpHandlerReference = new SnoutHandler();
+                await thelpHandlerReference.HandleThelpCommand(command, deepl);
                 break;
         }
     } // Sélecteur de commandes envoyées au bot
@@ -825,6 +864,29 @@ public class Program
 
                 }
             }
+        }
+
+        // MODAL : TRADUIRE UN TEXTE
+        //////////////////////////////////////////////////////////////////////////////
+
+        if (modal.Data.CustomId == "translate_modal")
+        {
+            
+            CustomNotification notif = new CustomNotification(NotificationType.Info, "Traduction", "Traduction en cours ...");
+            await modal.RespondAsync(embed: notif.BuildEmbed());
+
+            SnoutTranslator translator = new SnoutTranslator(deepl, "api-free.deepl.com", GlobalConstants.globalSnoutVersion, "application/x-www-form-urlencoded");
+            string translatorInput = modal.Data.Components.First(x => x.CustomId == "translate_textbox").Value;
+            string translaterTargetLanguage = modal.Data.Components.First(x => x.CustomId == "translate_language_to_textbox").Value;
+
+            string answer = await translator.TranslateTextAsync(translatorInput, translaterTargetLanguage);
+
+            string detectedSource = answer.Split('|')[0];
+            string translatedText = answer.Split('|')[1];
+
+            CustomNotification notif2 = new CustomNotification(NotificationType.Success, $"Langue source : {detectedSource} ", translatedText);
+            await modal.Channel.SendMessageAsync(embed: notif2.BuildEmbed());
+
         }
 
     }
