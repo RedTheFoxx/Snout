@@ -20,7 +20,7 @@ public class Program
     private readonly List<string> _listUrl = new();
     private string deepl;
 
-    readonly System.Timers.Timer _timer = new System.Timers.Timer();
+    readonly System.Timers.Timer _timerFetcher = new System.Timers.Timer();
     
 
     public static class GlobalConstants
@@ -42,8 +42,8 @@ public class Program
             GatewayIntents = GatewayIntents.All
         });
         
-        _timer.Interval = 300000; // Vitesse de l'auto-updater (=5 minutes entre chaque Fetch vers Battlemetrics)
-        _timer.AutoReset = true;
+        _timerFetcher.Interval = 300000; // Vitesse de l'auto-updater (=5 minutes entre chaque Fetch vers Battlemetrics)
+        _timerFetcher.AutoReset = true;
 
         _liveSniffer = new HllSniffer();
         _liveChannels = new List<IMessageChannel>();
@@ -68,7 +68,7 @@ public class Program
         _client.UserIsTyping += LiveHandlers.UserIsTyping; // action_TYPING
         _client.UserVoiceStateUpdated += LiveHandlers.UserVoiceStateUpdated; // action_VOICE_CHANNEL_USER_STATUS_UPDATED
 
-        _timer.Elapsed += Timer_Elapsed;
+        _timerFetcher.Elapsed += Timer_Elapsed;
 
         // Check if file "token.txt" exist at the root of the project
         
@@ -330,12 +330,12 @@ public class Program
 
             case "fetch":
                 SnoutHandler fetchHandlerReference = new SnoutHandler();
-                await fetchHandlerReference.HandleFetchCommand(command, _client, _liveChannels, _timer);
+                await fetchHandlerReference.HandleFetchCommand(command, _client, _liveChannels, _timerFetcher);
                 break;
 
             case "stop":
                 SnoutHandler stopHandlerReference = new SnoutHandler();
-                await stopHandlerReference.HandleStopCommand(command, _client, _liveChannels, _timer);
+                await stopHandlerReference.HandleStopCommand(command, _client, _liveChannels, _timerFetcher);
                 break;
 
             case "add":
