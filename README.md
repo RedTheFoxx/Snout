@@ -23,7 +23,7 @@ Il est essentiellement développé de façon asynchrone dans son exécution.
 - **/unregister** : retire un utilisateur de la base de données de Snout
 
 :moneybag: **Commandes du banking**
-- **/account** : créer un nouveau compte bancaire et l'assigne à un utilisateur (/register non requis)
+- **/account** : créer un nouveau compte bancaire et l'assigne à un utilisateur
 - **/editaccount** : éditer les paramètres d'un compte bancaire, tels que la limite de découvert, les frais de service ou le taux d'intérêt.
 - **/myaccounts** : afficher le statut de ses comptes bancaires. (résultats en messages privés)
 - **/checkaccounts** : vérifier le statut des comptes bancaires d'un utilisateur. (résultats en messages privés)
