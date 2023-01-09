@@ -34,8 +34,14 @@ public class Program
     // Thread principal
     private async Task MainAsync()
     {
-        _client = new DiscordSocketClient();
-
+        _client = new DiscordSocketClient(new DiscordSocketConfig
+        {
+            LogLevel = LogSeverity.Verbose,
+            MessageCacheSize = 100,
+            AlwaysDownloadUsers = true,
+            GatewayIntents = GatewayIntents.All
+        });
+        
         _timer.Interval = 300000; // Vitesse de l'auto-updater (=5 minutes entre chaque Fetch vers Battlemetrics)
         _timer.AutoReset = true;
 
@@ -44,12 +50,23 @@ public class Program
 
         _client.Log += Log;
         _client.Ready += ClientReady;
-        _client.SlashCommandExecuted += SlashCommandHandler;
-        _client.ModalSubmitted += ModalHandler;
-        _client.SelectMenuExecuted += SelectMenuHandler;
+        _client.SlashCommandExecuted += SlashCommandHandler; // action_SNOUT_COMMAND_USED
+        _client.ModalSubmitted += ModalHandler; // action_MODAL_SUBMITTED
+        _client.SelectMenuExecuted += SelectMenuHandler; // action_SELECT_MENU_EXECUTED
+
+        // Ci-dessous, les évènements traités par le LiveHandler (module : paycheck)
+
+        _client.PresenceUpdated += LiveHandlers.PresenceUpdated; // action_CHANGED_STATUS
+
+        _client.MessageReceived += LiveHandlers.MessageReceived; // action_MESSAGE & MESSAGE_SENT_WITH_FILE & TAGUED_BY & TAGUED_SOMEONE
+        _client.MessageDeleted += LiveHandlers.MessageDeleted; // action_MESSAGE_DELETED
+        _client.MessageUpdated += LiveHandlers.MessageUpdated; // action_MESSAGE_UPDATED
         
-        // >> Pour la v1.2, penser à régler les paramètres du client dont le cache afin de pouvoir lire dans les message des users et gérer d'autres évènements.
-        // >> Penser aux globalswitches pour désactiver le Paycheck system (car il génère un traffic important potentiel)
+        _client.ReactionAdded += LiveHandlers.ReactionAdded; // action_REACTION_ADDED
+        _client.ReactionRemoved += LiveHandlers.ReactionRemoved; // action_REACTION_REMOVED
+        
+        _client.UserIsTyping += LiveHandlers.UserIsTyping; // action_TYPING
+        _client.UserVoiceStateUpdated += LiveHandlers.UserVoiceStateUpdated; // action_VOICE_CHANNEL_USER_STATUS_UPDATED
 
         _timer.Elapsed += Timer_Elapsed;
 
@@ -301,6 +318,9 @@ public class Program
 
     private async Task SlashCommandHandler(SocketSlashCommand command)
     {
+
+        // ICI : log action_USED_SNOUT_COMMAND
+        
         switch (command.Data.Name)
         {
             case "ping":
