@@ -325,8 +325,20 @@ public class Program
     private async Task SlashCommandHandler(SocketSlashCommand command)
     {
 
-        // ICI : log action_USED_SNOUT_COMMAND
-        
+        if (GlobalSwitches.modulePaycheck == true)
+        {
+            SnoutUser snoutCommandUser = new SnoutUser(command.User.Username + "#" + command.User.Discriminator);
+            if (await snoutCommandUser.GetUserIdAsync())
+            {
+                Paycheck snoutCommandUsedPaycheck = new Paycheck(snoutCommandUser, "action_USED_SNOUT_COMMAND", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+                await snoutCommandUsedPaycheck.CreatePaycheckAsync();
+            }
+            else
+            {
+                Console.WriteLine("MODULE PAYCHECK - DENIED ACTION - DATABASE : Erreur lors de la récupération de l'ID de l'utilisateur. Existait-il ?");
+            }
+        }
+
         switch (command.Data.Name)
         {
             case "ping":

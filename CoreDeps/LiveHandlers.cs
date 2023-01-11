@@ -8,6 +8,7 @@ internal class LiveHandlers
     /* This class is used to handle the event monitoring hooked in the Main() method.
      * 
      * IMPORTANT : Keep this comment updated with the latest changes in DB and new actions declared.
+     * IF CHECKED : ✔️ Implementation is total
      * 
      * Declared actions in database :
      * 
@@ -24,12 +25,12 @@ internal class LiveHandlers
      * - action_CHANGED_STATUS : When a user changes his status. 
      * - action_MESSAGE_SENT_WITH_FILE : When a message is sent with a file in a channel. 
      * - action_TAGUED_SOMEONE : When a user tags someone in a message. 
-     * - action_USED_SNOUT_COMMAND : When a user uses a Snout command. 
+     * - action_USED_SNOUT_COMMAND : When a user uses a Snout command. ✔️
      * 
      * Each function is used to handle an event but its scope is not limited to the Paycheck modules, it can be reused for future things.
      * 
      */
-    
+
     internal static Task MessageDeleted(Cacheable<IMessage, ulong> arg1, Cacheable<IMessageChannel, ulong> arg2)
     {
         throw new NotImplementedException();

@@ -667,11 +667,11 @@ namespace Snout.Modules
                 await connection.OpenAsync();
 
                 using var command = connection.CreateCommand();
-                command.CommandText = "INSERT INTO Paychecks (user, targetUser, invokedAction, date) VALUES (@user, @targetUser, @invokedAction, @date)";
-                command.Parameters.AddWithValue("@user", User);
+                command.CommandText = "INSERT INTO Action_logs (user, targetUser, invokedAction, date) VALUES (@user, @targetUser, @invokedAction, @date)";
+                command.Parameters.AddWithValue("@user", User.UserId);
                 if (TargetUser != null)
                 {
-                    command.Parameters.AddWithValue("@targetUser", TargetUser);
+                    command.Parameters.AddWithValue("@targetUser", TargetUser.UserId);
                 }
                 else
                 {
