@@ -647,12 +647,12 @@ namespace Snout.Modules
     public class Paycheck
     {
         public int PaycheckId { get; set; }
-        public int User { get; set; }
-        public int? TargetUser { get; set; }
+        public SnoutUser User { get; set; }
+        public SnoutUser? TargetUser { get; set; }
         public string InvokedAction { get; set; }
         public string Date { get; set; }
 
-        public Paycheck(int user, string invokedAction, string date, int? targetUser = null)
+        public Paycheck(SnoutUser user, string invokedAction, string date, SnoutUser? targetUser = null)
         {
             User = user;
             InvokedAction = invokedAction;
@@ -669,7 +669,7 @@ namespace Snout.Modules
                 using var command = connection.CreateCommand();
                 command.CommandText = "INSERT INTO Paychecks (user, targetUser, invokedAction, date) VALUES (@user, @targetUser, @invokedAction, @date)";
                 command.Parameters.AddWithValue("@user", User);
-                if (TargetUser != 0)
+                if (TargetUser != null)
                 {
                     command.Parameters.AddWithValue("@targetUser", TargetUser);
                 }
