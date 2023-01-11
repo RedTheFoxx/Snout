@@ -667,7 +667,7 @@ namespace Snout.Modules
                 await connection.OpenAsync();
 
                 using var command = connection.CreateCommand();
-                command.CommandText = "INSERT INTO Action_logs (user, targetUser, invokedAction, date) VALUES (@user, @targetUser, @invokedAction, @date)";
+                command.CommandText = "INSERT INTO Action_logs (user, targetUser, invokedAction, timestamp) VALUES (@user, @targetUser, @invokedAction, @timestamp)";
                 command.Parameters.AddWithValue("@user", User.UserId);
                 if (TargetUser != null)
                 {
@@ -678,7 +678,7 @@ namespace Snout.Modules
                     command.Parameters.AddWithValue("@targetUser", DBNull.Value);
                 }
                 command.Parameters.AddWithValue("@invokedAction", InvokedAction);
-                command.Parameters.AddWithValue("@date", Date);
+                command.Parameters.AddWithValue("@timestamp", Date);
 
                 await command.ExecuteNonQueryAsync();
 
