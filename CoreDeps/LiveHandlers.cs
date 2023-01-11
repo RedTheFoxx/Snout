@@ -2,14 +2,16 @@
 using Discord.WebSocket;
 using Snout.Modules;
 using System.Collections.Concurrent;
+using static Snout.Program;
 
 namespace Snout.CoreDeps;
 internal class LiveHandlers
 {
     // Sera utilisé plus tard pour Queue les paycheck et gérer les burst issus des évènements à haute fréquence
-    // private readonly ConcurrentQueue<Paycheck> _paycheckQueue = new ConcurrentQueue<Paycheck>();
+    // private ConcurrentQueue<Paycheck> _paycheckQueue;
 
-    /* This class is used to handle the event monitoring hooked in the Main() method. Each paycheck issued from a intensive event (like MESSAGE_SENT) is processed onto a queue before.
+    /* This class is used to handle the event monitoring hooked in the Main() method. Each paycheck issued from an event is send to paycheckQueue which absorb bursts and regulate
+     * DB access
      * 
      * IMPORTANT : Keep this comment updated with the latest changes in DB and new actions declared.
      * IF CHECKED : ✔️ Implementation is complete
@@ -28,7 +30,7 @@ internal class LiveHandlers
      * - action_VOICE_CHANNEL_USER_STATUS_UPDATED : When a user's status in a voice channel is updated.
      * - action_CHANGED_STATUS : When a user changes his status. 
      * - action_MESSAGE_SENT_WITH_FILE : When a message is sent with a file in a channel. 
-     * - action_TAGUED_SOMEONE : When a user tags someone in a message. 
+     * - action_TAGUED_SOMEONE : When a user tags someone in a message.
      * - action_USED_SNOUT_COMMAND : When a user uses a Snout command. ✔️
      * 
      * Each function is used to handle an event but its scope is not limited to the Paycheck modules, it can be reused for future things.
@@ -37,41 +39,86 @@ internal class LiveHandlers
 
     internal static Task MessageDeleted(Cacheable<IMessage, ulong> arg1, Cacheable<IMessageChannel, ulong> arg2)
     {
-        throw new NotImplementedException();
+        if (GlobalElements.modulePaycheckEnabled)
+        {
+            SnoutUser messageDeletedUser = new SnoutUser(arg1.Value.Author.Username + "#" + arg1.Value.Author.Discriminator);
+            Paycheck paycheck = new(messageDeletedUser, "action_MESSAGE_DELETED", DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+            GlobalElements.paycheckQueue.Enqueue(paycheck);
+
+            return Task.CompletedTask;
+                
+        }
+
+        return Task.CompletedTask;
     }
 
     internal static Task MessageReceived(SocketMessage arg)
     {
-        throw new NotImplementedException();
+        if (GlobalElements.modulePaycheckEnabled)
+        {
+            // TODO : Implement this
+            return Task.CompletedTask;
+        }
+        return Task.CompletedTask;
     }
 
     internal static Task MessageUpdated(Cacheable<IMessage, ulong> arg1, SocketMessage arg2, ISocketMessageChannel arg3)
     {
-        throw new NotImplementedException();
+        if (GlobalElements.modulePaycheckEnabled)
+        {
+            // TODO : Implement this
+            return Task.CompletedTask;
+        }
+        return Task.CompletedTask;
     }
     
     internal static Task PresenceUpdated(SocketUser arg1, SocketPresence arg2, SocketPresence arg3)
     {
-        throw new NotImplementedException();
+        if (GlobalElements.modulePaycheckEnabled)
+        {
+            // TODO : Implement this
+            return Task.CompletedTask;
+        }
+        return Task.CompletedTask;
     }
 
     internal static Task ReactionAdded(Cacheable<IUserMessage, ulong> arg1, Cacheable<IMessageChannel, ulong> arg2, SocketReaction arg3)
     {
-        throw new NotImplementedException();
+        if (GlobalElements.modulePaycheckEnabled)
+        {
+            // TODO : Implement this
+            return Task.CompletedTask;
+        }
+        return Task.CompletedTask;
     }
 
     internal static Task ReactionRemoved(Cacheable<IUserMessage, ulong> arg1, Cacheable<IMessageChannel, ulong> arg2, SocketReaction arg3)
     {
-        throw new NotImplementedException();
+        if (GlobalElements.modulePaycheckEnabled)
+        {
+            // TODO : Implement this
+            return Task.CompletedTask;
+        }
+        return Task.CompletedTask;
     }
 
     internal static Task UserIsTyping(Cacheable<IUser, ulong> arg1, Cacheable<IMessageChannel, ulong> arg2)
     {
-        throw new NotImplementedException();
+        if (GlobalElements.modulePaycheckEnabled)
+        {
+            // TODO : Implement this
+            return Task.CompletedTask;
+        }
+        return Task.CompletedTask;
     }
 
     internal static Task UserVoiceStateUpdated(SocketUser arg1, SocketVoiceState arg2, SocketVoiceState arg3)
     {
-        throw new NotImplementedException();
+        if (GlobalElements.modulePaycheckEnabled)
+        {
+            // TODO : Implement this
+            return Task.CompletedTask;
+        }
+        return Task.CompletedTask;
     }
 }
