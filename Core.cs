@@ -25,7 +25,7 @@ public class Program
     public static class GlobalSwitches
     {
         public const string globalSnoutVersion = "Snout v1.1a";
-        public static bool modulePaycheck;
+        public static bool modulePaycheckEnabled;
     }
     
     public static void Main(string[] args)
@@ -44,13 +44,13 @@ public class Program
         
         // Modules init & global switches
         
-        _timerFetcher.Interval = 300000; // Vitesse de l'auto-updater (=5 minutes entre chaque Fetch vers Battlemetrics)
+        _timerFetcher.Interval = 300000; // Vitesse de l'auto-updater (= 5 minutes entre chaque Fetch vers Battlemetrics)
         _timerFetcher.AutoReset = true;
 
         _liveSniffer = new HllSniffer();
         _liveChannels = new List<IMessageChannel>();
 
-        GlobalSwitches.modulePaycheck = false;
+        GlobalSwitches.modulePaycheckEnabled = false;
 
         // Default events
 
@@ -60,19 +60,19 @@ public class Program
         _client.ModalSubmitted += ModalHandler; // action_MODAL_SUBMITTED
         _client.SelectMenuExecuted += SelectMenuHandler; // action_SELECT_MENU_EXECUTED
 
-        // Ci-dessous, les évènements traités par le LiveHandler (module : paycheck)
+        // Ci-dessous, les évènements traités par le LiveHandler (module(s) client(s) : paycheck)
 
-        _client.PresenceUpdated += LiveHandlers.PresenceUpdated; // action_CHANGED_STATUS
+        // _client.PresenceUpdated += LiveHandlers.PresenceUpdated; // action_CHANGED_STATUS
 
-        _client.MessageReceived += LiveHandlers.MessageReceived; // action_MESSAGE & MESSAGE_SENT_WITH_FILE & TAGUED_BY & TAGUED_SOMEONE
-        _client.MessageDeleted += LiveHandlers.MessageDeleted; // action_MESSAGE_DELETED
-        _client.MessageUpdated += LiveHandlers.MessageUpdated; // action_MESSAGE_UPDATED
+        // _client.MessageReceived += LiveHandlers.MessageReceived; // action_MESSAGE & MESSAGE_SENT_WITH_FILE & TAGUED_BY & TAGUED_SOMEONE
+        // _client.MessageDeleted += LiveHandlers.MessageDeleted; // action_MESSAGE_DELETED
+        // _client.MessageUpdated += LiveHandlers.MessageUpdated; // action_MESSAGE_UPDATED
         
-        _client.ReactionAdded += LiveHandlers.ReactionAdded; // action_REACTION_ADDED
-        _client.ReactionRemoved += LiveHandlers.ReactionRemoved; // action_REACTION_REMOVED
+        // _client.ReactionAdded += LiveHandlers.ReactionAdded; // action_REACTION_ADDED
+        // _client.ReactionRemoved += LiveHandlers.ReactionRemoved; // action_REACTION_REMOVED
         
-        _client.UserIsTyping += LiveHandlers.UserIsTyping; // action_TYPING
-        _client.UserVoiceStateUpdated += LiveHandlers.UserVoiceStateUpdated; // action_VOICE_CHANNEL_USER_STATUS_UPDATED
+        // _client.UserIsTyping += LiveHandlers.UserIsTyping; // action_TYPING
+        // _client.UserVoiceStateUpdated += LiveHandlers.UserVoiceStateUpdated; // action_VOICE_CHANNEL_USER_STATUS_UPDATED
 
         _timerFetcher.Elapsed += Timer_Elapsed;
 
@@ -143,65 +143,69 @@ public class Program
         var commands = new List<SlashCommandBuilder>
         {
 
-            new SlashCommandBuilder()
-                .WithName("ping")
-                .WithDescription("Envoyer un ping vers la gateway Discord"),
+            //new SlashCommandBuilder()
+            //    .WithName("ping")
+            //    .WithDescription("Envoyer un ping vers la gateway Discord"),
 
-            new SlashCommandBuilder()
-                .WithName("fetch")
-                .WithDescription("Assigne un canal au fetch automatique HLL et déclenche ce dernier"),
+            //new SlashCommandBuilder()
+            //    .WithName("fetch")
+            //    .WithDescription("Assigne un canal au fetch automatique HLL et déclenche ce dernier"),
 
-            new SlashCommandBuilder()
-                .WithName("stop")
-                .WithDescription("Purger les canaux et arrêter le fetch automatique HLL"),
+            //new SlashCommandBuilder()
+            //    .WithName("stop")
+            //    .WithDescription("Purger les canaux et arrêter le fetch automatique HLL"),
 
-            new SlashCommandBuilder()
-                .WithName("add")
-                .WithDescription("Ajouter un serveur HLL à la liste de fetch automatique"),
+            //new SlashCommandBuilder()
+            //    .WithName("add")
+            //    .WithDescription("Ajouter un serveur HLL à la liste de fetch automatique"),
 
-            new SlashCommandBuilder()
-                .WithName("register")
-                .WithDescription("Inscrire un utilisateur dans Snout Bot"),
+            //new SlashCommandBuilder()
+            //    .WithName("register")
+            //    .WithDescription("Inscrire un utilisateur dans Snout Bot"),
 
-            new SlashCommandBuilder()
-                .WithName("unregister")
-                .WithDescription("Désinscrire un utilisateur de Snout Bot"),
+            //new SlashCommandBuilder()
+            //    .WithName("unregister")
+            //    .WithDescription("Désinscrire un utilisateur de Snout Bot"),
 
-            new SlashCommandBuilder()
-                .WithName("account")
-                .WithDescription("Créer un nouveau compte bancaire"),
+            //new SlashCommandBuilder()
+            //    .WithName("account")
+            //    .WithDescription("Créer un nouveau compte bancaire"),
 
-            new SlashCommandBuilder()
-                .WithName("myaccounts")
-                .WithDescription("Afficher ses comptes bancaires"),
+            //new SlashCommandBuilder()
+            //    .WithName("myaccounts")
+            //    .WithDescription("Afficher ses comptes bancaires"),
 
-            new SlashCommandBuilder()
-                .WithName("checkaccounts")
-                .WithDescription("Afficher les comptes bancaires d'un utilisateur"),
+            //new SlashCommandBuilder()
+            //    .WithName("checkaccounts")
+            //    .WithDescription("Afficher les comptes bancaires d'un utilisateur"),
 
-            new SlashCommandBuilder()
-                .WithName("editaccount")
-                .WithDescription("Modifier un compte bancaire"),
+            //new SlashCommandBuilder()
+            //    .WithName("editaccount")
+            //    .WithDescription("Modifier un compte bancaire"),
 
-            new SlashCommandBuilder()
-                .WithName("deposit")
-                .WithDescription("Déposer de l'argent sur un compte bancaire"),
+            //new SlashCommandBuilder()
+            //    .WithName("deposit")
+            //    .WithDescription("Déposer de l'argent sur un compte bancaire"),
 
-            new SlashCommandBuilder()
-                .WithName("withdraw")
-                .WithDescription("Retirer de l'argent d'un compte bancaire"),
+            //new SlashCommandBuilder()
+            //    .WithName("withdraw")
+            //    .WithDescription("Retirer de l'argent d'un compte bancaire"),
 
-            new SlashCommandBuilder()
-                .WithName("transfer")
-                .WithDescription("Transférer de l'argent d'un compte bancaire à un autre"),
+            //new SlashCommandBuilder()
+            //    .WithName("transfer")
+            //    .WithDescription("Transférer de l'argent d'un compte bancaire à un autre"),
 
-            new SlashCommandBuilder()
-                .WithName("t")
-                .WithDescription("Permet de traduire un texte vers une langue cible"),
+            //new SlashCommandBuilder()
+            //    .WithName("t")
+            //    .WithDescription("Permet de traduire un texte vers une langue cible"),
 
-            new SlashCommandBuilder()
-                .WithName("thelp")
-                .WithDescription("Afficher l'aide du traducteur de texte et les utilisations restantes"),
+            //new SlashCommandBuilder()
+            //    .WithName("thelp")
+            //    .WithDescription("Afficher l'aide du traducteur de texte et les utilisations restantes"),
+            
+            //new SlashCommandBuilder()
+            //    .WithName("mpaycheck")
+            //    .WithDescription("Activer / Désactiver le module paycheck")
 
         };
 
@@ -325,17 +329,18 @@ public class Program
     private async Task SlashCommandHandler(SocketSlashCommand command)
     {
 
-        if (GlobalSwitches.modulePaycheck == true)
+        if (GlobalSwitches.modulePaycheckEnabled == true)
         {
             SnoutUser snoutCommandUser = new SnoutUser(command.User.Username + "#" + command.User.Discriminator);
             if (await snoutCommandUser.GetUserIdAsync())
             {
                 Paycheck snoutCommandUsedPaycheck = new Paycheck(snoutCommandUser, "action_USED_SNOUT_COMMAND", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
                 await snoutCommandUsedPaycheck.CreatePaycheckAsync();
+                Console.WriteLine("PAYCHECK - SUCCESS : action_USED_SNOUT_COMMAND distribuée à " + command.User.Username + "#" + command.User.Discriminator);
             }
             else
             {
-                Console.WriteLine("MODULE PAYCHECK - DENIED ACTION - DATABASE : Erreur lors de la récupération de l'ID de l'utilisateur. Existait-il ?");
+                Console.WriteLine("PAYCHECK - SKIP : L'utilisateur " + command.User.Username + "#" + command.User.Discriminator + " n'est pas un SnoutUser.");
             }
         }
 
@@ -413,6 +418,11 @@ public class Program
             case "thelp":
                 SnoutHandler thelpHandlerReference = new SnoutHandler();
                 await thelpHandlerReference.HandleThelpCommand(command, deepl);
+                break;
+
+            case "mpaycheck":
+                SnoutHandler mpaycheckHandlerReference = new SnoutHandler();
+                await mpaycheckHandlerReference.HandleMpaycheckCommand(command);
                 break;
         }
     } // Sélecteur de commandes envoyées au bot
