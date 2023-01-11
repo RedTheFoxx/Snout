@@ -1,14 +1,18 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using Snout.Modules;
+using System.Collections.Concurrent;
 
 namespace Snout.CoreDeps;
 internal class LiveHandlers
 {
+    // Sera utilisé plus tard pour Queue les paycheck et gérer les burst issus des évènements à haute fréquence
+    // private readonly ConcurrentQueue<Paycheck> _paycheckQueue = new ConcurrentQueue<Paycheck>();
 
-    /* This class is used to handle the event monitoring hooked in the Main() method.
+    /* This class is used to handle the event monitoring hooked in the Main() method. Each paycheck issued from a intensive event (like MESSAGE_SENT) is processed onto a queue before.
      * 
      * IMPORTANT : Keep this comment updated with the latest changes in DB and new actions declared.
-     * IF CHECKED : ✔️ Implementation is total
+     * IF CHECKED : ✔️ Implementation is complete
      * 
      * Declared actions in database :
      * 
