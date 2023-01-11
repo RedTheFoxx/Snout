@@ -662,28 +662,34 @@ namespace Snout.Modules
 
         public async Task<bool> CreatePaycheckAsync() // Create a paycheck (Action_logs) in the database
         {
-            using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
+            if (await User.GetUserIdAsync())
             {
-                await connection.OpenAsync();
 
-                using var command = connection.CreateCommand();
-                command.CommandText = "INSERT INTO Action_logs (user, targetUser, invokedAction, timestamp) VALUES (@user, @targetUser, @invokedAction, @timestamp)";
-                command.Parameters.AddWithValue("@user", User.UserId);
-                if (TargetUser != null)
+                using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
                 {
-                    command.Parameters.AddWithValue("@targetUser", TargetUser.UserId);
-                }
-                else
-                {
-                    command.Parameters.AddWithValue("@targetUser", DBNull.Value);
-                }
-                command.Parameters.AddWithValue("@invokedAction", InvokedAction);
-                command.Parameters.AddWithValue("@timestamp", Date);
+                    await connection.OpenAsync();
 
-                await command.ExecuteNonQueryAsync();
+                    using var command = connection.CreateCommand();
+                    command.CommandText = "INSERT INTO Action_logs (user, targetUser, invokedAction, timestamp) VALUES (@user, @targetUser, @invokedAction, @timestamp)";
+                    command.Parameters.AddWithValue("@user", User.UserId);
+                    if (TargetUser != null)
+                    {
+                        command.Parameters.AddWithValue("@targetUser", TargetUser.UserId);
+                    }
+                    else
+                    {
+                        command.Parameters.AddWithValue("@targetUser", DBNull.Value);
+                    }
+                    command.Parameters.AddWithValue("@invokedAction", InvokedAction);
+                    command.Parameters.AddWithValue("@timestamp", Date);
 
-                return true;
+                    await command.ExecuteNonQueryAsync();
+
+                    return true;
+                }
             }
+
+            return false;
         }
     }
 }

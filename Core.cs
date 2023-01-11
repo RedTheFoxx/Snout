@@ -4,7 +4,6 @@ using Discord.WebSocket;
 using Newtonsoft.Json;
 using Snout.CoreDeps;
 using Snout.Modules;
-using System.Data.SqlClient;
 using System.Data.SQLite;
 using System.Globalization;
 
@@ -27,7 +26,7 @@ public class Program
         public const string globalSnoutVersion = "Snout v1.1a";
         public static bool modulePaycheckEnabled;
     }
-    
+
     public static void Main(string[] args)
         => new Program().MainAsync().GetAwaiter().GetResult();
 
@@ -41,9 +40,9 @@ public class Program
             AlwaysDownloadUsers = true,
             GatewayIntents = GatewayIntents.All
         });
-        
+
         // Modules init & global switches
-        
+
         _timerFetcher.Interval = 300000; // Vitesse de l'auto-updater (= 5 minutes entre chaque Fetch vers Battlemetrics)
         _timerFetcher.AutoReset = true;
 
@@ -67,17 +66,17 @@ public class Program
         // _client.MessageReceived += LiveHandlers.MessageReceived; // action_MESSAGE & MESSAGE_SENT_WITH_FILE & TAGUED_BY & TAGUED_SOMEONE
         // _client.MessageDeleted += LiveHandlers.MessageDeleted; // action_MESSAGE_DELETED
         // _client.MessageUpdated += LiveHandlers.MessageUpdated; // action_MESSAGE_UPDATED
-        
+
         // _client.ReactionAdded += LiveHandlers.ReactionAdded; // action_REACTION_ADDED
         // _client.ReactionRemoved += LiveHandlers.ReactionRemoved; // action_REACTION_REMOVED
-        
+
         // _client.UserIsTyping += LiveHandlers.UserIsTyping; // action_TYPING
         // _client.UserVoiceStateUpdated += LiveHandlers.UserVoiceStateUpdated; // action_VOICE_CHANNEL_USER_STATUS_UPDATED
 
         _timerFetcher.Elapsed += Timer_Elapsed;
 
         // Check if file "token.txt" exist at the root of the project
-        
+
         if (!File.Exists("token.txt"))
         {
             Console.WriteLine("Le fichier token.txt n'existe pas. Veuillez le créer à la racine du programme et y insérer votre token.");
@@ -94,7 +93,7 @@ public class Program
         }
 
         // Check DeepL API key at the root & care about API domain (https://www.deepl.com/fr/account/summary)
-        
+
         if (!File.Exists("deepl.txt"))
         {
             Console.WriteLine("TRANSLATOR : Le fichier deepl.txt n'existe pas. Veuillez le créer à la racine du programme et y insérer votre clé API.");
@@ -129,10 +128,10 @@ public class Program
 
     private async Task ClientReady()
     {
-        
+
         #region Ajout/Suppr. Global Commands
 
-        
+
         // SUPPR. DE TOUTES LES GLOBAL COMMANDS :
 
         await _client.Rest.DeleteAllGlobalCommandsAsync();
@@ -202,7 +201,7 @@ public class Program
             //new SlashCommandBuilder()
             //    .WithName("thelp")
             //    .WithDescription("Afficher l'aide du traducteur de texte et les utilisations restantes"),
-            
+
             //new SlashCommandBuilder()
             //    .WithName("mpaycheck")
             //    .WithDescription("Activer / Désactiver le module paycheck")
@@ -224,8 +223,8 @@ public class Program
         }
 
         #endregion
-        
-        
+
+
         #region Génération de la base de donnée
         // Vérification de l'existence de la DB, sinon création par appel de "GenerateDB.sql"
 
@@ -284,7 +283,7 @@ public class Program
                     }
                 }
             }
-            
+
             // Ferme la connexion à la base de données
             connection.Close();
             Console.WriteLine("DATABASE : Connexion fermée");
@@ -332,15 +331,14 @@ public class Program
         if (GlobalSwitches.modulePaycheckEnabled == true)
         {
             SnoutUser snoutCommandUser = new SnoutUser(command.User.Username + "#" + command.User.Discriminator);
-            if (await snoutCommandUser.GetUserIdAsync())
+            Paycheck snoutCommandUsedPaycheck = new Paycheck(snoutCommandUser, "action_USED_SNOUT_COMMAND", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+            if (await snoutCommandUsedPaycheck.CreatePaycheckAsync())
             {
-                Paycheck snoutCommandUsedPaycheck = new Paycheck(snoutCommandUser, "action_USED_SNOUT_COMMAND", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
-                await snoutCommandUsedPaycheck.CreatePaycheckAsync();
                 Console.WriteLine("PAYCHECK - SUCCESS : action_USED_SNOUT_COMMAND distribuée à " + command.User.Username + "#" + command.User.Discriminator);
             }
             else
             {
-                Console.WriteLine("PAYCHECK - SKIP : L'utilisateur " + command.User.Username + "#" + command.User.Discriminator + " n'est pas un SnoutUser.");
+                Console.WriteLine("PAYCHECK - SKIP : " + command.User.Username + "#" + command.User.Discriminator + " n'est pas un SnoutUser.");
             }
         }
 
@@ -563,9 +561,9 @@ public class Program
             // 3. On construit un SnoutUser sur la base de son UserID (et pas son DiscordID)
 
             SnoutUser importedSnoutUser = new SnoutUser(userId: int.Parse(components.First(x => x.CustomId == "new_account_userid_textbox").Value));
-            
+
             // Check if this user exists in the database
-            
+
             if (!await importedSnoutUser.GetDiscordIdAsync())
             {
                 await modal.RespondAsync(embed: ajoutNok.BuildEmbed());
@@ -671,7 +669,7 @@ public class Program
                 await modal.RespondAsync(embed: notif.BuildEmbed());
                 return;
             }
-            
+
             else
             {
                 // Récupérer les données du formulaire
@@ -919,7 +917,7 @@ public class Program
 
         if (modal.Data.CustomId == "translate_modal")
         {
-            
+
             CustomNotification notif = new CustomNotification(NotificationType.Info, "Traduction", "Traduction en cours ...");
             await modal.RespondAsync(embed: notif.BuildEmbed());
 
@@ -979,5 +977,5 @@ public class Program
         // Envoyez le message privé
         await user.SendMessageAsync(embed: embedBuilder.Build());
     }
-    
+
 }
