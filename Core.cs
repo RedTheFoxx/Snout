@@ -4,6 +4,7 @@ using Discord.WebSocket;
 using Newtonsoft.Json;
 using Snout.CoreDeps;
 using Snout.Modules;
+using System.Collections.Concurrent;
 using System.Data.SQLite;
 using System.Globalization;
 
@@ -20,11 +21,12 @@ public class Program
     private string deepl;
 
     readonly System.Timers.Timer _timerFetcher = new System.Timers.Timer();
-
-    public static class GlobalSwitches
+    
+    public static class GlobalElements
     {
         public const string globalSnoutVersion = "Snout v1.1a";
         public static bool modulePaycheckEnabled;
+        public static ConcurrentQueue<Paycheck> paycheckQueue = new ConcurrentQueue<Paycheck>();
     }
 
     public static void Main(string[] args)
@@ -40,7 +42,7 @@ public class Program
             AlwaysDownloadUsers = true,
             GatewayIntents = GatewayIntents.All
         });
-
+        
         // Modules init & global switches
 
         _timerFetcher.Interval = 300000; // Vitesse de l'auto-updater (= 5 minutes entre chaque Fetch vers Battlemetrics)
@@ -49,7 +51,7 @@ public class Program
         _liveSniffer = new HllSniffer();
         _liveChannels = new List<IMessageChannel>();
 
-        GlobalSwitches.modulePaycheckEnabled = false;
+        GlobalElements.modulePaycheckEnabled = false;
 
         // Default events
 
@@ -328,7 +330,7 @@ public class Program
     private async Task SlashCommandHandler(SocketSlashCommand command)
     {
 
-        if (GlobalSwitches.modulePaycheckEnabled == true)
+        if (GlobalElements.modulePaycheckEnabled == true)
         {
             SnoutUser snoutCommandUser = new SnoutUser(command.User.Username + "#" + command.User.Discriminator);
             Paycheck snoutCommandUsedPaycheck = new Paycheck(snoutCommandUser, "action_USED_SNOUT_COMMAND", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
@@ -921,7 +923,7 @@ public class Program
             CustomNotification notif = new CustomNotification(NotificationType.Info, "Traduction", "Traduction en cours ...");
             await modal.RespondAsync(embed: notif.BuildEmbed());
 
-            SnoutTranslator translator = new SnoutTranslator(deepl, "api-free.deepl.com", GlobalSwitches.globalSnoutVersion, "application/x-www-form-urlencoded");
+            SnoutTranslator translator = new SnoutTranslator(deepl, "api-free.deepl.com", GlobalElements.globalSnoutVersion, "application/x-www-form-urlencoded");
             string translatorInput = modal.Data.Components.First(x => x.CustomId == "translate_textbox").Value;
             string translaterTargetLanguage = modal.Data.Components.First(x => x.CustomId == "translate_language_to_textbox").Value;
 
