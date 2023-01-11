@@ -21,11 +21,11 @@ public class Program
     private string deepl;
 
     readonly System.Timers.Timer _timerFetcher = new System.Timers.Timer();
-    
 
     public static class GlobalSwitches
     {
         public const string globalSnoutVersion = "Snout v1.1a";
+        public static bool modulePaycheck;
     }
     
     public static void Main(string[] args)
@@ -42,11 +42,17 @@ public class Program
             GatewayIntents = GatewayIntents.All
         });
         
+        // Modules init & global switches
+        
         _timerFetcher.Interval = 300000; // Vitesse de l'auto-updater (=5 minutes entre chaque Fetch vers Battlemetrics)
         _timerFetcher.AutoReset = true;
 
         _liveSniffer = new HllSniffer();
         _liveChannels = new List<IMessageChannel>();
+
+        GlobalSwitches.modulePaycheck = false;
+
+        // Default events
 
         _client.Log += Log;
         _client.Ready += ClientReady;
