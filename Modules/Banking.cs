@@ -155,7 +155,7 @@ namespace Snout.Modules
 
                     accountInfoEmbedBuilder.AddField("Frais de service", reader.GetDouble(7) + " " + reader.GetString(4) + " / jour", true);
 
-                    accountInfoEmbedBuilder.WithFooter(Program.GlobalConstants.globalSnoutVersion);
+                    accountInfoEmbedBuilder.WithFooter(Program.GlobalSwitches.globalSnoutVersion);
                     accountInfoEmbedBuilder.WithTimestamp(DateTimeOffset.UtcNow);
                     accountInfoEmbedBuilder.WithColor(Color.Green);
                     accountInfoEmbedBuilder.WithThumbnailUrl("https://cdn-icons-png.flaticon.com/512/1365/1365895.png");
@@ -278,7 +278,7 @@ namespace Snout.Modules
 
                 transactionEmbedBuilder.WithTitle($"Transactions récentes du compte n°{AccountNumber}");
                 transactionEmbedBuilder.WithDescription(concatDescriptionFromList);
-                transactionEmbedBuilder.WithFooter(Program.GlobalConstants.globalSnoutVersion);
+                transactionEmbedBuilder.WithFooter(Program.GlobalSwitches.globalSnoutVersion);
                 transactionEmbedBuilder.WithTimestamp(DateTimeOffset.UtcNow);
 
             }

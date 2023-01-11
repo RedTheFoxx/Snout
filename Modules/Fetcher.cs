@@ -46,7 +46,7 @@ public class HllSniffer {
                                 emptyAnswerEmbed.WithDescription(":x: Protections DDOS actives. Les résultats peuvent être *incomplets* ou *indisponibles*.");
                                 emptyAnswerEmbed.WithThumbnailUrl("https://static.wixstatic.com/media/da3421_111b24ae66f64f73aa94efeb80b08f58~mv2.png/v1/fit/w_2500,h_1330,al_c/da3421_111b24ae66f64f73aa94efeb80b08f58~mv2.png");
                                 emptyAnswerEmbed.WithColor(new Color(0, 0, 255));
-                                emptyAnswerEmbed.WithFooter(Program.GlobalConstants.globalSnoutVersion + " | Source : Battlemetrics.com");
+                                emptyAnswerEmbed.WithFooter(Program.GlobalSwitches.globalSnoutVersion + " | Source : Battlemetrics.com");
                                 emptyAnswerEmbed.WithTimestamp(DateTimeOffset.UtcNow);
 
                                 return emptyAnswerEmbed.Build();
@@ -82,7 +82,7 @@ public class HllSniffer {
             .WithDescription("---")
             .WithThumbnailUrl("https://static.wixstatic.com/media/da3421_111b24ae66f64f73aa94efeb80b08f58~mv2.png/v1/fit/w_2500,h_1330,al_c/da3421_111b24ae66f64f73aa94efeb80b08f58~mv2.png")
             .WithColor(new Color(0, 0, 255))
-            .WithFooter(Program.GlobalConstants.globalSnoutVersion + " | Source : Battlemetrics")
+            .WithFooter(Program.GlobalSwitches.globalSnoutVersion + " | Source : Battlemetrics")
             .WithTimestamp(DateTimeOffset.UtcNow);
 
         var sortedFields = listed

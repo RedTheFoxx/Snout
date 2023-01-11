@@ -23,7 +23,7 @@ public class Program
     readonly System.Timers.Timer _timerFetcher = new System.Timers.Timer();
     
 
-    public static class GlobalConstants
+    public static class GlobalSwitches
     {
         public const string globalSnoutVersion = "Snout v1.1a";
     }
@@ -895,7 +895,7 @@ public class Program
             CustomNotification notif = new CustomNotification(NotificationType.Info, "Traduction", "Traduction en cours ...");
             await modal.RespondAsync(embed: notif.BuildEmbed());
 
-            SnoutTranslator translator = new SnoutTranslator(deepl, "api-free.deepl.com", GlobalConstants.globalSnoutVersion, "application/x-www-form-urlencoded");
+            SnoutTranslator translator = new SnoutTranslator(deepl, "api-free.deepl.com", GlobalSwitches.globalSnoutVersion, "application/x-www-form-urlencoded");
             string translatorInput = modal.Data.Components.First(x => x.CustomId == "translate_textbox").Value;
             string translaterTargetLanguage = modal.Data.Components.First(x => x.CustomId == "translate_language_to_textbox").Value;
 

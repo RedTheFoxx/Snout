@@ -314,14 +314,14 @@ class SnoutHandler
                 .AddField("🗃 Langues cibles disponibles", "BG,CS,DA,DE,EL,EN-GB,EN-US,ES,ET,FI,FR,HU,ID,IT,JA,LT,LV,NL,PL,PT-BR,PT-PT,RO,RU,SK,SL,SV,TR,UK,ZH")
                 .AddField("📝 Caractères utilisés ce mois-ci", "*Affichage impossible - Aucun token DeepL n'a été renseigné*")
                 .WithColor(Color.Blue)
-                .WithFooter(Program.GlobalConstants.globalSnoutVersion + " & DeepL API v2.0")
+                .WithFooter(Program.GlobalSwitches.globalSnoutVersion + " & DeepL API v2.0")
                 .WithTimestamp(DateTimeOffset.UtcNow);
 
             await command.RespondAsync(ephemeral: true, embed: embed.Build());
         }
         else
         {
-            SnoutTranslator translator = new SnoutTranslator(deepl, "api-free.deepl.com", GlobalConstants.globalSnoutVersion, "application/x-www-form-urlencoded");
+            SnoutTranslator translator = new SnoutTranslator(deepl, "api-free.deepl.com", GlobalSwitches.globalSnoutVersion, "application/x-www-form-urlencoded");
             int remainingCharacters = await translator.GetRemainingCharactersAsync();
             
             var embed = new EmbedBuilder();
@@ -332,7 +332,7 @@ class SnoutHandler
                 .AddField("🗃 Langues cibles disponibles", "BG,CS,DA,DE,EL,EN-GB,EN-US,ES,ET,FI,FR,HU,ID,IT,JA,LT,LV,NL,PL,PT-BR,PT-PT,RO,RU,SK,SL,SV,TR,UK,ZH")
                 .AddField("📝 Caractères utilisés ce mois-ci", remainingCharacters + " / 500.000")
                 .WithColor(Color.Blue)
-                .WithFooter(Program.GlobalConstants.globalSnoutVersion + " & DeepL API v2.0")
+                .WithFooter(Program.GlobalSwitches.globalSnoutVersion + " & DeepL API v2.0")
                 .WithTimestamp(DateTimeOffset.UtcNow);
 
             await command.RespondAsync(ephemeral: true, embed: embed.Build());
