@@ -340,4 +340,22 @@ class SnoutHandler
         }
             
     }
+
+    public async Task HandleMpaycheckCommand(SocketSlashCommand command)
+    {
+        
+        if (GlobalSwitches.modulePaycheckEnabled == true)
+        {
+            GlobalSwitches.modulePaycheckEnabled = false;
+            CustomNotification notifSwitchedToFalse = new CustomNotification(NotificationType.Success, "MODULE CONTROL", "Module paycheck désactivé.");
+            await command.RespondAsync(embed: notifSwitchedToFalse.BuildEmbed());
+        }
+        else
+        {
+            GlobalSwitches.modulePaycheckEnabled = true;
+            CustomNotification notifSwitchedToTrue = new CustomNotification(NotificationType.Success, "MODULE CONTROL", "Module paycheck activé.");
+            await command.RespondAsync(embed: notifSwitchedToTrue.BuildEmbed());
+
+        }
+    }
 }
