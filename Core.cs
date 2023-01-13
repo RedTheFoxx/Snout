@@ -40,7 +40,7 @@ public class Program
         _client = new DiscordSocketClient(new DiscordSocketConfig
         {
             LogLevel = LogSeverity.Verbose,
-            MessageCacheSize = 100,
+            MessageCacheSize = 200,
             AlwaysDownloadUsers = true,
             GatewayIntents = GatewayIntents.All
         });
@@ -65,24 +65,23 @@ public class Program
         _client.ModalSubmitted += ModalHandler; // action_MODAL_SUBMITTED
         _client.SelectMenuExecuted += SelectMenuHandler; // action_SELECT_MENU_EXECUTED
 
-        // Ci-dessous, les évènements traités par le LiveHandler (module(s) client(s) : paycheck)
+        // Ci - dessous, les évènements traités par le LiveHandler(module(s) client(s) : paycheck)
 
-        // _client.PresenceUpdated += LiveHandlers.PresenceUpdated; // action_CHANGED_STATUS
+        // _client.PresenceUpdated += Events.PresenceUpdated; // action_CHANGED_STATUS
 
-        // _client.MessageReceived += LiveHandlers.MessageReceived; // action_MESSAGE & MESSAGE_SENT_WITH_FILE & TAGUED_BY & TAGUED_SOMEONE
-        _client.MessageDeleted += LiveHandlers.MessageDeleted; // action_MESSAGE_DELETED
-        // _client.MessageUpdated += LiveHandlers.MessageUpdated; // action_MESSAGE_UPDATED
+        //_client.MessageReceived += Events.MessageReceived; // action_MESSAGE & MESSAGE_SENT_WITH_FILE & TAGUED_BY & TAGUED_SOMEONE
+        //_client.MessageUpdated += Events.MessageUpdated; // action_MESSAGE_UPDATED
 
-        // _client.ReactionAdded += LiveHandlers.ReactionAdded; // action_REACTION_ADDED
-        // _client.ReactionRemoved += LiveHandlers.ReactionRemoved; // action_REACTION_REMOVED
+        //_client.ReactionAdded += Events.ReactionAdded; // action_REACTION_ADDED
+        //_client.ReactionRemoved += Events.ReactionRemoved; // action_REACTION_REMOVED
 
-        // _client.UserIsTyping += LiveHandlers.UserIsTyping; // action_TYPING
-        // _client.UserVoiceStateUpdated += LiveHandlers.UserVoiceStateUpdated; // action_VOICE_CHANNEL_USER_STATUS_UPDATED
+        //_client.UserIsTyping += Events.UserIsTyping; // action_TYPING
+        _client.UserVoiceStateUpdated += Events.UserVoiceStateUpdated; // action_VOICE_CHANNEL_USER_STATUS_UPDATED
 
         // paycheckQueue thread worker
         // TODO 
         //
-        
+
         _timerFetcher.Elapsed += Timer_Elapsed;
 
         // Check if file "token.txt" exist at the root of the project
@@ -212,9 +211,9 @@ public class Program
             //    .WithName("thelp")
             //    .WithDescription("Afficher l'aide du traducteur de texte et les utilisations restantes"),
 
-            //new SlashCommandBuilder()
-            //    .WithName("mpaycheck")
-            //    .WithDescription("Activer / Désactiver le module paycheck")
+            new SlashCommandBuilder()
+                .WithName("mpaycheck")
+                .WithDescription("Activer / Désactiver le module paycheck")
 
         };
 
@@ -342,14 +341,7 @@ public class Program
         {
             SnoutUser snoutCommandUser = new SnoutUser(command.User.Username + "#" + command.User.Discriminator);
             Paycheck snoutCommandUsedPaycheck = new Paycheck(snoutCommandUser, "action_USED_SNOUT_COMMAND", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
-            if (await snoutCommandUsedPaycheck.CreatePaycheckAsync())
-            {
-                Console.WriteLine("PAYCHECK - SUCCESS : action_USED_SNOUT_COMMAND distribuée à " + command.User.Username + "#" + command.User.Discriminator);
-            }
-            else
-            {
-                Console.WriteLine("PAYCHECK - SKIP : " + command.User.Username + "#" + command.User.Discriminator + " n'est pas un SnoutUser.");
-            }
+            GlobalElements.paycheckQueue.Enqueue(snoutCommandUsedPaycheck);
         }
 
         switch (command.Data.Name)
@@ -997,9 +989,16 @@ public class Program
                 {
                     if (GlobalElements.paycheckQueue.TryDequeue(out var paycheck))
                     {
-                        await paycheck.CreatePaycheckAsync();
-                        await Task.Delay(1000);
-                        
+                        if (await paycheck.CreatePaycheckAsync())
+                        {
+                            Console.WriteLine("PAYCHECK : +1 Discord Action pour " + paycheck.User.DiscordId + " : " + paycheck.InvokedAction);
+                            await Task.Delay(1000);
+                        }
+                        else
+                        {
+                            Console.WriteLine("PAYCHECK - SKIP : Utilisateur " + paycheck.User + " inconnu de Snout");
+                            await Task.Delay(1000);
+                        }
                     }
                 }
             }
