@@ -84,13 +84,22 @@ internal class Events
         return Task.CompletedTask;
     }
 
-    internal static Task UserIsTyping(Cacheable<IUser, ulong> arg1, Cacheable<IMessageChannel, ulong> arg2)
+    internal static async Task<Task> UserIsTyping(Cacheable<IUser, ulong> arg1, Cacheable<IMessageChannel, ulong> arg2)
     {
         if (GlobalElements.modulePaycheckEnabled)
         {
-            // TODO : Implement this
+            IUser cacheableUser = await arg1.GetOrDownloadAsync();
+           
+            if (cacheableUser != null)
+            {
+                SnoutUser user = new SnoutUser(discordId: cacheableUser.Username + "#" + cacheableUser.Discriminator);
+                Paycheck paycheck = new Paycheck(user, "action_TYPING", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+                GlobalElements.paycheckQueue.Enqueue(paycheck);
+
+            }
             return Task.CompletedTask;
         }
+        
         return Task.CompletedTask;
     }
 
