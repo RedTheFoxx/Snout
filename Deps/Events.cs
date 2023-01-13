@@ -1,4 +1,5 @@
 ﻿using Discord;
+using Discord.Rest;
 using Discord.WebSocket;
 using Snout.Modules;
 using System.Collections.Concurrent;
@@ -7,7 +8,7 @@ using static Snout.Program;
 namespace Snout.CoreDeps;
 internal class Events
 {
-    
+
     /* This class is used to handle the event monitoring hooked in the Main() method. Each paycheck issued from an event is send to paycheckQueue which absorb bursts and regulate
      * DB access
      * 
@@ -16,11 +17,11 @@ internal class Events
      * 
      * Declared actions in database :
      * 
-     * - action_TYPING : When a user starts typing in a channel.
+     * - action_TYPING : When a user starts typing in a channel. ✔️
      * - action_MESSAGE_SENT : When a message is sent in a channel.
      * - action_MESSAGE_UPDATED : When a message is updated in a channel.
-     * - action_REACTION_ADDED : When a reaction is added to a message.
-     * - action_REACTION_REMOVED : When a reaction is removed from a message.
+     * - action_REACTION_ADDED : When a reaction is added to a message. ✔️
+     * - action_REACTION_REMOVED : When a reaction is removed from a message. ✔️
      * - action_MODAL_SUBMITTED : When a modal is submitted.
      * - action_SELECT_MENU_EXECUTED : When a select menu is executed.
      * - action_TAGUED_BY : When a user is tagged by another user.
@@ -68,7 +69,15 @@ internal class Events
     {
         if (GlobalElements.modulePaycheckEnabled)
         {
-            // TODO : Implement this
+            Optional<IUser> optionalUser = arg3.User;
+
+            if (optionalUser.IsSpecified)
+            {
+                SnoutUser user = new SnoutUser(discordId: optionalUser.Value.Username + "#" + optionalUser.Value.Discriminator);
+                Paycheck paycheck = new Paycheck(user, "action_REACTION_ADDED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+                GlobalElements.paycheckQueue.Enqueue(paycheck);
+            }
+            
             return Task.CompletedTask;
         }
         return Task.CompletedTask;
@@ -78,7 +87,15 @@ internal class Events
     {
         if (GlobalElements.modulePaycheckEnabled)
         {
-            // TODO : Implement this
+            Optional<IUser> optionalUser = arg3.User;
+
+            if (optionalUser.IsSpecified)
+            {
+                SnoutUser user = new SnoutUser(discordId: optionalUser.Value.Username + "#" + optionalUser.Value.Discriminator);
+                Paycheck paycheck = new Paycheck(user, "action_REACTION_REMOVED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+                GlobalElements.paycheckQueue.Enqueue(paycheck);
+            }
+
             return Task.CompletedTask;
         }
         return Task.CompletedTask;
