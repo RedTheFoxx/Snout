@@ -72,8 +72,8 @@ public class Program
         //_client.MessageReceived += Events.MessageReceived; // action_MESSAGE & MESSAGE_SENT_WITH_FILE & TAGUED_BY & TAGUED_SOMEONE
         //_client.MessageUpdated += Events.MessageUpdated; // action_MESSAGE_UPDATED
 
-        //_client.ReactionAdded += Events.ReactionAdded; // action_REACTION_ADDED
-        //_client.ReactionRemoved += Events.ReactionRemoved; // action_REACTION_REMOVED
+        _client.ReactionAdded += Events.ReactionAdded; // action_REACTION_ADDED
+        _client.ReactionRemoved += Events.ReactionRemoved; // action_REACTION_REMOVED
 
         _client.UserIsTyping += Events.UserIsTyping; // action_TYPING
         _client.UserVoiceStateUpdated += Events.UserVoiceStateUpdated; // action_VOICE_CHANNEL_USER_STATUS_UPDATED
