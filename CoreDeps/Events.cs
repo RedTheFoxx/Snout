@@ -5,7 +5,7 @@ using System.Collections.Concurrent;
 using static Snout.Program;
 
 namespace Snout.CoreDeps;
-internal class LiveHandlers
+internal class Events
 {
     // Sera utilisé plus tard pour Queue les paycheck et gérer les burst issus des évènements à haute fréquence
     // private ConcurrentQueue<Paycheck> _paycheckQueue;
@@ -36,21 +36,6 @@ internal class LiveHandlers
      * Each function is used to handle an event but its scope is not limited to the Paycheck modules, it can be reused for future things.
      * 
      */
-
-    internal static Task MessageDeleted(Cacheable<IMessage, ulong> arg1, Cacheable<IMessageChannel, ulong> arg2)
-    {
-        if (GlobalElements.modulePaycheckEnabled)
-        {
-            SnoutUser messageDeletedUser = new SnoutUser(arg1.Value.Author.Username + "#" + arg1.Value.Author.Discriminator);
-            Paycheck paycheck = new(messageDeletedUser, "action_MESSAGE_DELETED", DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
-            GlobalElements.paycheckQueue.Enqueue(paycheck);
-
-            return Task.CompletedTask;
-                
-        }
-
-        return Task.CompletedTask;
-    }
 
     internal static Task MessageReceived(SocketMessage arg)
     {
@@ -116,7 +101,10 @@ internal class LiveHandlers
     {
         if (GlobalElements.modulePaycheckEnabled)
         {
-            // TODO : Implement this
+            SnoutUser user = new SnoutUser(arg1.Username + "#" + arg1.Discriminator);
+            Paycheck paycheck = new Paycheck(user, "action_VOICE_CHANNEL_USER_STATUS_UPDATED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+            GlobalElements.paycheckQueue.Enqueue(paycheck);
+
             return Task.CompletedTask;
         }
         return Task.CompletedTask;
