@@ -27,7 +27,9 @@ public class Program
         public const string globalSnoutVersion = "Snout v1.1a";
         public static bool modulePaycheckEnabled;
         public static ConcurrentQueue<Paycheck> paycheckQueue = new ConcurrentQueue<Paycheck>();
+        public static Thread paycheckDequeuerThread = new Thread(PaycheckDequeuer);
     }
+    
 
     public static void Main(string[] args)
         => new Program().MainAsync().GetAwaiter().GetResult();
@@ -52,6 +54,8 @@ public class Program
         _liveChannels = new List<IMessageChannel>();
 
         GlobalElements.modulePaycheckEnabled = false;
+        Thread paycheckDequeuerThread = new Thread(PaycheckDequeuer);
+        paycheckDequeuerThread.Start(); // Lancement du thread de défilement de la queue des paychecks. Un paycheck par seconde.
 
         // Default events
 
@@ -66,7 +70,7 @@ public class Program
         // _client.PresenceUpdated += LiveHandlers.PresenceUpdated; // action_CHANGED_STATUS
 
         // _client.MessageReceived += LiveHandlers.MessageReceived; // action_MESSAGE & MESSAGE_SENT_WITH_FILE & TAGUED_BY & TAGUED_SOMEONE
-        // _client.MessageDeleted += LiveHandlers.MessageDeleted; // action_MESSAGE_DELETED
+        _client.MessageDeleted += LiveHandlers.MessageDeleted; // action_MESSAGE_DELETED
         // _client.MessageUpdated += LiveHandlers.MessageUpdated; // action_MESSAGE_UPDATED
 
         // _client.ReactionAdded += LiveHandlers.ReactionAdded; // action_REACTION_ADDED
@@ -75,6 +79,10 @@ public class Program
         // _client.UserIsTyping += LiveHandlers.UserIsTyping; // action_TYPING
         // _client.UserVoiceStateUpdated += LiveHandlers.UserVoiceStateUpdated; // action_VOICE_CHANNEL_USER_STATUS_UPDATED
 
+        // paycheckQueue thread worker
+        // TODO 
+        //
+        
         _timerFetcher.Elapsed += Timer_Elapsed;
 
         // Check if file "token.txt" exist at the root of the project
@@ -978,6 +986,24 @@ public class Program
 
         // Envoyez le message privé
         await user.SendMessageAsync(embed: embedBuilder.Build());
+    }
+    public static async void PaycheckDequeuer()
+    {
+        while (true)
+        {
+            if (GlobalElements.modulePaycheckEnabled)
+            {
+                if (GlobalElements.paycheckQueue.Count > 0)
+                {
+                    if (GlobalElements.paycheckQueue.TryDequeue(out var paycheck))
+                    {
+                        await paycheck.CreatePaycheckAsync();
+                        await Task.Delay(1000);
+                        
+                    }
+                }
+            }
+        }
     }
 
 }
