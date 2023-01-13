@@ -75,7 +75,7 @@ public class Program
         //_client.ReactionAdded += Events.ReactionAdded; // action_REACTION_ADDED
         //_client.ReactionRemoved += Events.ReactionRemoved; // action_REACTION_REMOVED
 
-        //_client.UserIsTyping += Events.UserIsTyping; // action_TYPING
+        _client.UserIsTyping += Events.UserIsTyping; // action_TYPING
         _client.UserVoiceStateUpdated += Events.UserVoiceStateUpdated; // action_VOICE_CHANNEL_USER_STATUS_UPDATED
 
         // paycheckQueue thread worker
@@ -144,7 +144,7 @@ public class Program
         // SUPPR. DE TOUTES LES GLOBAL COMMANDS :
 
         await _client.Rest.DeleteAllGlobalCommandsAsync();
-        Console.WriteLine("GLOBAL COMMMANDS -> All Deleted");
+        Console.WriteLine("CORE : Global commands purgées");
 
         // REINSCRIPTION DE TOUTES LES GLOBAL COMMANDS :
 
@@ -222,7 +222,7 @@ public class Program
             try
             {
                 await _client.CreateGlobalApplicationCommandAsync(command.Build());
-                Console.WriteLine(command.Name + " -> Nouvelle Global Command ajoutée");
+                Console.WriteLine("CORE : " + command.Name + " -> global command enregistrée");
             }
             catch (HttpException exception)
             {
@@ -259,7 +259,7 @@ public class Program
             Console.WriteLine("DATABASE : Connexion à la base de données ouverte");
 
             // Lit et exécute le contenu du fichier GenerateDB.sql
-            string sql = await File.ReadAllTextAsync("SQL\\GenerateDB.sql");
+            string sql = await File.ReadAllTextAsync("C:\\Users\\moris\\Desktop\\Snout\\SQL\\GenerateDB.sql");
 
             using (SQLiteCommand command = new SQLiteCommand(sql, connection))
             {
