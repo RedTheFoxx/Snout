@@ -18,18 +18,18 @@ internal class Events
      * Declared actions in database :
      * 
      * - action_TYPING : When a user starts typing in a channel. ✔️
-     * - action_MESSAGE_SENT : When a message is sent in a channel.
-     * - action_MESSAGE_UPDATED : When a message is updated in a channel.
+     * - action_MESSAGE_SENT : When a message is sent in a channel. ✔️
+     * - action_MESSAGE_UPDATED : When a message is updated in a channel. ✔️
      * - action_REACTION_ADDED : When a reaction is added to a message. ✔️
      * - action_REACTION_REMOVED : When a reaction is removed from a message. ✔️
-     * - action_MODAL_SUBMITTED : When a modal is submitted.
-     * - action_SELECT_MENU_EXECUTED : When a select menu is executed.
-     * - action_TAGUED_BY : When a user is tagged by another user.
+     * - action_CHANGED_STATUS : When a user changes his status. ✔️
      * - action_VOICE_CHANNEL_USER_STATUS_UPDATED : When a user's status in a voice channel is updated. ✔️
-     * - action_CHANGED_STATUS : When a user changes his status. 
-     * - action_MESSAGE_SENT_WITH_FILE : When a message is sent with a file in a channel. 
-     * - action_TAGUED_SOMEONE : When a user tags someone in a message.
      * - action_USED_SNOUT_COMMAND : When a user uses a Snout command. ✔️
+     * - action_MODAL_SUBMITTED : When a modal is submitted. ✔️
+     * - action_SELECT_MENU_EXECUTED : When a select menu is executed. ✔️
+     * - action_TAGUED_BY : When a user is tagged by another user. ✔️
+     * - action_TAGUED_SOMEONE : When a user tags someone in a message. ✔️
+     * - action_MESSAGE_SENT_WITH_FILE : When a message is sent with a file in a channel. ✔️
      * 
      * Each function is used to handle an event but its scope is not limited to the Paycheck modules, it can be reused for future things.
      * 
@@ -39,19 +39,65 @@ internal class Events
     {
         if (GlobalElements.modulePaycheckEnabled)
         {
-            // TODO : Implement this
+            SnoutUser user = new SnoutUser(discordId: arg.Author.Username + "#" + arg.Author.Discriminator);
+            Paycheck paycheck = new Paycheck(user, "action_MESSAGE_SENT", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+            GlobalElements.paycheckQueue.Enqueue(paycheck);
+
+            // Check if there is any attachment or file in the message and reward the user
+            if (arg.Attachments.Count > 0)
+            {
+                Paycheck attachmentPaycheck = new Paycheck(user, "action_MESSAGE_SENT_WITH_FILE", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+                GlobalElements.paycheckQueue.Enqueue(attachmentPaycheck);
+            }
+
+            // Process TAGUED_BY et TAGUED_SOMEONE here
+            var messageContentTags = arg.Tags;
+            if (messageContentTags.Count > 0) // Any tags in the message ?
+            {
+                foreach (var tag in messageContentTags)
+                {
+                    if (tag.Type == TagType.UserMention)
+                    {
+                        SnoutUser tagingUser = new SnoutUser(discordId: arg.Author.Username + "#" + arg.Author.Discriminator);
+                        Paycheck taguingUserPaycheck = new Paycheck(tagingUser, "action_TAGUED_SOMEONE", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+                        GlobalElements.paycheckQueue.Enqueue(taguingUserPaycheck);
+
+                        // Get the user mentionned and clean it
+                        string? userMentionned = tag.Value.ToString();
+                        string cleanUserMentionned = userMentionned.Remove(0, 1); // Delete the first caracter 
+                        cleanUserMentionned = cleanUserMentionned.Remove(cleanUserMentionned.IndexOf("#") - 1, 1);  // Delete the caracter just before the #
+
+                        // If the user mentionned is not the author of the message
+                        if (cleanUserMentionned != (arg.Author.Username + "#" + arg.Author.Discriminator))
+                        {
+                            SnoutUser cleanMentionnedSnoutUser = new SnoutUser(discordId: cleanUserMentionned);
+                            Paycheck userMentionnedPaycheck = new Paycheck(cleanMentionnedSnoutUser, "action_TAGUED_BY", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+                            GlobalElements.paycheckQueue.Enqueue(userMentionnedPaycheck);
+                        }
+                    }
+                }
+            }
             return Task.CompletedTask;
         }
         return Task.CompletedTask;
     }
 
-    internal static Task MessageUpdated(Cacheable<IMessage, ulong> arg1, SocketMessage arg2, ISocketMessageChannel arg3)
+    internal static async Task<Task> MessageUpdated(Cacheable<IMessage, ulong> arg1, SocketMessage arg2, ISocketMessageChannel arg3)
     {
         if (GlobalElements.modulePaycheckEnabled)
         {
-            // TODO : Implement this
+            var cacheableMessage = await arg1.GetOrDownloadAsync();
+
+            if (cacheableMessage != null)
+            {
+                SnoutUser user = new SnoutUser(discordId: cacheableMessage.Author.Username + "#" + cacheableMessage.Author.Discriminator);
+                Paycheck paycheck = new Paycheck(user, "action_MESSAGE_UPDATED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+                GlobalElements.paycheckQueue.Enqueue(paycheck);
+            }
+            
             return Task.CompletedTask;
         }
+        
         return Task.CompletedTask;
     }
     
@@ -59,9 +105,13 @@ internal class Events
     {
         if (GlobalElements.modulePaycheckEnabled)
         {
-            // TODO : Implement this
+            SnoutUser user = new SnoutUser(discordId: arg1.Username + "#" + arg1.Discriminator);
+            Paycheck paycheck = new Paycheck(user, "action_CHANGED_STATUS", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+            GlobalElements.paycheckQueue.Enqueue(paycheck);
+            
             return Task.CompletedTask;
         }
+        
         return Task.CompletedTask;
     }
 
