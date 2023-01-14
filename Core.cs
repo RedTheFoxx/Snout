@@ -67,20 +67,16 @@ public class Program
 
         // Ci - dessous, les évènements traités par le LiveHandler(module(s) client(s) : paycheck)
 
-        // _client.PresenceUpdated += Events.PresenceUpdated; // action_CHANGED_STATUS
+        _client.PresenceUpdated += Events.PresenceUpdated; // action_CHANGED_STATUS
 
-        //_client.MessageReceived += Events.MessageReceived; // action_MESSAGE & MESSAGE_SENT_WITH_FILE & TAGUED_BY & TAGUED_SOMEONE
-        //_client.MessageUpdated += Events.MessageUpdated; // action_MESSAGE_UPDATED
+        _client.MessageReceived += Events.MessageReceived; // action_MESSAGE & MESSAGE_SENT_WITH_FILE & TAGUED_BY & TAGUED_SOMEONE
+        _client.MessageUpdated += Events.MessageUpdated; // action_MESSAGE_UPDATED
 
         _client.ReactionAdded += Events.ReactionAdded; // action_REACTION_ADDED
         _client.ReactionRemoved += Events.ReactionRemoved; // action_REACTION_REMOVED
 
         _client.UserIsTyping += Events.UserIsTyping; // action_TYPING
         _client.UserVoiceStateUpdated += Events.UserVoiceStateUpdated; // action_VOICE_CHANNEL_USER_STATUS_UPDATED
-
-        // paycheckQueue thread worker
-        // TODO 
-        //
 
         _timerFetcher.Elapsed += Timer_Elapsed;
 
@@ -426,14 +422,22 @@ public class Program
                 break;
         }
     } // Sélecteur de commandes envoyées au bot
-
+    
     private async Task ModalHandler(SocketModal modal)
     {
+         
         // MODAL : AJOUT D'URL
         //////////////////////////////////////////////////////////////////////////////
 
         if (modal.Data.CustomId == "new_url_modal")
         {
+            if (GlobalElements.modulePaycheckEnabled == true)
+            {
+                SnoutUser paycheckUser = new SnoutUser(discordId: modal.User.Username + "#" + modal.User.Discriminator);
+                Paycheck paycheck = new Paycheck(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+                GlobalElements.paycheckQueue.Enqueue(paycheck);
+            }
+
             List<SocketMessageComponentData> components = modal.Data.Components.ToList();
 
             var nouvelUrl = components.First(x => x.CustomId == "new_url_textbox").Value;
@@ -499,6 +503,12 @@ public class Program
 
         if (modal.Data.CustomId == "new_user_modal")
         {
+            if (GlobalElements.modulePaycheckEnabled == true)
+            {
+                SnoutUser paycheckUser = new SnoutUser(discordId: modal.User.Username + "#" + modal.User.Discriminator);
+                Paycheck paycheck = new Paycheck(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+                GlobalElements.paycheckQueue.Enqueue(paycheck);
+            }
 
             List<SocketMessageComponentData> components = modal.Data.Components.ToList();
             var nouvelUser = components.First(x => x.CustomId == "new_user_textbox").Value;
@@ -526,6 +536,13 @@ public class Program
 
         if (modal.Data.CustomId == "new_account_modal")
         {
+            if (GlobalElements.modulePaycheckEnabled == true)
+            {
+                SnoutUser paycheckUser = new SnoutUser(discordId: modal.User.Username + "#" + modal.User.Discriminator);
+                Paycheck paycheck = new Paycheck(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+                GlobalElements.paycheckQueue.Enqueue(paycheck);
+            }
+
             List<SocketMessageComponentData> components = modal.Data.Components.ToList();
             CustomNotification ajoutNok = new CustomNotification(NotificationType.Error, "Banque", "Impossible de créer le compte. Vérifiez votre saisie.");
 
@@ -621,6 +638,13 @@ public class Program
         if (modal.Data.CustomId == "check_accounts_modal")
         {
 
+            if (GlobalElements.modulePaycheckEnabled == true)
+            {
+                SnoutUser paycheckUser = new SnoutUser(discordId: modal.User.Username + "#" + modal.User.Discriminator);
+                Paycheck paycheck = new Paycheck(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+                GlobalElements.paycheckQueue.Enqueue(paycheck);
+            }
+
             await modal.RespondAsync(embed: new CustomNotification(NotificationType.Info, "Banque", "Votre demande est en cours de traitement").BuildEmbed());
 
             var modalUser = modal.Data.Components.First(x => x.CustomId == "check_accounts_textbox").Value;
@@ -661,6 +685,13 @@ public class Program
 
         if (modal.Data.CustomId == "edit_account_modal")
         {
+
+            if (GlobalElements.modulePaycheckEnabled == true)
+            {
+                SnoutUser paycheckUser = new SnoutUser(discordId: modal.User.Username + "#" + modal.User.Discriminator);
+                Paycheck paycheck = new Paycheck(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+                GlobalElements.paycheckQueue.Enqueue(paycheck);
+            }
 
             Account account = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "edit_account_textbox").Value));
             account.GetParameters(int.Parse(modal.Data.Components.First(x => x.CustomId == "edit_account_textbox").Value));
@@ -747,6 +778,14 @@ public class Program
 
         if (modal.Data.CustomId == "deposit_modal")
         {
+
+            if (GlobalElements.modulePaycheckEnabled == true)
+            {
+                SnoutUser paycheckUser = new SnoutUser(discordId: modal.User.Username + "#" + modal.User.Discriminator);
+                Paycheck paycheck = new Paycheck(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+                GlobalElements.paycheckQueue.Enqueue(paycheck);
+            }
+
             Account account = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "deposit_account_textbox").Value));
             account.GetParameters(int.Parse(modal.Data.Components.First(x => x.CustomId == "deposit_account_textbox").Value));
 
@@ -800,6 +839,13 @@ public class Program
 
         if (modal.Data.CustomId == "withdraw_modal")
         {
+            if (GlobalElements.modulePaycheckEnabled == true)
+            {
+                SnoutUser paycheckUser = new SnoutUser(discordId: modal.User.Username + "#" + modal.User.Discriminator);
+                Paycheck paycheck = new Paycheck(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+                GlobalElements.paycheckQueue.Enqueue(paycheck);
+            }
+
             Account account = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "withdraw_account_textbox").Value));
             account.GetParameters(int.Parse(modal.Data.Components.First(x => x.CustomId == "withdraw_account_textbox").Value));
 
@@ -853,6 +899,13 @@ public class Program
 
         if (modal.Data.CustomId == "transfer_modal")
         {
+            if (GlobalElements.modulePaycheckEnabled == true)
+            {
+                SnoutUser paycheckUser = new SnoutUser(discordId: modal.User.Username + "#" + modal.User.Discriminator);
+                Paycheck paycheck = new Paycheck(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+                GlobalElements.paycheckQueue.Enqueue(paycheck);
+            }
+
             Account account = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_source_textbox").Value));
             account.GetParameters(int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_source_textbox").Value));
 
@@ -920,6 +973,13 @@ public class Program
         if (modal.Data.CustomId == "translate_modal")
         {
 
+            if (GlobalElements.modulePaycheckEnabled == true)
+            {
+                SnoutUser paycheckUser = new SnoutUser(discordId: modal.User.Username + "#" + modal.User.Discriminator);
+                Paycheck paycheck = new Paycheck(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+                GlobalElements.paycheckQueue.Enqueue(paycheck);
+            }
+
             CustomNotification notif = new CustomNotification(NotificationType.Info, "Traduction", "Traduction en cours ...");
             await modal.RespondAsync(embed: notif.BuildEmbed());
 
@@ -936,11 +996,19 @@ public class Program
             await modal.Channel.SendMessageAsync(embed: notif2.BuildEmbed());
 
         }
-
+    
+   
     }
 
     private async Task SelectMenuHandler(SocketMessageComponent menu)
     {
+        
+        if (GlobalElements.modulePaycheckEnabled == true)
+        {
+            SnoutUser paycheckUser = new SnoutUser(discordId: menu.User.Username + "#" + menu.User.Discriminator);
+            Paycheck paycheck = new Paycheck(paycheckUser, "action_SELECT_MENU_EXECUTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+            GlobalElements.paycheckQueue.Enqueue(paycheck);
+        }
 
         var selectedUserData = string.Join(", ", menu.Data.Values);
 
@@ -996,7 +1064,7 @@ public class Program
                         }
                         else
                         {
-                            Console.WriteLine("PAYCHECK - SKIP : Utilisateur " + paycheck.User + " inconnu de Snout");
+                            Console.WriteLine("PAYCHECK - SKIP : Utilisateur " + paycheck.User.DiscordId + " inconnu de Snout");
                             await Task.Delay(1000);
                         }
                     }
