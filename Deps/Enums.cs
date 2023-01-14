@@ -3,6 +3,7 @@
     Deposit,
     Withdrawal,
     Transfer,
+    Paycheck,
     DailyUpdate,
     LockAction,
     Unknown
