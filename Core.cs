@@ -21,13 +21,14 @@ public class Program
     private string deepl;
 
     readonly System.Timers.Timer _timerFetcher = new System.Timers.Timer();
-    
+
     public static class GlobalElements
     {
         public const string globalSnoutVersion = "Snout v1.1a";
         public static bool modulePaycheckEnabled;
         public static ConcurrentQueue<Paycheck> paycheckQueue = new ConcurrentQueue<Paycheck>();
         public static Thread paycheckDequeuerThread = new Thread(PaycheckDequeuer);
+        public static Timer? dailyUpdaterTimerUniqueReference = null;
     }
     
 
@@ -171,29 +172,29 @@ public class Program
             //    .WithName("unregister")
             //    .WithDescription("Désinscrire un utilisateur de Snout Bot"),
 
-            //new SlashCommandBuilder()
-            //    .WithName("account")
-            //    .WithDescription("Créer un nouveau compte bancaire"),
+            new SlashCommandBuilder()
+                .WithName("account")
+                .WithDescription("Créer un nouveau compte bancaire"),
 
-            //new SlashCommandBuilder()
-            //    .WithName("myaccounts")
-            //    .WithDescription("Afficher ses comptes bancaires"),
+            new SlashCommandBuilder()
+                .WithName("myaccounts")
+                .WithDescription("Afficher ses comptes bancaires"),
 
             //new SlashCommandBuilder()
             //    .WithName("checkaccounts")
             //    .WithDescription("Afficher les comptes bancaires d'un utilisateur"),
 
-            //new SlashCommandBuilder()
-            //    .WithName("editaccount")
-            //    .WithDescription("Modifier un compte bancaire"),
+            new SlashCommandBuilder()
+                .WithName("editaccount")
+                .WithDescription("Modifier un compte bancaire"),
 
-            //new SlashCommandBuilder()
-            //    .WithName("deposit")
-            //    .WithDescription("Déposer de l'argent sur un compte bancaire"),
+            new SlashCommandBuilder()
+                .WithName("deposit")
+                .WithDescription("Déposer de l'argent sur un compte bancaire"),
 
-            //new SlashCommandBuilder()
-            //    .WithName("withdraw")
-            //    .WithDescription("Retirer de l'argent d'un compte bancaire"),
+            new SlashCommandBuilder()
+                .WithName("withdraw")
+                .WithDescription("Retirer de l'argent d'un compte bancaire"),
 
             //new SlashCommandBuilder()
             //    .WithName("transfer")
