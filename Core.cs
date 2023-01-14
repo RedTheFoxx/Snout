@@ -255,7 +255,7 @@ public class Program
             Console.WriteLine("DATABASE : Connexion à la base de données ouverte");
 
             // Lit et exécute le contenu du fichier GenerateDB.sql
-            string sql = await File.ReadAllTextAsync("C:\\Users\\moris\\Desktop\\Snout\\SQL\\GenerateDB.sql");
+            string sql = await File.ReadAllTextAsync("C:\\Users\\moris\\Desktop\\Snout\\SQL\\GenerateDB.sql"); // A modifier avant release, chercher le fichier dans le dossier "SQL"
 
             using (SQLiteCommand command = new SQLiteCommand(sql, connection))
             {
