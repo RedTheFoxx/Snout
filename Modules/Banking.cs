@@ -463,6 +463,50 @@ namespace Snout.Modules
 
 
         }
+        public async Task<bool> DailyUpdate()
+        {
+            
+            if (Type == AccountType.Locked)
+            {
+                return false;
+            }
+
+            if (CheckOverdraftLimit(AccountNumber))
+            {
+                // Overdraft penalty basée sur le calcul d'un pourcentage de découvert à définir
+                
+                // On calcule le dailyprofit qui sera déclenché à chaque dailyUpdate mais on ajoutera la pénalité :
+                // On applique donc : [Balance + Overdraft Penalty - Frais de service]
+            }
+
+            // On calcule le dailyprofit qui sera déclenché à chaque dailyUpdate :
+            // Si le solde est > 0 on appliquera [Balance * Taux d'intérêt - Frais de service]
+            // Si le solde est <= 0 on appliquera juste [Balance - Frais de service]
+
+            // Balance = Balance + DailyProfit 
+
+            DateTime currentDateTime = DateTime.Now;
+
+            string currentDate = currentDateTime.ToString("dd MMMM yyyy");
+            string currentTime = currentDateTime.ToString("HH:mm:ss");
+
+            Transaction transaction = new(AccountNumber, TransactionType.DailyUpdate, Balance, currentDate + " " + currentTime); // Remplacer la Balance par le Daily Profit ici
+            await transaction.CreateTransactionAsync();
+
+            using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
+            {
+                connection.Open();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = "UPDATE Accounts SET Balance = @Balance WHERE AccountNumber = @AccountNumber";
+                command.Parameters.AddWithValue("@AccountNumber", AccountNumber);
+                command.Parameters.AddWithValue("@Balance", Balance);
+                command.ExecuteNonQuery();
+
+                return true;
+            }
+        }
+        
         public async Task<bool> RemoveMoneyAsync(double amount)
         {
 
