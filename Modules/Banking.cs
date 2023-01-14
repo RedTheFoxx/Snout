@@ -692,16 +692,14 @@ namespace Snout.Modules
     {
         public int PaycheckId { get; set; }
         public SnoutUser User { get; set; }
-        public SnoutUser? TargetUser { get; set; }
         public string InvokedAction { get; set; }
         public string Date { get; set; }
 
-        public Paycheck(SnoutUser user, string invokedAction, string date, SnoutUser? targetUser = null)
+        public Paycheck(SnoutUser user, string invokedAction, string date)
         {
             User = user;
             InvokedAction = invokedAction;
             Date = date;
-            TargetUser = targetUser;
         }
 
         public async Task<bool> CreatePaycheckAsync() // Create a paycheck (Action_logs) in the database
@@ -714,16 +712,8 @@ namespace Snout.Modules
                     await connection.OpenAsync();
 
                     using var command = connection.CreateCommand();
-                    command.CommandText = "INSERT INTO Action_logs (user, targetUser, invokedAction, timestamp) VALUES (@user, @targetUser, @invokedAction, @timestamp)";
+                    command.CommandText = "INSERT INTO Action_logs (user, invokedAction, timestamp) VALUES (@user, @invokedAction, @timestamp)";
                     command.Parameters.AddWithValue("@user", User.UserId);
-                    if (TargetUser != null)
-                    {
-                        command.Parameters.AddWithValue("@targetUser", TargetUser.UserId);
-                    }
-                    else
-                    {
-                        command.Parameters.AddWithValue("@targetUser", DBNull.Value);
-                    }
                     command.Parameters.AddWithValue("@invokedAction", InvokedAction);
                     command.Parameters.AddWithValue("@timestamp", Date);
 
