@@ -287,7 +287,7 @@ namespace Snout.Modules
         }
 
         // Méthodes getters
-
+        
         public List<double> GetParameters(int accountNumber)
         {
             List<double> parameters = new();
@@ -470,21 +470,24 @@ namespace Snout.Modules
             {
                 return false;
             }
-
+            
             if (CheckOverdraftLimit(AccountNumber))
             {
-                // Overdraft penalty basée sur le calcul d'un pourcentage de découvert à définir
-                
-                // On calcule le dailyprofit qui sera déclenché à chaque dailyUpdate mais on ajoutera la pénalité :
-                // On applique donc : [Balance + Overdraft Penalty - Frais de service]
+                double overdraftPenalty = Balance + OverdraftLimit - AccountFees;
+                Balance = Balance + overdraftPenalty;
             }
-
-            // On calcule le dailyprofit qui sera déclenché à chaque dailyUpdate :
-            // Si le solde est > 0 on appliquera [Balance * Taux d'intérêt - Frais de service]
-            // Si le solde est <= 0 on appliquera juste [Balance - Frais de service]
-
-            // Balance = Balance + DailyProfit 
-
+            else
+            {
+                if (Balance <= 0)
+                {
+                    Balance = Balance - AccountFees;
+                }
+                else if (Balance > 0)
+                {
+                    Balance = Balance + (Balance * InterestRate) - AccountFees;
+                }
+            }
+            
             DateTime currentDateTime = DateTime.Now;
 
             string currentDate = currentDateTime.ToString("dd MMMM yyyy");
@@ -681,8 +684,7 @@ namespace Snout.Modules
 
                 return true;
             }
-
-
+            
         }
 
     }
@@ -725,5 +727,59 @@ namespace Snout.Modules
 
             return false;
         }
+    }
+
+    // A class used to execute get each account in the database every morning at 6:00 AM and execute DailyUpdate() method from Account class
+    public class DailyAccountUpdater
+    {
+        // constructor
+        public DailyAccountUpdater() { }
+        public Task<Timer> CreateDailyUpdateTimer()
+        {
+            DateTime now = DateTime.Now;
+            DateTime morning = new(now.Year, now.Month, now.Day, 6, 0, 0);
+            if (now > morning)
+            {
+                morning = morning.AddDays(1);
+            }
+            
+            TimeSpan timeToGo = morning - now;
+            int dueTime = (int)timeToGo.TotalMilliseconds;
+
+            Func<Task<bool>> callback = ExecuteDailyUpdateAsync;
+            Timer timer = new(state => callback(), null, dueTime, Timeout.Infinite);
+
+            return Task.FromResult(timer);
+        }
+        public async Task<bool> ExecuteDailyUpdateAsync()
+        {
+            using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
+            {
+                await connection.OpenAsync();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = "SELECT AccountNumber FROM Accounts";
+                using var reader = await command.ExecuteReaderAsync();
+
+                List<int> accountNumbers = new List<int>();
+                while (reader.Read())
+                {
+                    accountNumbers.Add(reader.GetInt32(0));
+                }
+                Console.WriteLine("PAYCHECK - DAILY UPDATE : Il y'a " + accountNumbers.Count + " éléments dans la liste de comptes lus");
+                
+                connection.Dispose();
+                
+                foreach (int accountNumber in accountNumbers)
+                {
+                    Account account = new Account(accountNumber);
+                    await account.DailyUpdate();
+                    Console.WriteLine("PAYCHECK - DAILY UPDATE : Compte n°" + account.AccountNumber + " mis à jour avec un nouveau solde à " + account.Balance);
+                }
+
+                return true;
+            }
+        }
+        
     }
 }
