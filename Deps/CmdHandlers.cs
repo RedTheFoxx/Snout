@@ -348,14 +348,32 @@ class SnoutHandler
         {
             GlobalElements.modulePaycheckEnabled = false;
             CustomNotification notifSwitchedToFalse = new CustomNotification(NotificationType.Success, "MODULE CONTROL", "Module paycheck désactivé.");
+            
+            GlobalElements.dailyUpdaterTimerUniqueReference.Dispose();
+            Console.WriteLine("PAYCHECK : Daily upate timer disposed");
+            
             await command.RespondAsync(embed: notifSwitchedToFalse.BuildEmbed());
         }
         else
         {
             GlobalElements.modulePaycheckEnabled = true;
             CustomNotification notifSwitchedToTrue = new CustomNotification(NotificationType.Success, "MODULE CONTROL", "Module paycheck activé.");
-            await command.RespondAsync(embed: notifSwitchedToTrue.BuildEmbed());
+            
+            DailyAccountUpdater paycheckDailyTimerObject = new DailyAccountUpdater();
+            Timer timerReference = await paycheckDailyTimerObject.CreateDailyUpdateTimer();
+            GlobalElements.dailyUpdaterTimerUniqueReference = timerReference;
 
+            if (GlobalElements.dailyUpdaterTimerUniqueReference != null)
+            {
+                Console.WriteLine("PAYCHECK : Daily account update task programmée (chaque jour à 06:00)");
+            }
+            else
+            {
+                Console.WriteLine("PAYCHECK : Erreur lors de la programmation de la tâche d'update");
+            }
+
+            await command.RespondAsync(embed: notifSwitchedToTrue.BuildEmbed());
+            
         }
     }
 }
