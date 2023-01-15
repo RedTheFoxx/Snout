@@ -766,6 +766,87 @@ namespace Snout.Modules
                 return true;
             }
         }
+        
+        private async Task<bool> ExecuteDailyPaycheckAsync()
+        {
+            // 1. Get all paychecks
+            // 2. Get all Actions from Actions and keep a list of all actions with their corresponding amount
+            // 3. Calculate the total amount for all paychecks per user
+            // 4. Create a unique transaction for each user describing the total amount to be added to his account
+            // 5. Get the user's checkings account number
+            // 6. Update the balance of each account
+
+            using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
+            {
+                await connection.OpenAsync();
+
+                using var extractActionsCommand = connection.CreateCommand();
+                extractActionsCommand.CommandText = "SELECT * FROM Actions";
+                using var readerActions = await extractActionsCommand.ExecuteReaderAsync();
+
+                Dictionary<string, double> actions = new Dictionary<string, double>(); // Get all actions with their corresponding values
+                while (readerActions.Read())
+                {
+                    actions.Add(readerActions.GetString(1), readerActions.GetDouble(2));
+                }
+
+                await connection.CloseAsync();
+
+                await connection.OpenAsync();
+                
+                using var extractPaychecksCommand = connection.CreateCommand();
+                extractPaychecksCommand.CommandText = "SELECT user, invokedAction, timestamp FROM Action_logs";
+                using var readerPaychecks = await extractPaychecksCommand.ExecuteReaderAsync();
+
+                Dictionary<int, double> totalAmountsPerUser = new Dictionary<int, double>();
+                while (readerPaychecks.Read())
+                {
+                    int userId = readerPaychecks.GetInt32(1);
+
+                    if (!totalAmountsPerUser.ContainsKey(userId))
+                    {
+                        totalAmountsPerUser.Add(userId, 0);
+                        totalAmountsPerUser[userId] = totalAmountsPerUser[userId] + actions[readerPaychecks.GetString(2)];
+                    }
+                    else
+                    {
+                        totalAmountsPerUser[userId] = totalAmountsPerUser[userId] + actions[readerPaychecks.GetString(2)];
+                    }
+
+                }
+                await connection.CloseAsync();
+
+                await connection.OpenAsync();
+
+                // get all the checkings account from Accounts table and list them with their respective amount to be added but do it for only one checkings account of a user
+
+                using var extractCheckingsAccountsCommand = connection.CreateCommand();
+                extractCheckingsAccountsCommand.CommandText = "SELECT AccountNumber, UserId FROM Accounts WHERE Type = 'checkings'";
+                using var readerAccounts = await extractCheckingsAccountsCommand.ExecuteReaderAsync();
+
+                List<int> processedUserId = new List<int>();
+                Dictionary<int, double> accountsToUpdate = new Dictionary<int, double>();
+
+                while (readerAccounts.Read())
+                {
+                    if (!processedUserId.Contains(readerAccounts.GetInt32(1)))
+                    {
+                        accountsToUpdate[readerAccounts.GetInt32(0)] = totalAmountsPerUser[readerAccounts.GetInt32(1)];
+                        processedUserId.Add(readerAccounts.GetInt32(1));
+                    }
+                }
+
+                await connection.CloseAsync();
+
+                // update all the accounts from the accountsToUpdate dictionnary and create a transaction pour each (transaction type = paycheck)
+                
+                // TODO : Finish this
+
+            }
+
+            return true;
+        }
+
         public Task<Timer> CreateDailyUpdateTimer()
         {
             DateTime now = DateTime.Now;
