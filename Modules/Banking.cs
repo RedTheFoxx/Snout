@@ -1,5 +1,6 @@
 using Discord;
 using System.Data.SQLite;
+using static Snout.Program;
 
 namespace Snout.Modules
 {
@@ -769,6 +770,9 @@ namespace Snout.Modules
 
         private async Task<bool> ExecuteDailyPaycheckAsync()
         {
+
+            GlobalElements.paycheckDequeuerThread.Interrupt(); // Block the dequeuer thread to avoid concurrent access to the database
+
             using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
             {
                 await connection.OpenAsync();
@@ -851,6 +855,8 @@ namespace Snout.Modules
                 await connection.DisposeAsync();
             }
 
+            GlobalElements.paycheckDequeuerThread.Start(); // Unblock the dequeuer thread
+
             return true;
         }
 
@@ -874,7 +880,7 @@ namespace Snout.Modules
         public Task<Timer> CreateDailyPaycheckTimer()
         {
             DateTime now = DateTime.Now;
-            DateTime morning = new(now.Year, now.Month, now.Day, 7, 0, 0);
+            DateTime morning = new(now.Year, now.Month, now.Day, 23, 0, 0);
             if (now > morning)
             {
                 morning = morning.AddDays(1);
