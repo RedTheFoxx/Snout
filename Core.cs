@@ -29,6 +29,7 @@ public class Program
         public static ConcurrentQueue<Paycheck> paycheckQueue = new ConcurrentQueue<Paycheck>();
         public static Thread paycheckDequeuerThread = new Thread(PaycheckDequeuer);
         public static Timer? dailyUpdaterTimerUniqueReference = null;
+        public static Timer? dailyPaycheckTimerUniqueReference = null;
     }
     
 
