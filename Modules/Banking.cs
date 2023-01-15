@@ -737,6 +737,35 @@ namespace Snout.Modules
     {
         // constructor
         public DailyAccountUpdater() { }
+        private async Task<bool> ExecuteDailyUpdateAsync()
+        {
+            using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
+            {
+                await connection.OpenAsync();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = "SELECT AccountNumber FROM Accounts";
+                using var reader = await command.ExecuteReaderAsync();
+
+                List<int> accountNumbers = new List<int>();
+                while (reader.Read())
+                {
+                    accountNumbers.Add(reader.GetInt32(0));
+                }
+                Console.WriteLine("PAYCHECK - DAILY UPDATE : Il y'a " + accountNumbers.Count + " éléments dans la liste de comptes lus");
+
+                connection.Dispose();
+
+                foreach (int accountNumber in accountNumbers)
+                {
+                    Account account = new Account(accountNumber);
+                    await account.DailyUpdate();
+                    Console.WriteLine("PAYCHECK - DAILY UPDATE : Compte n°" + account.AccountNumber + " mis à jour avec un nouveau solde à " + account.Balance);
+                }
+
+                return true;
+            }
+        }
         public Task<Timer> CreateDailyUpdateTimer()
         {
             DateTime now = DateTime.Now;
@@ -754,35 +783,22 @@ namespace Snout.Modules
 
             return Task.FromResult(timer);
         }
-        public async Task<bool> ExecuteDailyUpdateAsync()
+        public Task<Timer> CreateDailyPaycheckTimer()
         {
-            using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
+            DateTime now = DateTime.Now;
+            DateTime morning = new(now.Year, now.Month, now.Day, 7, 0, 0);
+            if (now > morning)
             {
-                await connection.OpenAsync();
-
-                using var command = connection.CreateCommand();
-                command.CommandText = "SELECT AccountNumber FROM Accounts";
-                using var reader = await command.ExecuteReaderAsync();
-
-                List<int> accountNumbers = new List<int>();
-                while (reader.Read())
-                {
-                    accountNumbers.Add(reader.GetInt32(0));
-                }
-                Console.WriteLine("PAYCHECK - DAILY UPDATE : Il y'a " + accountNumbers.Count + " éléments dans la liste de comptes lus");
-                
-                connection.Dispose();
-                
-                foreach (int accountNumber in accountNumbers)
-                {
-                    Account account = new Account(accountNumber);
-                    await account.DailyUpdate();
-                    Console.WriteLine("PAYCHECK - DAILY UPDATE : Compte n°" + account.AccountNumber + " mis à jour avec un nouveau solde à " + account.Balance);
-                }
-
-                return true;
+                morning = morning.AddDays(1);
             }
+
+            TimeSpan timeToGo = morning - now;
+            int dueTime = (int)timeToGo.TotalMilliseconds;
+
+            Func<Task<bool>> callback = ExecuteDailyUpdateAsync;
+            Timer timer = new(state => callback(), null, dueTime, Timeout.Infinite);
+
+            return Task.FromResult(timer);
         }
-        
     }
 }
