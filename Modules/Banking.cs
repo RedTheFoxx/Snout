@@ -287,7 +287,7 @@ namespace Snout.Modules
         }
 
         // Méthodes getters
-        
+
         public List<double> GetParameters(int accountNumber)
         {
             List<double> parameters = new();
@@ -465,12 +465,12 @@ namespace Snout.Modules
         }
         public async Task<bool> DailyUpdate()
         {
-            
+
             if (Type == AccountType.Locked)
             {
                 return false;
             }
-            
+
             if (CheckOverdraftLimit(AccountNumber))
             {
                 double overdraftPenalty = Balance + OverdraftLimit - AccountFees;
@@ -490,7 +490,7 @@ namespace Snout.Modules
                     Balance = Math.Round(rawBalance, 2);
                 }
             }
-            
+
             DateTime currentDateTime = DateTime.Now;
 
             string currentDate = currentDateTime.ToString("dd MMMM yyyy");
@@ -512,7 +512,7 @@ namespace Snout.Modules
                 return true;
             }
         }
-        
+
         public async Task<bool> RemoveMoneyAsync(double amount)
         {
 
@@ -687,7 +687,7 @@ namespace Snout.Modules
 
                 return true;
             }
-            
+
         }
 
     }
@@ -766,16 +766,9 @@ namespace Snout.Modules
                 return true;
             }
         }
-        
+
         private async Task<bool> ExecuteDailyPaycheckAsync()
         {
-            // 1. Get all paychecks
-            // 2. Get all Actions from Actions and keep a list of all actions with their corresponding amount
-            // 3. Calculate the total amount for all paychecks per user
-            // 4. Create a unique transaction for each user describing the total amount to be added to his account
-            // 5. Get the user's checkings account number
-            // 6. Update the balance of each account
-
             using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
             {
                 await connection.OpenAsync();
@@ -784,7 +777,8 @@ namespace Snout.Modules
                 extractActionsCommand.CommandText = "SELECT * FROM Actions";
                 using var readerActions = await extractActionsCommand.ExecuteReaderAsync();
 
-                Dictionary<string, double> actions = new Dictionary<string, double>(); // Get all actions with their corresponding values
+                Dictionary<string, double> actions = new Dictionary<string, double>(); // Inside : all actions and corresponding values
+
                 while (readerActions.Read())
                 {
                     actions.Add(readerActions.GetString(1), readerActions.GetDouble(2));
@@ -793,12 +787,13 @@ namespace Snout.Modules
                 await connection.CloseAsync();
 
                 await connection.OpenAsync();
-                
+
                 using var extractPaychecksCommand = connection.CreateCommand();
                 extractPaychecksCommand.CommandText = "SELECT user, invokedAction, timestamp FROM Action_logs";
                 using var readerPaychecks = await extractPaychecksCommand.ExecuteReaderAsync();
 
-                Dictionary<int, double> totalAmountsPerUser = new Dictionary<int, double>();
+                Dictionary<int, double> totalAmountsPerUser = new Dictionary<int, double>(); // Inside : all users and corresponding total amounts to add to their accounts
+
                 while (readerPaychecks.Read())
                 {
                     int userId = readerPaychecks.GetInt32(1);
@@ -807,10 +802,12 @@ namespace Snout.Modules
                     {
                         totalAmountsPerUser.Add(userId, 0);
                         totalAmountsPerUser[userId] = totalAmountsPerUser[userId] + actions[readerPaychecks.GetString(2)];
+                        Console.WriteLine("PAYCHECK - DAILY PAYCHECK : Gain de " + actions[readerPaychecks.GetString(2)] + " pour le - nouvel - utilisateur n°" + userId);
                     }
                     else
                     {
                         totalAmountsPerUser[userId] = totalAmountsPerUser[userId] + actions[readerPaychecks.GetString(2)];
+                        Console.WriteLine("PAYCHECK - DAILY PAYCHECK : Gain de " + actions[readerPaychecks.GetString(2)] + " pour l'utilisateur n°" + userId);
                     }
 
                 }
@@ -818,14 +815,12 @@ namespace Snout.Modules
 
                 await connection.OpenAsync();
 
-                // get all the checkings account from Accounts table and list them with their respective amount to be added but do it for only one checkings account of a user
-
                 using var extractCheckingsAccountsCommand = connection.CreateCommand();
                 extractCheckingsAccountsCommand.CommandText = "SELECT AccountNumber, UserId FROM Accounts WHERE Type = 'checkings'";
                 using var readerAccounts = await extractCheckingsAccountsCommand.ExecuteReaderAsync();
 
-                List<int> processedUserId = new List<int>();
-                Dictionary<int, double> accountsToUpdate = new Dictionary<int, double>();
+                List<int> processedUserId = new List<int>(); // List of all users whom account has already been seen
+                Dictionary<int, double> accountsToUpdate = new Dictionary<int, double>(); // Inside : all accounts to update and corresponding amounts to add to their balances
 
                 while (readerAccounts.Read())
                 {
@@ -833,15 +828,27 @@ namespace Snout.Modules
                     {
                         accountsToUpdate[readerAccounts.GetInt32(0)] = totalAmountsPerUser[readerAccounts.GetInt32(1)];
                         processedUserId.Add(readerAccounts.GetInt32(1));
+                        Console.WriteLine("PAYCHECK - DAILY PAYCHECK : Ajout de " + totalAmountsPerUser[readerAccounts.GetInt32(1)] + " au compte n°" + readerAccounts.GetInt32(0));
                     }
                 }
 
                 await connection.CloseAsync();
 
-                // update all the accounts from the accountsToUpdate dictionnary and create a transaction pour each (transaction type = paycheck)
-                
-                // TODO : Finish this
+                await connection.OpenAsync();
 
+                foreach (KeyValuePair<int, double> account in accountsToUpdate)
+                {
+                    using var updateAccountCommand = connection.CreateCommand();
+                    updateAccountCommand.CommandText = "UPDATE Accounts SET Balance = Balance + @amount WHERE AccountNumber = @accountNumber";
+                    updateAccountCommand.Parameters.AddWithValue("@amount", account.Value);
+                    updateAccountCommand.Parameters.AddWithValue("@accountNumber", account.Key);
+
+                    await updateAccountCommand.ExecuteNonQueryAsync();
+                    Console.WriteLine("PAYCHECK - DAILY PAYCHECK : Compte n°" + account.Key + " mis à jour");
+                }
+
+                await connection.CloseAsync();
+                await connection.DisposeAsync();
             }
 
             return true;
@@ -855,7 +862,7 @@ namespace Snout.Modules
             {
                 morning = morning.AddDays(1);
             }
-            
+
             TimeSpan timeToGo = morning - now;
             int dueTime = (int)timeToGo.TotalMilliseconds;
 
@@ -876,7 +883,7 @@ namespace Snout.Modules
             TimeSpan timeToGo = morning - now;
             int dueTime = (int)timeToGo.TotalMilliseconds;
 
-            Func<Task<bool>> callback = ExecuteDailyUpdateAsync;
+            Func<Task<bool>> callback = ExecuteDailyPaycheckAsync;
             Timer timer = new(state => callback(), null, dueTime, Timeout.Infinite);
 
             return Task.FromResult(timer);
