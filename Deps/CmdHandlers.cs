@@ -350,8 +350,10 @@ class SnoutHandler
             CustomNotification notifSwitchedToFalse = new CustomNotification(NotificationType.Success, "MODULE CONTROL", "Module paycheck désactivé.");
             
             GlobalElements.dailyUpdaterTimerUniqueReference.Dispose();
+            GlobalElements.dailyPaycheckTimerUniqueReference.Dispose();
             Console.WriteLine("PAYCHECK : Daily upate timer disposed");
-            
+            Console.WriteLine("PAYCHECK : Daily paycheck timer disposed");
+
             await command.RespondAsync(embed: notifSwitchedToFalse.BuildEmbed());
         }
         else
@@ -360,8 +362,10 @@ class SnoutHandler
             CustomNotification notifSwitchedToTrue = new CustomNotification(NotificationType.Success, "MODULE CONTROL", "Module paycheck activé.");
             
             DailyAccountUpdater paycheckDailyTimerObject = new DailyAccountUpdater();
-            Timer timerReference = await paycheckDailyTimerObject.CreateDailyUpdateTimer();
-            GlobalElements.dailyUpdaterTimerUniqueReference = timerReference;
+            Timer timerDailyUpdateReference = await paycheckDailyTimerObject.CreateDailyUpdateTimer();
+            Timer timerPaycheckReference = await paycheckDailyTimerObject.CreateDailyPaycheckTimer();
+            GlobalElements.dailyUpdaterTimerUniqueReference = timerDailyUpdateReference;
+            GlobalElements.dailyPaycheckTimerUniqueReference = timerPaycheckReference;
 
             if (GlobalElements.dailyUpdaterTimerUniqueReference != null)
             {
@@ -369,7 +373,16 @@ class SnoutHandler
             }
             else
             {
-                Console.WriteLine("PAYCHECK : Erreur lors de la programmation de la tâche d'update");
+                Console.WriteLine("PAYCHECK : Erreur lors de la programmation de la tâche : update");
+            }
+
+            if (GlobalElements.dailyPaycheckTimerUniqueReference != null)
+            {
+                Console.WriteLine("PAYCHECK : Daily paycheck task programmée (chaque jour à 07:00)");
+            }
+            else
+            {
+                Console.WriteLine("PAYCHECK : Erreur lors de la programmation de la tâche : paycheck");
             }
 
             await command.RespondAsync(embed: notifSwitchedToTrue.BuildEmbed());
