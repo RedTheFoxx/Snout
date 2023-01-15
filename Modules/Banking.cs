@@ -474,17 +474,20 @@ namespace Snout.Modules
             if (CheckOverdraftLimit(AccountNumber))
             {
                 double overdraftPenalty = Balance + OverdraftLimit - AccountFees;
-                Balance = Balance + overdraftPenalty;
+                double rawBalance = Balance + overdraftPenalty;
+                Balance = Math.Round(rawBalance, 2);
             }
             else
             {
                 if (Balance <= 0)
                 {
-                    Balance = Balance - AccountFees;
+                    double rawBalance = Balance - AccountFees;
+                    Balance = Math.Round(rawBalance, 2);
                 }
                 else if (Balance > 0)
                 {
-                    Balance = Balance + (Balance * InterestRate) - AccountFees;
+                    double rawBalance = Balance + (Balance * InterestRate) - AccountFees;
+                    Balance = Math.Round(rawBalance, 2);
                 }
             }
             
