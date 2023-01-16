@@ -18,19 +18,17 @@ public class Program
     private HllSniffer? _liveSniffer;
     private List<IMessageChannel> _liveChannels;
     private readonly List<string> _listUrl = new();
-    private string deepl;
+    private string _deepl;
 
     readonly System.Timers.Timer _timerFetcher = new System.Timers.Timer();
 
     public static class GlobalElements
     {
-        public const string globalSnoutVersion = "Snout v1.1a";
-        public static bool modulePaycheckEnabled;
-        public static ConcurrentQueue<Paycheck> paycheckQueue = new ConcurrentQueue<Paycheck>();
-        public static Thread paycheckDequeuerThread = new Thread(PaycheckDequeuer);
-        public static bool paycheckDequeuerThreadSwitch = true;
-        public static Timer? dailyUpdaterTimerUniqueReference = null;
-        public static Timer? dailyPaycheckTimerUniqueReference = null;
+        public const string GlobalSnoutVersion = "Snout v1.1a";
+        public static bool ModulePaycheckEnabled;
+        public static ConcurrentQueue<Paycheck> PaycheckQueue = new ConcurrentQueue<Paycheck>();
+        public static Timer? DailyUpdaterTimerUniqueReference = null;
+        public static Timer? DailyPaycheckTimerUniqueReference = null;
     }
     
 
@@ -56,7 +54,7 @@ public class Program
         _liveSniffer = new HllSniffer();
         _liveChannels = new List<IMessageChannel>();
 
-        GlobalElements.modulePaycheckEnabled = false;
+        GlobalElements.ModulePaycheckEnabled = false;
         Thread paycheckDequeuerThread = new Thread(PaycheckDequeuer);
         paycheckDequeuerThread.Start(); // Lancement du thread de défilement de la queue des paychecks. Un paycheck par seconde.
 
@@ -106,14 +104,14 @@ public class Program
         {
             Console.WriteLine("TRANSLATOR : Le fichier deepl.txt n'existe pas. Veuillez le créer à la racine du programme et y insérer votre clé API.");
             Console.ReadLine();
-            deepl = "null";
+            _deepl = "null";
             return;
         }
         else
         {
-            deepl = File.ReadAllText("deepl.txt");
+            _deepl = File.ReadAllText("deepl.txt");
             Console.WriteLine("TRANSLATOR : Clé API DeepL enregistrée");
-            Console.WriteLine("TRANSLATOR : " + deepl);
+            Console.WriteLine("TRANSLATOR : " + _deepl);
         }
 
         _listUrl.Add("https://www.battlemetrics.com/servers/hll/17380658");
@@ -336,11 +334,11 @@ public class Program
     private async Task SlashCommandHandler(SocketSlashCommand command)
     {
 
-        if (GlobalElements.modulePaycheckEnabled == true)
+        if (GlobalElements.ModulePaycheckEnabled == true)
         {
             SnoutUser snoutCommandUser = new SnoutUser(command.User.Username + "#" + command.User.Discriminator);
             Paycheck snoutCommandUsedPaycheck = new Paycheck(snoutCommandUser, "action_USED_SNOUT_COMMAND", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
-            GlobalElements.paycheckQueue.Enqueue(snoutCommandUsedPaycheck);
+            GlobalElements.PaycheckQueue.Enqueue(snoutCommandUsedPaycheck);
         }
 
         switch (command.Data.Name)
@@ -416,7 +414,7 @@ public class Program
 
             case "thelp":
                 SnoutHandler thelpHandlerReference = new SnoutHandler();
-                await thelpHandlerReference.HandleThelpCommand(command, deepl);
+                await thelpHandlerReference.HandleThelpCommand(command, _deepl);
                 break;
 
             case "mpaycheck":
@@ -434,11 +432,11 @@ public class Program
 
         if (modal.Data.CustomId == "new_url_modal")
         {
-            if (GlobalElements.modulePaycheckEnabled == true)
+            if (GlobalElements.ModulePaycheckEnabled == true)
             {
                 SnoutUser paycheckUser = new SnoutUser(discordId: modal.User.Username + "#" + modal.User.Discriminator);
                 Paycheck paycheck = new Paycheck(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
-                GlobalElements.paycheckQueue.Enqueue(paycheck);
+                GlobalElements.PaycheckQueue.Enqueue(paycheck);
             }
 
             List<SocketMessageComponentData> components = modal.Data.Components.ToList();
@@ -506,11 +504,11 @@ public class Program
 
         if (modal.Data.CustomId == "new_user_modal")
         {
-            if (GlobalElements.modulePaycheckEnabled == true)
+            if (GlobalElements.ModulePaycheckEnabled == true)
             {
                 SnoutUser paycheckUser = new SnoutUser(discordId: modal.User.Username + "#" + modal.User.Discriminator);
                 Paycheck paycheck = new Paycheck(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
-                GlobalElements.paycheckQueue.Enqueue(paycheck);
+                GlobalElements.PaycheckQueue.Enqueue(paycheck);
             }
 
             List<SocketMessageComponentData> components = modal.Data.Components.ToList();
@@ -521,9 +519,9 @@ public class Program
             if (isMatch)
             {
                 var nouvelUserInDb = new SnoutUser(nouvelUser);
-                var ID = await nouvelUserInDb.CreateUserAsync();
+                var id = await nouvelUserInDb.CreateUserAsync();
 
-                CustomNotification notifOk = new CustomNotification(NotificationType.Info, "Base de données", $"L'utilisateur {nouvelUser} dispose de l'ID {ID}");
+                CustomNotification notifOk = new CustomNotification(NotificationType.Info, "Base de données", $"L'utilisateur {nouvelUser} dispose de l'ID {id}");
                 await modal.RespondAsync(embed: notifOk.BuildEmbed());
             }
             else
@@ -539,11 +537,11 @@ public class Program
 
         if (modal.Data.CustomId == "new_account_modal")
         {
-            if (GlobalElements.modulePaycheckEnabled == true)
+            if (GlobalElements.ModulePaycheckEnabled == true)
             {
                 SnoutUser paycheckUser = new SnoutUser(discordId: modal.User.Username + "#" + modal.User.Discriminator);
                 Paycheck paycheck = new Paycheck(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
-                GlobalElements.paycheckQueue.Enqueue(paycheck);
+                GlobalElements.PaycheckQueue.Enqueue(paycheck);
             }
 
             List<SocketMessageComponentData> components = modal.Data.Components.ToList();
@@ -641,11 +639,11 @@ public class Program
         if (modal.Data.CustomId == "check_accounts_modal")
         {
 
-            if (GlobalElements.modulePaycheckEnabled == true)
+            if (GlobalElements.ModulePaycheckEnabled == true)
             {
                 SnoutUser paycheckUser = new SnoutUser(discordId: modal.User.Username + "#" + modal.User.Discriminator);
                 Paycheck paycheck = new Paycheck(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
-                GlobalElements.paycheckQueue.Enqueue(paycheck);
+                GlobalElements.PaycheckQueue.Enqueue(paycheck);
             }
 
             await modal.RespondAsync(embed: new CustomNotification(NotificationType.Info, "Banque", "Votre demande est en cours de traitement").BuildEmbed());
@@ -689,11 +687,11 @@ public class Program
         if (modal.Data.CustomId == "edit_account_modal")
         {
 
-            if (GlobalElements.modulePaycheckEnabled == true)
+            if (GlobalElements.ModulePaycheckEnabled == true)
             {
                 SnoutUser paycheckUser = new SnoutUser(discordId: modal.User.Username + "#" + modal.User.Discriminator);
                 Paycheck paycheck = new Paycheck(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
-                GlobalElements.paycheckQueue.Enqueue(paycheck);
+                GlobalElements.PaycheckQueue.Enqueue(paycheck);
             }
 
             Account account = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "edit_account_textbox").Value));
@@ -782,11 +780,11 @@ public class Program
         if (modal.Data.CustomId == "deposit_modal")
         {
 
-            if (GlobalElements.modulePaycheckEnabled == true)
+            if (GlobalElements.ModulePaycheckEnabled == true)
             {
                 SnoutUser paycheckUser = new SnoutUser(discordId: modal.User.Username + "#" + modal.User.Discriminator);
                 Paycheck paycheck = new Paycheck(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
-                GlobalElements.paycheckQueue.Enqueue(paycheck);
+                GlobalElements.PaycheckQueue.Enqueue(paycheck);
             }
 
             Account account = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "deposit_account_textbox").Value));
@@ -842,11 +840,11 @@ public class Program
 
         if (modal.Data.CustomId == "withdraw_modal")
         {
-            if (GlobalElements.modulePaycheckEnabled == true)
+            if (GlobalElements.ModulePaycheckEnabled == true)
             {
                 SnoutUser paycheckUser = new SnoutUser(discordId: modal.User.Username + "#" + modal.User.Discriminator);
                 Paycheck paycheck = new Paycheck(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
-                GlobalElements.paycheckQueue.Enqueue(paycheck);
+                GlobalElements.PaycheckQueue.Enqueue(paycheck);
             }
 
             Account account = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "withdraw_account_textbox").Value));
@@ -902,11 +900,11 @@ public class Program
 
         if (modal.Data.CustomId == "transfer_modal")
         {
-            if (GlobalElements.modulePaycheckEnabled == true)
+            if (GlobalElements.ModulePaycheckEnabled == true)
             {
                 SnoutUser paycheckUser = new SnoutUser(discordId: modal.User.Username + "#" + modal.User.Discriminator);
                 Paycheck paycheck = new Paycheck(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
-                GlobalElements.paycheckQueue.Enqueue(paycheck);
+                GlobalElements.PaycheckQueue.Enqueue(paycheck);
             }
 
             Account account = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_source_textbox").Value));
@@ -976,17 +974,17 @@ public class Program
         if (modal.Data.CustomId == "translate_modal")
         {
 
-            if (GlobalElements.modulePaycheckEnabled == true)
+            if (GlobalElements.ModulePaycheckEnabled == true)
             {
                 SnoutUser paycheckUser = new SnoutUser(discordId: modal.User.Username + "#" + modal.User.Discriminator);
                 Paycheck paycheck = new Paycheck(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
-                GlobalElements.paycheckQueue.Enqueue(paycheck);
+                GlobalElements.PaycheckQueue.Enqueue(paycheck);
             }
 
             CustomNotification notif = new CustomNotification(NotificationType.Info, "Traduction", "Traduction en cours ...");
             await modal.RespondAsync(embed: notif.BuildEmbed());
 
-            SnoutTranslator translator = new SnoutTranslator(deepl, "api-free.deepl.com", GlobalElements.globalSnoutVersion, "application/x-www-form-urlencoded");
+            SnoutTranslator translator = new SnoutTranslator(_deepl, "api-free.deepl.com", GlobalElements.GlobalSnoutVersion, "application/x-www-form-urlencoded");
             string translatorInput = modal.Data.Components.First(x => x.CustomId == "translate_textbox").Value;
             string translaterTargetLanguage = modal.Data.Components.First(x => x.CustomId == "translate_language_to_textbox").Value;
 
@@ -1006,11 +1004,11 @@ public class Program
     private async Task SelectMenuHandler(SocketMessageComponent menu)
     {
         
-        if (GlobalElements.modulePaycheckEnabled == true)
+        if (GlobalElements.ModulePaycheckEnabled == true)
         {
             SnoutUser paycheckUser = new SnoutUser(discordId: menu.User.Username + "#" + menu.User.Discriminator);
             Paycheck paycheck = new Paycheck(paycheckUser, "action_SELECT_MENU_EXECUTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
-            GlobalElements.paycheckQueue.Enqueue(paycheck);
+            GlobalElements.PaycheckQueue.Enqueue(paycheck);
         }
 
         var selectedUserData = string.Join(", ", menu.Data.Values);
@@ -1054,11 +1052,11 @@ public class Program
     {
         while (true)
         {
-            if (GlobalElements.modulePaycheckEnabled)
+            if (GlobalElements.ModulePaycheckEnabled)
             {
-                if (GlobalElements.paycheckQueue.Count > 0)
+                if (GlobalElements.PaycheckQueue.Count > 0)
                 {
-                    if (GlobalElements.paycheckQueue.TryDequeue(out var paycheck))
+                    if (GlobalElements.PaycheckQueue.TryDequeue(out var paycheck))
                     {
                         if (await paycheck.CreatePaycheckAsync())
                         {

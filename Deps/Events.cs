@@ -37,17 +37,17 @@ internal class Events
 
     internal static Task MessageReceived(SocketMessage arg)
     {
-        if (GlobalElements.modulePaycheckEnabled)
+        if (GlobalElements.ModulePaycheckEnabled)
         {
             SnoutUser user = new SnoutUser(discordId: arg.Author.Username + "#" + arg.Author.Discriminator);
             Paycheck paycheck = new Paycheck(user, "action_MESSAGE_SENT", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
-            GlobalElements.paycheckQueue.Enqueue(paycheck);
+            GlobalElements.PaycheckQueue.Enqueue(paycheck);
 
             // Check if there is any attachment or file in the message and reward the user
             if (arg.Attachments.Count > 0)
             {
                 Paycheck attachmentPaycheck = new Paycheck(user, "action_MESSAGE_SENT_WITH_FILE", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
-                GlobalElements.paycheckQueue.Enqueue(attachmentPaycheck);
+                GlobalElements.PaycheckQueue.Enqueue(attachmentPaycheck);
             }
 
             // Process TAGUED_BY et TAGUED_SOMEONE here
@@ -60,7 +60,7 @@ internal class Events
                     {
                         SnoutUser tagingUser = new SnoutUser(discordId: arg.Author.Username + "#" + arg.Author.Discriminator);
                         Paycheck taguingUserPaycheck = new Paycheck(tagingUser, "action_TAGUED_SOMEONE", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
-                        GlobalElements.paycheckQueue.Enqueue(taguingUserPaycheck);
+                        GlobalElements.PaycheckQueue.Enqueue(taguingUserPaycheck);
 
                         // Get the user mentionned and clean it
                         string? userMentionned = tag.Value.ToString();
@@ -72,7 +72,7 @@ internal class Events
                         {
                             SnoutUser cleanMentionnedSnoutUser = new SnoutUser(discordId: cleanUserMentionned);
                             Paycheck userMentionnedPaycheck = new Paycheck(cleanMentionnedSnoutUser, "action_TAGUED_BY", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
-                            GlobalElements.paycheckQueue.Enqueue(userMentionnedPaycheck);
+                            GlobalElements.PaycheckQueue.Enqueue(userMentionnedPaycheck);
                         }
                     }
                 }
@@ -84,7 +84,7 @@ internal class Events
 
     internal static async Task<Task> MessageUpdated(Cacheable<IMessage, ulong> arg1, SocketMessage arg2, ISocketMessageChannel arg3)
     {
-        if (GlobalElements.modulePaycheckEnabled)
+        if (GlobalElements.ModulePaycheckEnabled)
         {
             var cacheableMessage = await arg1.GetOrDownloadAsync();
 
@@ -92,7 +92,7 @@ internal class Events
             {
                 SnoutUser user = new SnoutUser(discordId: cacheableMessage.Author.Username + "#" + cacheableMessage.Author.Discriminator);
                 Paycheck paycheck = new Paycheck(user, "action_MESSAGE_UPDATED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
-                GlobalElements.paycheckQueue.Enqueue(paycheck);
+                GlobalElements.PaycheckQueue.Enqueue(paycheck);
             }
             
             return Task.CompletedTask;
@@ -103,11 +103,11 @@ internal class Events
     
     internal static Task PresenceUpdated(SocketUser arg1, SocketPresence arg2, SocketPresence arg3)
     {
-        if (GlobalElements.modulePaycheckEnabled)
+        if (GlobalElements.ModulePaycheckEnabled)
         {
             SnoutUser user = new SnoutUser(discordId: arg1.Username + "#" + arg1.Discriminator);
             Paycheck paycheck = new Paycheck(user, "action_CHANGED_STATUS", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
-            GlobalElements.paycheckQueue.Enqueue(paycheck);
+            GlobalElements.PaycheckQueue.Enqueue(paycheck);
             
             return Task.CompletedTask;
         }
@@ -117,7 +117,7 @@ internal class Events
 
     internal static Task ReactionAdded(Cacheable<IUserMessage, ulong> arg1, Cacheable<IMessageChannel, ulong> arg2, SocketReaction arg3)
     {
-        if (GlobalElements.modulePaycheckEnabled)
+        if (GlobalElements.ModulePaycheckEnabled)
         {
             Optional<IUser> optionalUser = arg3.User;
 
@@ -125,7 +125,7 @@ internal class Events
             {
                 SnoutUser user = new SnoutUser(discordId: optionalUser.Value.Username + "#" + optionalUser.Value.Discriminator);
                 Paycheck paycheck = new Paycheck(user, "action_REACTION_ADDED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
-                GlobalElements.paycheckQueue.Enqueue(paycheck);
+                GlobalElements.PaycheckQueue.Enqueue(paycheck);
             }
             
             return Task.CompletedTask;
@@ -135,7 +135,7 @@ internal class Events
 
     internal static Task ReactionRemoved(Cacheable<IUserMessage, ulong> arg1, Cacheable<IMessageChannel, ulong> arg2, SocketReaction arg3)
     {
-        if (GlobalElements.modulePaycheckEnabled)
+        if (GlobalElements.ModulePaycheckEnabled)
         {
             Optional<IUser> optionalUser = arg3.User;
 
@@ -143,7 +143,7 @@ internal class Events
             {
                 SnoutUser user = new SnoutUser(discordId: optionalUser.Value.Username + "#" + optionalUser.Value.Discriminator);
                 Paycheck paycheck = new Paycheck(user, "action_REACTION_REMOVED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
-                GlobalElements.paycheckQueue.Enqueue(paycheck);
+                GlobalElements.PaycheckQueue.Enqueue(paycheck);
             }
 
             return Task.CompletedTask;
@@ -153,7 +153,7 @@ internal class Events
 
     internal static async Task<Task> UserIsTyping(Cacheable<IUser, ulong> arg1, Cacheable<IMessageChannel, ulong> arg2)
     {
-        if (GlobalElements.modulePaycheckEnabled)
+        if (GlobalElements.ModulePaycheckEnabled)
         {
             IUser cacheableUser = await arg1.GetOrDownloadAsync();
            
@@ -161,7 +161,7 @@ internal class Events
             {
                 SnoutUser user = new SnoutUser(discordId: cacheableUser.Username + "#" + cacheableUser.Discriminator);
                 Paycheck paycheck = new Paycheck(user, "action_TYPING", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
-                GlobalElements.paycheckQueue.Enqueue(paycheck);
+                GlobalElements.PaycheckQueue.Enqueue(paycheck);
 
             }
             return Task.CompletedTask;
@@ -172,11 +172,11 @@ internal class Events
 
     internal static Task UserVoiceStateUpdated(SocketUser arg1, SocketVoiceState arg2, SocketVoiceState arg3)
     {
-        if (GlobalElements.modulePaycheckEnabled)
+        if (GlobalElements.ModulePaycheckEnabled)
         {
             SnoutUser user = new SnoutUser(arg1.Username + "#" + arg1.Discriminator);
             Paycheck paycheck = new Paycheck(user, "action_VOICE_CHANNEL_USER_STATUS_UPDATED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
-            GlobalElements.paycheckQueue.Enqueue(paycheck);
+            GlobalElements.PaycheckQueue.Enqueue(paycheck);
 
             return Task.CompletedTask;
         }

@@ -156,7 +156,7 @@ namespace Snout.Modules
 
                     accountInfoEmbedBuilder.AddField("Frais de service", reader.GetDouble(7) + " " + reader.GetString(4) + " / jour", true);
 
-                    accountInfoEmbedBuilder.WithFooter(Program.GlobalElements.globalSnoutVersion);
+                    accountInfoEmbedBuilder.WithFooter(Program.GlobalElements.GlobalSnoutVersion);
                     accountInfoEmbedBuilder.WithTimestamp(DateTimeOffset.UtcNow);
                     accountInfoEmbedBuilder.WithColor(Color.Green);
                     accountInfoEmbedBuilder.WithThumbnailUrl("https://cdn-icons-png.flaticon.com/512/1365/1365895.png");
@@ -279,7 +279,7 @@ namespace Snout.Modules
 
                 transactionEmbedBuilder.WithTitle($"Transactions récentes du compte n°{AccountNumber}");
                 transactionEmbedBuilder.WithDescription(concatDescriptionFromList);
-                transactionEmbedBuilder.WithFooter(Program.GlobalElements.globalSnoutVersion);
+                transactionEmbedBuilder.WithFooter(Program.GlobalElements.GlobalSnoutVersion);
                 transactionEmbedBuilder.WithTimestamp(DateTimeOffset.UtcNow);
 
             }
@@ -771,7 +771,7 @@ namespace Snout.Modules
         private async Task<bool> ExecuteDailyPaycheckAsync()
         {
 
-            GlobalElements.modulePaycheckEnabled = false;
+            GlobalElements.ModulePaycheckEnabled = false;
 
             using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
             {
@@ -895,7 +895,7 @@ namespace Snout.Modules
                 await connection.DisposeAsync();
             }
 
-            GlobalElements.modulePaycheckEnabled = true;
+            GlobalElements.ModulePaycheckEnabled = true;
 
             return true;
         }

@@ -314,14 +314,14 @@ class SnoutHandler
                 .AddField("🗃 Langues cibles disponibles", "BG,CS,DA,DE,EL,EN-GB,EN-US,ES,ET,FI,FR,HU,ID,IT,JA,LT,LV,NL,PL,PT-BR,PT-PT,RO,RU,SK,SL,SV,TR,UK,ZH")
                 .AddField("📝 Caractères utilisés ce mois-ci", "*Affichage impossible - Aucun token DeepL n'a été renseigné*")
                 .WithColor(Color.Blue)
-                .WithFooter(Program.GlobalElements.globalSnoutVersion + " & DeepL API v2.0")
+                .WithFooter(Program.GlobalElements.GlobalSnoutVersion + " & DeepL API v2.0")
                 .WithTimestamp(DateTimeOffset.UtcNow);
 
             await command.RespondAsync(ephemeral: true, embed: embed.Build());
         }
         else
         {
-            SnoutTranslator translator = new SnoutTranslator(deepl, "api-free.deepl.com", GlobalElements.globalSnoutVersion, "application/x-www-form-urlencoded");
+            SnoutTranslator translator = new SnoutTranslator(deepl, "api-free.deepl.com", GlobalElements.GlobalSnoutVersion, "application/x-www-form-urlencoded");
             int remainingCharacters = await translator.GetRemainingCharactersAsync();
             
             var embed = new EmbedBuilder();
@@ -332,7 +332,7 @@ class SnoutHandler
                 .AddField("🗃 Langues cibles disponibles", "BG,CS,DA,DE,EL,EN-GB,EN-US,ES,ET,FI,FR,HU,ID,IT,JA,LT,LV,NL,PL,PT-BR,PT-PT,RO,RU,SK,SL,SV,TR,UK,ZH")
                 .AddField("📝 Caractères utilisés ce mois-ci", remainingCharacters + " / 500.000")
                 .WithColor(Color.Blue)
-                .WithFooter(Program.GlobalElements.globalSnoutVersion + " & DeepL API v2.0")
+                .WithFooter(Program.GlobalElements.GlobalSnoutVersion + " & DeepL API v2.0")
                 .WithTimestamp(DateTimeOffset.UtcNow);
 
             await command.RespondAsync(ephemeral: true, embed: embed.Build());
@@ -344,13 +344,13 @@ class SnoutHandler
     public async Task HandleMpaycheckCommand(SocketSlashCommand command)
     {
         
-        if (GlobalElements.modulePaycheckEnabled == true)
+        if (GlobalElements.ModulePaycheckEnabled == true)
         {
-            GlobalElements.modulePaycheckEnabled = false;
+            GlobalElements.ModulePaycheckEnabled = false;
             CustomNotification notifSwitchedToFalse = new CustomNotification(NotificationType.Success, "MODULE CONTROL", "Module paycheck désactivé.");
             
-            GlobalElements.dailyUpdaterTimerUniqueReference.Dispose();
-            GlobalElements.dailyPaycheckTimerUniqueReference.Dispose();
+            GlobalElements.DailyUpdaterTimerUniqueReference.Dispose();
+            GlobalElements.DailyPaycheckTimerUniqueReference.Dispose();
             
             Console.WriteLine("PAYCHECK : Daily upate timer disposed");
             Console.WriteLine("PAYCHECK : Daily paycheck timer disposed");
@@ -359,7 +359,7 @@ class SnoutHandler
         }
         else
         {
-            GlobalElements.modulePaycheckEnabled = true;
+            GlobalElements.ModulePaycheckEnabled = true;
             CustomNotification notifSwitchedToTrue = new CustomNotification(NotificationType.Success, "MODULE CONTROL", "Module paycheck activé.");
             
             DailyAccountUpdater dailyUpdaterTimerObject = new DailyAccountUpdater();
@@ -368,12 +368,12 @@ class SnoutHandler
             Timer timerDailyUpdateReference = await dailyUpdaterTimerObject.CreateDailyUpdateTimer();
             Timer timerPaycheckReference = await paycheckDeliveryTimerObject.CreateDailyPaycheckTimer();
             
-            GlobalElements.dailyUpdaterTimerUniqueReference = timerDailyUpdateReference;
-            GlobalElements.dailyPaycheckTimerUniqueReference = timerPaycheckReference;
+            GlobalElements.DailyUpdaterTimerUniqueReference = timerDailyUpdateReference;
+            GlobalElements.DailyPaycheckTimerUniqueReference = timerPaycheckReference;
 
             // await paycheckDeliveryTimerObject.ExecuteDailyPaycheckAsync();
 
-            if (GlobalElements.dailyUpdaterTimerUniqueReference != null)
+            if (GlobalElements.DailyUpdaterTimerUniqueReference != null)
             {
                 Console.WriteLine("PAYCHECK - DAILY UPDATE TASK : Daily account update task programmée (chaque jour à 06:00)");
             }
@@ -382,7 +382,7 @@ class SnoutHandler
                 Console.WriteLine("PAYCHECK - DAILY UPDATE TASK : Erreur lors de la programmation de la tâche : update");
             }
 
-            if (GlobalElements.dailyPaycheckTimerUniqueReference != null)
+            if (GlobalElements.DailyPaycheckTimerUniqueReference != null)
             {
                 Console.WriteLine("PAYCHECK - DAILY PAYCHECK TASK : Daily paycheck task programmée (chaque jour à 07:00)");
             }
