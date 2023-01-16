@@ -870,7 +870,7 @@ public class DailyAccountUpdater
     public Task<Timer> CreateDailyUpdateTimer()
     {
         DateTime now = DateTime.Now;
-        DateTime morning = new(now.Year, now.Month, now.Day, 21, 39, 0);
+        DateTime morning = new(now.Year, now.Month, now.Day, 6, 0, 0);
         if (now > morning)
         {
             morning = morning.AddDays(1);
@@ -887,7 +887,7 @@ public class DailyAccountUpdater
     public Task<Timer> CreateDailyPaycheckTimer()
     {
         DateTime now = DateTime.Now;
-        DateTime morning = new(now.Year, now.Month, now.Day, 21, 40, 0);
+        DateTime morning = new(now.Year, now.Month, now.Day, 6, 15, 0);
         if (now > morning)
         {
             morning = morning.AddDays(1);

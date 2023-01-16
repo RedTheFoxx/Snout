@@ -376,9 +376,8 @@ class SnoutHandler
 
             // await paycheckDeliveryTimerObject.ExecuteDailyPaycheckAsync();
 
-            Console.WriteLine("PAYCHECK - DAILY UPDATE TASK : Daily account update task programmée (chaque jour à 06:00)");
-
-            Console.WriteLine("PAYCHECK - DAILY PAYCHECK TASK : Daily paycheck task programmée (chaque jour à 07:00)");
+            Console.WriteLine("PAYCHECK - DAILY UPDATE TASK : Daily account update task programmée (chaque jour à 06h00)");
+            Console.WriteLine("PAYCHECK - DAILY PAYCHECK TASK : Daily paycheck task programmée (chaque jour à 06h15)");
 
             await command.RespondAsync(embed: notifSwitchedToTrue.BuildEmbed());
             
