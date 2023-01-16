@@ -767,11 +767,11 @@ namespace Snout.Modules
                 return true;
             }
         }
-
+        
         private async Task<bool> ExecuteDailyPaycheckAsync()
         {
 
-            GlobalElements.paycheckDequeuerThread.Interrupt(); // Block the dequeuer thread to avoid concurrent access to the database
+            GlobalElements.modulePaycheckEnabled = false;
 
             using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
             {
@@ -783,9 +783,9 @@ namespace Snout.Modules
 
                 Dictionary<string, double> actions = new Dictionary<string, double>(); // Inside : all actions and corresponding values
 
-                while (readerActions.Read())
+                while (await readerActions.ReadAsync())
                 {
-                    actions.Add(readerActions.GetString(1), readerActions.GetDouble(2));
+                    actions.Add(readerActions.GetString(1), Convert.ToDouble(readerActions.GetValue(2)));
                 }
 
                 await connection.CloseAsync();
@@ -793,28 +793,29 @@ namespace Snout.Modules
                 await connection.OpenAsync();
 
                 using var extractPaychecksCommand = connection.CreateCommand();
-                extractPaychecksCommand.CommandText = "SELECT user, invokedAction, timestamp FROM Action_logs";
+                extractPaychecksCommand.CommandText = "SELECT * FROM Action_logs";
                 using var readerPaychecks = await extractPaychecksCommand.ExecuteReaderAsync();
 
                 Dictionary<int, double> totalAmountsPerUser = new Dictionary<int, double>(); // Inside : all users and corresponding total amounts to add to their accounts
 
-                while (readerPaychecks.Read())
+                while (await readerPaychecks.ReadAsync())
                 {
-                    int userId = readerPaychecks.GetInt32(1);
+                    int userId = Convert.ToInt32(readerPaychecks.GetValue(1));
 
                     if (!totalAmountsPerUser.ContainsKey(userId))
                     {
                         totalAmountsPerUser.Add(userId, 0);
                         totalAmountsPerUser[userId] = totalAmountsPerUser[userId] + actions[readerPaychecks.GetString(2)];
-                        Console.WriteLine("PAYCHECK - DAILY PAYCHECK : Gain de " + actions[readerPaychecks.GetString(2)] + " pour le - nouvel - utilisateur n°" + userId);
+                        Console.WriteLine("PAYCHECK - DAILY PAYCHECK - NEW USER : Vu " + actions[readerPaychecks.GetString(2)] + " pour l'utilisateur n°" + userId);
                     }
                     else
                     {
                         totalAmountsPerUser[userId] = totalAmountsPerUser[userId] + actions[readerPaychecks.GetString(2)];
-                        Console.WriteLine("PAYCHECK - DAILY PAYCHECK : Gain de " + actions[readerPaychecks.GetString(2)] + " pour l'utilisateur n°" + userId);
+                        Console.WriteLine("PAYCHECK - DAILY PAYCHECK : Vu " + actions[readerPaychecks.GetString(2)] + " pour l'utilisateur n°" + userId);
                     }
 
                 }
+                
                 await connection.CloseAsync();
 
                 await connection.OpenAsync();
@@ -826,19 +827,34 @@ namespace Snout.Modules
                 List<int> processedUserId = new List<int>(); // List of all users whom account has already been seen
                 Dictionary<int, double> accountsToUpdate = new Dictionary<int, double>(); // Inside : all accounts to update and corresponding amounts to add to their balances
 
-                while (readerAccounts.Read())
+                while (await readerAccounts.ReadAsync())
                 {
-                    if (!processedUserId.Contains(readerAccounts.GetInt32(1)))
+                    if (!processedUserId.Contains(Convert.ToInt32(readerAccounts.GetValue(1))))
                     {
-                        accountsToUpdate[readerAccounts.GetInt32(0)] = totalAmountsPerUser[readerAccounts.GetInt32(1)];
-                        processedUserId.Add(readerAccounts.GetInt32(1));
-                        Console.WriteLine("PAYCHECK - DAILY PAYCHECK : Ajout de " + totalAmountsPerUser[readerAccounts.GetInt32(1)] + " au compte n°" + readerAccounts.GetInt32(0));
+
+                        if (totalAmountsPerUser.ContainsKey(Convert.ToInt32(readerAccounts.GetValue(1))))
+                        {
+                            accountsToUpdate.Add(Convert.ToInt32(readerAccounts.GetValue(0)), Math.Round(totalAmountsPerUser[Convert.ToInt32(readerAccounts.GetValue(1))], 2));
+                            processedUserId.Add(Convert.ToInt32(readerAccounts.GetValue(1)));
+                            Console.WriteLine("PAYCHECK - DAILY PAYCHECK : TOTAL A PAYER = " + Math.Round(totalAmountsPerUser[Convert.ToInt32(readerAccounts.GetValue(1))], 2) + " pour le compte n°" + Convert.ToInt32(readerAccounts.GetValue(0)));
+                        }
+                        else
+                        {
+                            Console.WriteLine("PAYCHECK - DAILY PAYCHECK : Aucun gain pour l'utilisateur n°" + Convert.ToInt32(readerAccounts.GetValue(1)));
+                        }
+
+                        //accountsToUpdate[Convert.ToInt32(readerAccounts.GetValue(0))] = totalAmountsPerUser[Convert.ToInt32(readerAccounts.GetValue(1))];
+                        //processedUserId.Add(Convert.ToInt32(readerAccounts.GetValue(1)));
+                        //Console.WriteLine("PAYCHECK - DAILY PAYCHECK : Ajout de " + totalAmountsPerUser[Convert.ToInt32(readerAccounts.GetValue(1))] + " au compte n°" + Convert.ToInt32(readerAccounts.GetValue(0)));
                     }
                 }
 
                 await connection.CloseAsync();
 
                 await connection.OpenAsync();
+
+                // Temporary list of transactions to add after the update
+                List<Transaction> transactions = new List<Transaction>(); // Inside : all transactions to add to the database
 
                 foreach (KeyValuePair<int, double> account in accountsToUpdate)
                 {
@@ -847,15 +863,39 @@ namespace Snout.Modules
                     updateAccountCommand.Parameters.AddWithValue("@amount", account.Value);
                     updateAccountCommand.Parameters.AddWithValue("@accountNumber", account.Key);
 
+                    DateTime currentDateTime = DateTime.Now;
+                    string currentDate = currentDateTime.ToString("dd MMMM yyyy");
+                    string currentTime = currentDateTime.ToString("HH:mm:ss");
+
+                    // Log this paycheck with a transaction
+                    Transaction dailyPaycheckTransaction = new Transaction(account.Key, TransactionType.Paycheck,account.Value, date: currentDate + " " + currentTime);
+                    transactions.Add(dailyPaycheckTransaction);
+
                     await updateAccountCommand.ExecuteNonQueryAsync();
                     Console.WriteLine("PAYCHECK - DAILY PAYCHECK : Compte n°" + account.Key + " mis à jour");
                 }
 
                 await connection.CloseAsync();
+
+                await connection.OpenAsync();
+
+                using var clearActionLogsCommand = connection.CreateCommand();
+                clearActionLogsCommand.CommandText = "DELETE FROM Action_logs";
+                await clearActionLogsCommand.ExecuteNonQueryAsync();
+                Console.WriteLine("PAYCHECK - DAILY PAYCHECK : Paychecks purgés. Fin de l'opération paycheck.");
+
+                await connection.CloseAsync();
+
+                // Add all transactions to the database
+                foreach (Transaction transaction in transactions)
+                {
+                    await transaction.CreateTransactionAsync();
+                }
+
                 await connection.DisposeAsync();
             }
 
-            GlobalElements.paycheckDequeuerThread.Start(); // Unblock the dequeuer thread
+            GlobalElements.modulePaycheckEnabled = true;
 
             return true;
         }
@@ -880,7 +920,7 @@ namespace Snout.Modules
         public Task<Timer> CreateDailyPaycheckTimer()
         {
             DateTime now = DateTime.Now;
-            DateTime morning = new(now.Year, now.Month, now.Day, 23, 0, 0);
+            DateTime morning = new(now.Year, now.Month, now.Day, 11, 42, 0);
             if (now > morning)
             {
                 morning = morning.AddDays(1);
