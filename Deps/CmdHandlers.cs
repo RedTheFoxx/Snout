@@ -351,6 +351,7 @@ class SnoutHandler
             
             GlobalElements.dailyUpdaterTimerUniqueReference.Dispose();
             GlobalElements.dailyPaycheckTimerUniqueReference.Dispose();
+            
             Console.WriteLine("PAYCHECK : Daily upate timer disposed");
             Console.WriteLine("PAYCHECK : Daily paycheck timer disposed");
 
@@ -361,28 +362,33 @@ class SnoutHandler
             GlobalElements.modulePaycheckEnabled = true;
             CustomNotification notifSwitchedToTrue = new CustomNotification(NotificationType.Success, "MODULE CONTROL", "Module paycheck activé.");
             
-            DailyAccountUpdater paycheckDailyTimerObject = new DailyAccountUpdater();
-            Timer timerDailyUpdateReference = await paycheckDailyTimerObject.CreateDailyUpdateTimer();
-            Timer timerPaycheckReference = await paycheckDailyTimerObject.CreateDailyPaycheckTimer();
+            DailyAccountUpdater dailyUpdaterTimerObject = new DailyAccountUpdater();
+            DailyAccountUpdater paycheckDeliveryTimerObject = new DailyAccountUpdater();
+            
+            Timer timerDailyUpdateReference = await dailyUpdaterTimerObject.CreateDailyUpdateTimer();
+            Timer timerPaycheckReference = await paycheckDeliveryTimerObject.CreateDailyPaycheckTimer();
+            
             GlobalElements.dailyUpdaterTimerUniqueReference = timerDailyUpdateReference;
             GlobalElements.dailyPaycheckTimerUniqueReference = timerPaycheckReference;
 
+            // await paycheckDeliveryTimerObject.ExecuteDailyPaycheckAsync();
+
             if (GlobalElements.dailyUpdaterTimerUniqueReference != null)
             {
-                Console.WriteLine("PAYCHECK : Daily account update task programmée (chaque jour à 06:00)");
+                Console.WriteLine("PAYCHECK - DAILY UPDATE TASK : Daily account update task programmée (chaque jour à 06:00)");
             }
             else
             {
-                Console.WriteLine("PAYCHECK : Erreur lors de la programmation de la tâche : update");
+                Console.WriteLine("PAYCHECK - DAILY UPDATE TASK : Erreur lors de la programmation de la tâche : update");
             }
 
             if (GlobalElements.dailyPaycheckTimerUniqueReference != null)
             {
-                Console.WriteLine("PAYCHECK : Daily paycheck task programmée (chaque jour à 07:00)");
+                Console.WriteLine("PAYCHECK - DAILY PAYCHECK TASK : Daily paycheck task programmée (chaque jour à 07:00)");
             }
             else
             {
-                Console.WriteLine("PAYCHECK : Erreur lors de la programmation de la tâche : paycheck");
+                Console.WriteLine("PAYCHECK - DAILY PAYCHECK TASK : Erreur lors de la programmation de la tâche : paycheck");
             }
 
             await command.RespondAsync(embed: notifSwitchedToTrue.BuildEmbed());
