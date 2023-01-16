@@ -2,6 +2,7 @@ using System.Data.Common;
 using Discord;
 using System.Data.SQLite;
 using static Snout.Program;
+using System.Collections.Generic;
 
 namespace Snout.Modules;
 
@@ -458,22 +459,22 @@ public class Account
             return false;
         }
 
-        if (CheckOverdraftLimit(AccountNumber))
+        if (CheckOverdraftLimit(AccountNumber)) // Overdraft hit ? calculate a penalty using an exponential AND account fees
         {
             oldBalance = Balance;
-            double overdraftPenalty = Balance + (0.2 * OverdraftLimit) + AccountFees;
+            double overdraftPenalty = 0.1 * Math.Exp(1 * (Balance + OverdraftLimit)) - AccountFees; // 0.1* e (1 * (-2000+1800))
             double rawBalance = Balance + overdraftPenalty;
             Balance = Math.Round(rawBalance, 2);
         }
         else
         {
-            if (Balance <= 0)
+            if (Balance <= 0) // No overdraft hit BUT negative OR zero ? No interests, just account fees
             {
                 oldBalance = Balance;
                 double rawBalance = Balance - AccountFees;
                 Balance = Math.Round(rawBalance, 2);
             }
-            else if (Balance > 0)
+            else if (Balance > 0) // Positive ? Distribute some interests
             {
                 oldBalance = Balance;
                 double rawBalance = Balance + (Balance * InterestRate) - AccountFees;
@@ -486,7 +487,7 @@ public class Account
         string currentDate = currentDateTime.ToString("dd MMMM yyyy");
         string currentTime = currentDateTime.ToString("HH:mm:ss");
 
-        
+        // Log in transaction the difference between the new and old balance
         Transaction transaction = new(AccountNumber, TransactionType.DailyUpdate, Balance - oldBalance, currentDate + " " + currentTime); // Remplacer la Balance par le Daily Profit ici
         await transaction.CreateTransactionAsync();
 
