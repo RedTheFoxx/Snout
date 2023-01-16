@@ -1,4 +1,5 @@
-﻿using Discord.WebSocket;
+﻿using System.Data.Common;
+using Discord.WebSocket;
 using Discord;
 using Snout;
 using System.Data.SQLite;
@@ -15,20 +16,20 @@ class SnoutHandler
     public async Task HandlePingCommand(SocketSlashCommand command)
     {
         string url = "gateway.discord.gg";
-        Ping pingSender = new Ping();
+        Ping pingSender = new();
         PingReply reply = pingSender.Send(url);
 
         if (reply.Status == IPStatus.Success)
         {
             Console.WriteLine("Ping success: RTT = {0} ms", reply.RoundtripTime);
-            CustomNotification notif = new CustomNotification(NotificationType.Info, "PING",
+            CustomNotification notif = new(NotificationType.Info, "PING",
                 "La gateway retourne : " + reply.RoundtripTime + " ms.");
             await command.RespondAsync(embed: notif.BuildEmbed());
         }
         else
         {
             Console.WriteLine("La gateway ne repond pas au ping !");
-            CustomNotification notif = new CustomNotification(NotificationType.Error, "PING",
+            CustomNotification notif = new(NotificationType.Error, "PING",
                 "La gateway retourne : " + reply.RoundtripTime + " ms.");
             await command.RespondAsync(embed: notif.BuildEmbed());
         }
@@ -62,13 +63,13 @@ class SnoutHandler
             if (liveChannels.Contains(chnl) == false)
             {
                 liveChannels.Add(chnl);
-                CustomNotification notif = new CustomNotification(NotificationType.Success, "AUTO-FETCHER", "Nouveau canal de diffusion ajouté");
+                CustomNotification notif = new(NotificationType.Success, "AUTO-FETCHER", "Nouveau canal de diffusion ajouté");
                 await chnl.SendMessageAsync(embed: notif.BuildEmbed());
                 Console.WriteLine("AUTO-FETCHER : Canal ajouté / ID = " + chnl.Id);
             }
             else
             {
-                CustomNotification notif = new CustomNotification(NotificationType.Info, "AUTO-FETCHER", "Ce canal de diffusion est déjà enregistré");
+                CustomNotification notif = new(NotificationType.Info, "AUTO-FETCHER", "Ce canal de diffusion est déjà enregistré");
                 await chnl.SendMessageAsync(embed: notif.BuildEmbed());
                 Console.WriteLine("AUTO-FETCHER : Le canal existe déjà ! / ID = " + chnl.Id);
             }
@@ -77,13 +78,13 @@ class SnoutHandler
         if (timer.Enabled == false)
         {
             timer.Start();
-            CustomNotification notif = new CustomNotification(NotificationType.Success, "AUTO-FETCHER", "Auto-fetcher activé");
+            CustomNotification notif = new(NotificationType.Success, "AUTO-FETCHER", "Auto-fetcher activé");
             await command.RespondAsync(embed: notif.BuildEmbed());
             Console.WriteLine("AUTO-FETCHER : ON / Timer = " + timer.Interval + " ms");
         }
         else
         {
-            CustomNotification notif = new CustomNotification(NotificationType.Info, "AUTO-FETCHER", "Auto-fetcher déjà actif");
+            CustomNotification notif = new(NotificationType.Info, "AUTO-FETCHER", "Auto-fetcher déjà actif");
             await command.RespondAsync(embed: notif.BuildEmbed());
             Console.WriteLine("AUTO-FETCHER : Déjà actif !");
 
@@ -100,13 +101,13 @@ class SnoutHandler
         {
             timer.Stop();
 
-            CustomNotification notifFetcher = new CustomNotification(NotificationType.Success, "AUTO-FETCHER", "Auto-fetcher désactivé");
+            CustomNotification notifFetcher = new(NotificationType.Success, "AUTO-FETCHER", "Auto-fetcher désactivé");
             await chnl.SendMessageAsync(embed: notifFetcher.BuildEmbed());
             Console.WriteLine("AUTO-FETCHER : OFF");
 
             liveChannels.Clear();
 
-            CustomNotification notifCanaux = new CustomNotification(NotificationType.Info, "AUTO-FETCHER", "Liste des canaux de diffusion purgée");
+            CustomNotification notifCanaux = new(NotificationType.Info, "AUTO-FETCHER", "Liste des canaux de diffusion purgée");
             await command.RespondAsync(embed: notifCanaux.BuildEmbed());
             Console.WriteLine("AUTO-FETCHER : Canaux purgés !");
 
@@ -115,8 +116,8 @@ class SnoutHandler
         {
             liveChannels.Clear();
 
-            CustomNotification notifCanaux = new CustomNotification(NotificationType.Info, "AUTO-FETCHER", "Liste des canaux de diffusion purgée");
-            CustomNotification notifFetcher = new CustomNotification(NotificationType.Error, "AUTO-FETCHER", "Auto-fetcher déjà désactivé");
+            CustomNotification notifCanaux = new(NotificationType.Info, "AUTO-FETCHER", "Liste des canaux de diffusion purgée");
+            CustomNotification notifFetcher = new(NotificationType.Error, "AUTO-FETCHER", "Auto-fetcher déjà désactivé");
 
             await chnl.SendMessageAsync(embed: notifCanaux.BuildEmbed());
             Console.WriteLine("AUTO-FETCHER : Canaux purgés !");
@@ -149,24 +150,24 @@ class SnoutHandler
 
     public async Task HandleUnregisterCommand(SocketSlashCommand command)
     {
-        using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
+        await using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
         {
             await connection.OpenAsync();
             var sqlCommand = new SQLiteCommand("SELECT UserId, DiscordId FROM Users", connection);
 
-            using (var reader = await sqlCommand.ExecuteReaderAsync())
+            await using (DbDataReader? reader = await sqlCommand.ExecuteReaderAsync())
             {
                 if (!reader.HasRows)
                 {
 
-                    CustomNotification notifDbVide = new CustomNotification(NotificationType.Error, "Base de données", "La base de données est vide : opération impossible");
+                    CustomNotification notifDbVide = new(NotificationType.Error, "Base de données", "La base de données est vide : opération impossible");
 
                     await command.RespondAsync(embed: notifDbVide.BuildEmbed());
 
                     return;
                 }
 
-                var menuBuilder = new SelectMenuBuilder()
+                SelectMenuBuilder? menuBuilder = new SelectMenuBuilder()
                     .WithPlaceholder("Sélectionnez un utilisateur")
                     .WithCustomId("del_user_menu");
 
@@ -177,7 +178,7 @@ class SnoutHandler
                     menuBuilder.AddOption($"ID {userId}", $"{discordId}", $"{discordId}");
                 }
 
-                var menuComponent = new ComponentBuilder().WithSelectMenu(menuBuilder);
+                ComponentBuilder? menuComponent = new ComponentBuilder().WithSelectMenu(menuBuilder);
 
                 await command.RespondAsync("Quel utilisateur faut-il supprimer ?", components: menuComponent.Build());
             }
@@ -186,22 +187,22 @@ class SnoutHandler
 
     public async Task HandleMyAccountsCommand(SocketSlashCommand command, DiscordSocketClient client)
     {
-        CustomNotification notifProcess = new CustomNotification(NotificationType.Info, "Banque", "Votre requête est en cours de traitement");
+        CustomNotification notifProcess = new(NotificationType.Info, "Banque", "Votre requête est en cours de traitement");
         await command.RespondAsync(embed: notifProcess.BuildEmbed());
 
         var commandUser = command.User.Username + "#" + command.User.Discriminator;
 
-        SnoutUser requestor = new SnoutUser(discordId: commandUser);
+        SnoutUser requestor = new(discordId: commandUser);
         bool userExists = await requestor.GetUserIdAsync();
 
         if (!userExists)
         {
-            CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Snout ne vous connaît pas. Contactez un administrateur.");
+            CustomNotification notif = new(NotificationType.Error, "Banque", "Snout ne vous connaît pas. Contactez un administrateur.");
             await command.RespondAsync(embed: notif.BuildEmbed());
             return;
         }
 
-        Account account = new Account(requestor);
+        Account account = new(requestor);
         var listedAccounts = await account.GetAccountInfoEmbedBuilders();
 
         if (listedAccounts.Count > 0)
@@ -211,13 +212,13 @@ class SnoutHandler
                 await command.User.SendMessageAsync(embed: elements.Build());
             }
 
-            CustomNotification accountNotif = new CustomNotification(NotificationType.Success, "Banque", "Résultats envoyés en messages privés");
+            CustomNotification accountNotif = new(NotificationType.Success, "Banque", "Résultats envoyés en messages privés");
             await command.Channel.SendMessageAsync(embed: accountNotif.BuildEmbed());
         }
         else
         {
-            CustomNotification noAccountNotif = new CustomNotification(NotificationType.Error, "Banque", "Vous ne disposez d'aucun compte");
-            var channel = await command.GetChannelAsync();
+            CustomNotification noAccountNotif = new(NotificationType.Error, "Banque", "Vous ne disposez d'aucun compte");
+            IMessageChannel? channel = await command.GetChannelAsync();
             await command.Channel.SendMessageAsync(embed: noAccountNotif.BuildEmbed());
         }
 
@@ -321,7 +322,7 @@ class SnoutHandler
         }
         else
         {
-            SnoutTranslator translator = new SnoutTranslator(deepl, "api-free.deepl.com", GlobalElements.GlobalSnoutVersion, "application/x-www-form-urlencoded");
+            SnoutTranslator translator = new(deepl, "api-free.deepl.com", GlobalElements.GlobalSnoutVersion, "application/x-www-form-urlencoded");
             int remainingCharacters = await translator.GetRemainingCharactersAsync();
             
             var embed = new EmbedBuilder();
@@ -347,11 +348,13 @@ class SnoutHandler
         if (GlobalElements.ModulePaycheckEnabled == true)
         {
             GlobalElements.ModulePaycheckEnabled = false;
-            CustomNotification notifSwitchedToFalse = new CustomNotification(NotificationType.Success, "MODULE CONTROL", "Module paycheck désactivé.");
-            
-            GlobalElements.DailyUpdaterTimerUniqueReference.Dispose();
-            GlobalElements.DailyPaycheckTimerUniqueReference.Dispose();
-            
+            CustomNotification notifSwitchedToFalse = new(NotificationType.Success, "MODULE CONTROL", "Module paycheck désactivé.");
+
+            if (GlobalElements.DailyUpdaterTimerUniqueReference != null)
+                await GlobalElements.DailyUpdaterTimerUniqueReference.DisposeAsync();
+            if (GlobalElements.DailyPaycheckTimerUniqueReference != null)
+                await GlobalElements.DailyPaycheckTimerUniqueReference.DisposeAsync();
+
             Console.WriteLine("PAYCHECK : Daily upate timer disposed");
             Console.WriteLine("PAYCHECK : Daily paycheck timer disposed");
 
@@ -360,10 +363,10 @@ class SnoutHandler
         else
         {
             GlobalElements.ModulePaycheckEnabled = true;
-            CustomNotification notifSwitchedToTrue = new CustomNotification(NotificationType.Success, "MODULE CONTROL", "Module paycheck activé.");
+            CustomNotification notifSwitchedToTrue = new(NotificationType.Success, "MODULE CONTROL", "Module paycheck activé.");
             
-            DailyAccountUpdater dailyUpdaterTimerObject = new DailyAccountUpdater();
-            DailyAccountUpdater paycheckDeliveryTimerObject = new DailyAccountUpdater();
+            DailyAccountUpdater dailyUpdaterTimerObject = new();
+            DailyAccountUpdater paycheckDeliveryTimerObject = new();
             
             Timer timerDailyUpdateReference = await dailyUpdaterTimerObject.CreateDailyUpdateTimer();
             Timer timerPaycheckReference = await paycheckDeliveryTimerObject.CreateDailyPaycheckTimer();
@@ -373,23 +376,9 @@ class SnoutHandler
 
             // await paycheckDeliveryTimerObject.ExecuteDailyPaycheckAsync();
 
-            if (GlobalElements.DailyUpdaterTimerUniqueReference != null)
-            {
-                Console.WriteLine("PAYCHECK - DAILY UPDATE TASK : Daily account update task programmée (chaque jour à 06:00)");
-            }
-            else
-            {
-                Console.WriteLine("PAYCHECK - DAILY UPDATE TASK : Erreur lors de la programmation de la tâche : update");
-            }
+            Console.WriteLine("PAYCHECK - DAILY UPDATE TASK : Daily account update task programmée (chaque jour à 06:00)");
 
-            if (GlobalElements.DailyPaycheckTimerUniqueReference != null)
-            {
-                Console.WriteLine("PAYCHECK - DAILY PAYCHECK TASK : Daily paycheck task programmée (chaque jour à 07:00)");
-            }
-            else
-            {
-                Console.WriteLine("PAYCHECK - DAILY PAYCHECK TASK : Erreur lors de la programmation de la tâche : paycheck");
-            }
+            Console.WriteLine("PAYCHECK - DAILY PAYCHECK TASK : Daily paycheck task programmée (chaque jour à 07:00)");
 
             await command.RespondAsync(embed: notifSwitchedToTrue.BuildEmbed());
             

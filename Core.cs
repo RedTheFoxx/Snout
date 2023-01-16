@@ -20,13 +20,13 @@ public class Program
     private readonly List<string> _listUrl = new();
     private string _deepl;
 
-    readonly System.Timers.Timer _timerFetcher = new System.Timers.Timer();
+    readonly System.Timers.Timer _timerFetcher = new();
 
     public static class GlobalElements
     {
         public const string GlobalSnoutVersion = "Snout v1.1a";
         public static bool ModulePaycheckEnabled;
-        public static ConcurrentQueue<Paycheck> PaycheckQueue = new ConcurrentQueue<Paycheck>();
+        public static readonly ConcurrentQueue<Paycheck> PaycheckQueue = new();
         public static Timer? DailyUpdaterTimerUniqueReference = null;
         public static Timer? DailyPaycheckTimerUniqueReference = null;
     }
@@ -38,7 +38,7 @@ public class Program
     // Thread principal
     private async Task MainAsync()
     {
-        _client = new DiscordSocketClient(new DiscordSocketConfig
+        _client = new(new()
         {
             LogLevel = LogSeverity.Verbose,
             MessageCacheSize = 200,
@@ -51,11 +51,11 @@ public class Program
         _timerFetcher.Interval = 300000; // Vitesse de l'auto-updater (= 5 minutes entre chaque Fetch vers Battlemetrics)
         _timerFetcher.AutoReset = true;
 
-        _liveSniffer = new HllSniffer();
-        _liveChannels = new List<IMessageChannel>();
+        _liveSniffer = new();
+        _liveChannels = new();
 
         GlobalElements.ModulePaycheckEnabled = false;
-        Thread paycheckDequeuerThread = new Thread(PaycheckDequeuer);
+        Thread paycheckDequeuerThread = new(PaycheckDequeuer);
         paycheckDequeuerThread.Start(); // Lancement du thread de défilement de la queue des paychecks. Un paycheck par seconde.
 
         // Default events
@@ -91,7 +91,7 @@ public class Program
         }
         else
         {
-            string token = File.ReadAllText("token.txt");
+            string token = await File.ReadAllTextAsync("token.txt");
             Console.WriteLine("CORE : Token Discord enregistré");
             Console.WriteLine("CORE : " + token);
             await _client.LoginAsync(TokenType.Bot, token);
@@ -109,7 +109,7 @@ public class Program
         }
         else
         {
-            _deepl = File.ReadAllText("deepl.txt");
+            _deepl = await File.ReadAllTextAsync("deepl.txt");
             Console.WriteLine("TRANSLATOR : Clé API DeepL enregistrée");
             Console.WriteLine("TRANSLATOR : " + _deepl);
         }
@@ -214,7 +214,7 @@ public class Program
 
         };
 
-        foreach (var command in commands)
+        foreach (SlashCommandBuilder? command in commands)
         {
             try
             {
@@ -250,7 +250,7 @@ public class Program
         }
 
         // Ouvre une connexion à la base de données
-        using (SQLiteConnection connection = new SQLiteConnection(connectionString))
+        await using (SQLiteConnection connection = new(connectionString))
         {
             await connection.OpenAsync();
             Console.WriteLine("DATABASE : Connexion à la base de données ouverte");
@@ -258,7 +258,7 @@ public class Program
             // Lit et exécute le contenu du fichier GenerateDB.sql
             string sql = await File.ReadAllTextAsync("C:\\Users\\moris\\Desktop\\Snout\\SQL\\GenerateDB.sql"); // A modifier avant release, chercher le fichier dans le dossier "SQL"
 
-            using (SQLiteCommand command = new SQLiteCommand(sql, connection))
+            await using (SQLiteCommand command = new(sql, connection))
             {
                 await command.ExecuteNonQueryAsync();
                 Console.WriteLine("DATABASE : Requêtes SQL exécutées : la structure est à jour");
@@ -267,7 +267,7 @@ public class Program
                 {
                     // Vérifiez si l'URL existe déjà dans la table
                     string selectSql = "SELECT COUNT(*) FROM urls WHERE url = @url";
-                    using (SQLiteCommand selectCommand = new SQLiteCommand(selectSql, connection))
+                    await using (SQLiteCommand selectCommand = new(selectSql, connection))
                     {
                         selectCommand.Parameters.AddWithValue("@url", url);
                         Int64 count = (Int64)selectCommand.ExecuteScalar();
@@ -275,7 +275,7 @@ public class Program
                         {
                             // L'URL n'existe pas encore dans la table, ajoutez-la
                             string insertSql = "INSERT INTO urls (url) VALUES (@url)";
-                            using (SQLiteCommand insertCommand = new SQLiteCommand(insertSql, connection))
+                            await using (SQLiteCommand insertCommand = new(insertSql, connection))
                             {
                                 insertCommand.Parameters.AddWithValue("@url", url);
                                 await insertCommand.ExecuteNonQueryAsync();
@@ -300,7 +300,7 @@ public class Program
     private async void Timer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
     {
 
-        var embed = _liveSniffer.Pull(_listUrl);
+        Embed? embed = _liveSniffer.Pull(_listUrl);
 
         foreach (IMessageChannel channel in _liveChannels)
         {
@@ -310,7 +310,7 @@ public class Program
             if (await cursor.MoveNextAsync())
             {
                 var currentCollection = cursor.Current;
-                var lastMessage = currentCollection.First();
+                IMessage? lastMessage = currentCollection.First();
                 if (lastMessage != null)
 
                 {
@@ -336,89 +336,89 @@ public class Program
 
         if (GlobalElements.ModulePaycheckEnabled == true)
         {
-            SnoutUser snoutCommandUser = new SnoutUser(command.User.Username + "#" + command.User.Discriminator);
-            Paycheck snoutCommandUsedPaycheck = new Paycheck(snoutCommandUser, "action_USED_SNOUT_COMMAND", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+            SnoutUser snoutCommandUser = new(command.User.Username + "#" + command.User.Discriminator);
+            Paycheck snoutCommandUsedPaycheck = new(snoutCommandUser, "action_USED_SNOUT_COMMAND", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
             GlobalElements.PaycheckQueue.Enqueue(snoutCommandUsedPaycheck);
         }
 
         switch (command.Data.Name)
         {
             case "ping":
-                SnoutHandler pingHandlerReference = new SnoutHandler();
+                SnoutHandler pingHandlerReference = new();
                 await pingHandlerReference.HandlePingCommand(command);
                 break;
 
             case "fetch":
-                SnoutHandler fetchHandlerReference = new SnoutHandler();
+                SnoutHandler fetchHandlerReference = new();
                 await fetchHandlerReference.HandleFetchCommand(command, _client, _liveChannels, _timerFetcher);
                 break;
 
             case "stop":
-                SnoutHandler stopHandlerReference = new SnoutHandler();
+                SnoutHandler stopHandlerReference = new();
                 await stopHandlerReference.HandleStopCommand(command, _client, _liveChannels, _timerFetcher);
                 break;
 
             case "add":
-                SnoutHandler addHandlerReference = new SnoutHandler();
+                SnoutHandler addHandlerReference = new();
                 await addHandlerReference.HandleAddCommand(command);
                 break;
 
             case "register":
-                SnoutHandler registerHandlerReference = new SnoutHandler();
+                SnoutHandler registerHandlerReference = new();
                 await registerHandlerReference.HandleRegisterCommand(command);
                 break;
 
             case "unregister":
-                SnoutHandler unregisterHandlerReference = new SnoutHandler();
+                SnoutHandler unregisterHandlerReference = new();
                 await unregisterHandlerReference.HandleUnregisterCommand(command);
                 break;
             case "account":
-                SnoutHandler accountHandlerReference = new SnoutHandler();
+                SnoutHandler accountHandlerReference = new();
                 await accountHandlerReference.HandleAccountCommand(command);
                 break;
 
             case "myaccounts":
-                SnoutHandler myaccountsHandlerReference = new SnoutHandler();
+                SnoutHandler myaccountsHandlerReference = new();
                 await myaccountsHandlerReference.HandleMyAccountsCommand(command, _client);
                 break;
 
             case "checkaccounts":
-                SnoutHandler checkaccountsHandlerReference = new SnoutHandler();
+                SnoutHandler checkaccountsHandlerReference = new();
                 await checkaccountsHandlerReference.HandleCheckAccountsCommand(command, _client);
                 break;
 
             case "editaccount":
-                SnoutHandler editaccountHandlerReference = new SnoutHandler();
+                SnoutHandler editaccountHandlerReference = new();
                 await editaccountHandlerReference.HandleEditAccountCommand(command, _client);
                 break;
 
             case "deposit":
-                SnoutHandler depositHandlerReference = new SnoutHandler();
+                SnoutHandler depositHandlerReference = new();
                 await depositHandlerReference.HandleDepositCommand(command);
                 break;
 
             case "withdraw":
-                SnoutHandler withdrawHandlerReference = new SnoutHandler();
+                SnoutHandler withdrawHandlerReference = new();
                 await withdrawHandlerReference.HandleWithdrawCommand(command);
                 break;
 
             case "transfer":
-                SnoutHandler transferHandlerReference = new SnoutHandler();
+                SnoutHandler transferHandlerReference = new();
                 await transferHandlerReference.HandleTransferCommand(command);
                 break;
 
             case "t":
-                SnoutHandler tHandlerReference = new SnoutHandler();
+                SnoutHandler tHandlerReference = new();
                 await tHandlerReference.HandleTCommand(command);
                 break;
 
             case "thelp":
-                SnoutHandler thelpHandlerReference = new SnoutHandler();
+                SnoutHandler thelpHandlerReference = new();
                 await thelpHandlerReference.HandleThelpCommand(command, _deepl);
                 break;
 
             case "mpaycheck":
-                SnoutHandler mpaycheckHandlerReference = new SnoutHandler();
+                SnoutHandler mpaycheckHandlerReference = new();
                 await mpaycheckHandlerReference.HandleMpaycheckCommand(command);
                 break;
         }
@@ -434,8 +434,8 @@ public class Program
         {
             if (GlobalElements.ModulePaycheckEnabled == true)
             {
-                SnoutUser paycheckUser = new SnoutUser(discordId: modal.User.Username + "#" + modal.User.Discriminator);
-                Paycheck paycheck = new Paycheck(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+                SnoutUser paycheckUser = new(discordId: modal.User.Username + "#" + modal.User.Discriminator);
+                Paycheck paycheck = new(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
                 GlobalElements.PaycheckQueue.Enqueue(paycheck);
             }
 
@@ -454,12 +454,12 @@ public class Program
 
                     try
                     {
-                        await using SQLiteConnection connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;");
+                        await using SQLiteConnection connection = new("Data Source=dynamic_data.db;Version=3;");
                         connection.Open();
 
                         // Vérifie si la valeur existe déjà dans la table
                         string checkSql = "SELECT COUNT(*) FROM urls WHERE url = @valueToAdd";
-                        SQLiteCommand checkCommand = new SQLiteCommand(checkSql, connection);
+                        SQLiteCommand checkCommand = new(checkSql, connection);
                         checkCommand.Parameters.AddWithValue("@valueToAdd", nouvelUrl);
                         int count = Convert.ToInt32(checkCommand.ExecuteScalar());
 
@@ -467,7 +467,7 @@ public class Program
                         {
                             // La valeur n'existe pas, on peut l'ajouter à la table
                             string insertSql = "INSERT INTO urls (url) VALUES (@valueToAdd)";
-                            SQLiteCommand insertCommand = new SQLiteCommand(insertSql, connection);
+                            SQLiteCommand insertCommand = new(insertSql, connection);
                             insertCommand.Parameters.AddWithValue("@valueToAdd", nouvelUrl);
                             insertCommand.ExecuteNonQuery();
                         }
@@ -478,14 +478,14 @@ public class Program
                     }
 
                     Console.WriteLine("AUTO-FETCHER : L'URL à été ajoutée");
-                    CustomNotification notif = new CustomNotification(NotificationType.Success, "AUTO-FETCHER",
+                    CustomNotification notif = new(NotificationType.Success, "AUTO-FETCHER",
                         "URL ajoutée à la liste de diffusion !");
                     await modal.RespondAsync(embed: notif.BuildEmbed());
                 }
                 else
                 {
                     Console.WriteLine("AUTO-FETCHER : L'URL existait déjà et n'a pas été ajouté");
-                    CustomNotification notif = new CustomNotification(NotificationType.Error, "AUTO-FETCHER",
+                    CustomNotification notif = new(NotificationType.Error, "AUTO-FETCHER",
                         "Cet URL existe déjà dans la base de données");
                     await modal.RespondAsync(embed: notif.BuildEmbed());
                 }
@@ -493,7 +493,7 @@ public class Program
             else
             {
                 Console.WriteLine("AUTO-FETCHER : Mauvais format d'URL / Ne pointe pas vers un serveur HLL Battlemetrics");
-                CustomNotification notif = new CustomNotification(NotificationType.Error, "AUTO-FETCHER",
+                CustomNotification notif = new(NotificationType.Error, "AUTO-FETCHER",
                     "Cet URL ne correspond pas à un serveur Hell Let Loose");
                 await modal.RespondAsync(embed: notif.BuildEmbed());
             }
@@ -506,8 +506,8 @@ public class Program
         {
             if (GlobalElements.ModulePaycheckEnabled == true)
             {
-                SnoutUser paycheckUser = new SnoutUser(discordId: modal.User.Username + "#" + modal.User.Discriminator);
-                Paycheck paycheck = new Paycheck(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+                SnoutUser paycheckUser = new(discordId: modal.User.Username + "#" + modal.User.Discriminator);
+                Paycheck paycheck = new(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
                 GlobalElements.PaycheckQueue.Enqueue(paycheck);
             }
 
@@ -521,12 +521,12 @@ public class Program
                 var nouvelUserInDb = new SnoutUser(nouvelUser);
                 var id = await nouvelUserInDb.CreateUserAsync();
 
-                CustomNotification notifOk = new CustomNotification(NotificationType.Info, "Base de données", $"L'utilisateur {nouvelUser} dispose de l'ID {id}");
+                CustomNotification notifOk = new(NotificationType.Info, "Base de données", $"L'utilisateur {nouvelUser} dispose de l'ID {id}");
                 await modal.RespondAsync(embed: notifOk.BuildEmbed());
             }
             else
             {
-                CustomNotification notif = new CustomNotification(NotificationType.Error, "Mauvais format", "L'entrée ne correspond pas à un Discord ID valide");
+                CustomNotification notif = new(NotificationType.Error, "Mauvais format", "L'entrée ne correspond pas à un Discord ID valide");
                 await modal.RespondAsync(embed: notif.BuildEmbed());
             }
 
@@ -539,17 +539,17 @@ public class Program
         {
             if (GlobalElements.ModulePaycheckEnabled == true)
             {
-                SnoutUser paycheckUser = new SnoutUser(discordId: modal.User.Username + "#" + modal.User.Discriminator);
-                Paycheck paycheck = new Paycheck(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+                SnoutUser paycheckUser = new(discordId: modal.User.Username + "#" + modal.User.Discriminator);
+                Paycheck paycheck = new(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
                 GlobalElements.PaycheckQueue.Enqueue(paycheck);
             }
 
             List<SocketMessageComponentData> components = modal.Data.Components.ToList();
-            CustomNotification ajoutNok = new CustomNotification(NotificationType.Error, "Banque", "Impossible de créer le compte. Vérifiez votre saisie.");
+            CustomNotification ajoutNok = new(NotificationType.Error, "Banque", "Impossible de créer le compte. Vérifiez votre saisie.");
 
             // 1. Un numéro de compte aléatoire
 
-            Random random = new Random();
+            Random random = new();
             int randomAccountNumber = random.Next();
 
             // 2. On switch sur le type de compte renseigné et on élimine les autres cas par une erreur
@@ -575,19 +575,19 @@ public class Program
 
                 default:
                     await modal.RespondAsync(embed: ajoutNok.BuildEmbed());
-                    throw new Exception("Le type de compte n'est pas valide !");
+                    throw new("Le type de compte n'est pas valide !");
             }
 
             // 3. On construit un SnoutUser sur la base de son UserID (et pas son DiscordID)
 
-            SnoutUser importedSnoutUser = new SnoutUser(userId: int.Parse(components.First(x => x.CustomId == "new_account_userid_textbox").Value));
+            SnoutUser importedSnoutUser = new(userId: int.Parse(components.First(x => x.CustomId == "new_account_userid_textbox").Value));
 
             // Check if this user exists in the database
 
             if (!await importedSnoutUser.GetDiscordIdAsync())
             {
                 await modal.RespondAsync(embed: ajoutNok.BuildEmbed());
-                throw new Exception("L'utilisateur n'existe pas dans la base de données !");
+                throw new("L'utilisateur n'existe pas dans la base de données !");
             }
 
             // 4. Prendre l'overdraft
@@ -596,7 +596,7 @@ public class Program
 
             if (!double.TryParse(input0, NumberStyles.Number, new CultureInfo("fr-FR"), out double importedOverdraftLimit))
             {
-                throw new Exception("Overdraft ne dispose pas d'une entrée valide.");
+                throw new("Overdraft ne dispose pas d'une entrée valide.");
             }
 
             // 5. Prendre l'interest
@@ -605,7 +605,7 @@ public class Program
 
             if (!double.TryParse(input, NumberStyles.Number, new CultureInfo("fr-FR"), out double importedInterest))
             {
-                throw new Exception("Interest ne dispose pas d'une entrée valide.");
+                throw new("Interest ne dispose pas d'une entrée valide.");
             }
 
             // 6. Prendre la fee
@@ -614,16 +614,16 @@ public class Program
 
             if (!double.TryParse(input2, NumberStyles.Number, new CultureInfo("fr-FR"), out double importedFee))
             {
-                throw new Exception("Fee ne dispose pas d'une entrée valide.");
+                throw new("Fee ne dispose pas d'une entrée valide.");
             }
 
             // TODO : Construire l'objet ACCOUNT et l'envoyer en base.
 
-            Account account = new Account(randomAccountNumber, importedAccountType, importedSnoutUser, 0.0, "€", importedOverdraftLimit, importedInterest, importedFee);
+            Account account = new(randomAccountNumber, importedAccountType, importedSnoutUser, 0.0, "€", importedOverdraftLimit, importedInterest, importedFee);
 
             if (account.RegisterAccount())
             {
-                CustomNotification ajoutOk = new CustomNotification(NotificationType.Success, "Banque", $"Nouveau compte crée avec le numéro {randomAccountNumber}");
+                CustomNotification ajoutOk = new(NotificationType.Success, "Banque", $"Nouveau compte crée avec le numéro {randomAccountNumber}");
                 await modal.RespondAsync(embed: ajoutOk.BuildEmbed());
             }
             else
@@ -641,8 +641,8 @@ public class Program
 
             if (GlobalElements.ModulePaycheckEnabled == true)
             {
-                SnoutUser paycheckUser = new SnoutUser(discordId: modal.User.Username + "#" + modal.User.Discriminator);
-                Paycheck paycheck = new Paycheck(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+                SnoutUser paycheckUser = new(discordId: modal.User.Username + "#" + modal.User.Discriminator);
+                Paycheck paycheck = new(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
                 GlobalElements.PaycheckQueue.Enqueue(paycheck);
             }
 
@@ -650,17 +650,17 @@ public class Program
 
             var modalUser = modal.Data.Components.First(x => x.CustomId == "check_accounts_textbox").Value;
 
-            SnoutUser requested = new SnoutUser(discordId: modalUser);
+            SnoutUser requested = new(discordId: modalUser);
             bool userExists = await requested.GetUserIdAsync();
 
             if (!userExists)
             {
-                CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Cet utilisateur n'existe pas");
+                CustomNotification notif = new(NotificationType.Error, "Banque", "Cet utilisateur n'existe pas");
                 await modal.RespondAsync(embed: notif.BuildEmbed());
                 return;
             }
 
-            Account account = new Account(requested);
+            Account account = new(requested);
             var listedAccounts = await account.GetAccountInfoEmbedBuilders();
 
             if (listedAccounts.Count > 0)
@@ -670,13 +670,13 @@ public class Program
                     await modal.User.SendMessageAsync(embed: elements.Build());
                 }
 
-                CustomNotification accountNotif = new CustomNotification(NotificationType.Success, "Banque", "Résultats envoyés en messages privés");
+                CustomNotification accountNotif = new(NotificationType.Success, "Banque", "Résultats envoyés en messages privés");
                 await modal.Channel.SendMessageAsync(embed: accountNotif.BuildEmbed());
             }
             else
             {
-                CustomNotification noAccountNotif = new CustomNotification(NotificationType.Error, "Banque", "L'utilisateur ne dispose d'aucun compte");
-                var channel = await modal.GetChannelAsync();
+                CustomNotification noAccountNotif = new(NotificationType.Error, "Banque", "L'utilisateur ne dispose d'aucun compte");
+                IMessageChannel? channel = await modal.GetChannelAsync();
                 await modal.Channel.SendMessageAsync(embed: noAccountNotif.BuildEmbed());
             }
         }
@@ -689,17 +689,17 @@ public class Program
 
             if (GlobalElements.ModulePaycheckEnabled == true)
             {
-                SnoutUser paycheckUser = new SnoutUser(discordId: modal.User.Username + "#" + modal.User.Discriminator);
-                Paycheck paycheck = new Paycheck(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+                SnoutUser paycheckUser = new(discordId: modal.User.Username + "#" + modal.User.Discriminator);
+                Paycheck paycheck = new(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
                 GlobalElements.PaycheckQueue.Enqueue(paycheck);
             }
 
-            Account account = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "edit_account_textbox").Value));
+            Account account = new(int.Parse(modal.Data.Components.First(x => x.CustomId == "edit_account_textbox").Value));
             account.GetParameters(int.Parse(modal.Data.Components.First(x => x.CustomId == "edit_account_textbox").Value));
 
             if (account.Type is AccountType.Unknown)
             {
-                CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Ce compte n'existe pas");
+                CustomNotification notif = new(NotificationType.Error, "Banque", "Ce compte n'existe pas");
                 await modal.RespondAsync(embed: notif.BuildEmbed());
                 return;
             }
@@ -718,7 +718,7 @@ public class Program
                 }
                 else if (!double.TryParse(input0, NumberStyles.Number, new CultureInfo("fr-FR"), out double importedOverdraftLimit))
                 {
-                    throw new Exception("DATA EDIT : Overdraft ne dispose pas d'une entrée valide.");
+                    throw new("DATA EDIT : Overdraft ne dispose pas d'une entrée valide.");
                 }
                 else
                 {
@@ -734,7 +734,7 @@ public class Program
                 }
                 else if (!double.TryParse(input, NumberStyles.Number, new CultureInfo("fr-FR"), out double importedInterest))
                 {
-                    throw new Exception("DATA EDIT : InterestRate ne dispose pas d'une entrée valide.");
+                    throw new("DATA EDIT : InterestRate ne dispose pas d'une entrée valide.");
                 }
                 else
                 {
@@ -750,7 +750,7 @@ public class Program
                 }
                 else if (!double.TryParse(input2, NumberStyles.Number, new CultureInfo("fr-FR"), out double importedFee))
                 {
-                    throw new Exception("DATA EDIT : AccountFees ne dispose pas d'une entrée valide.");
+                    throw new("DATA EDIT : AccountFees ne dispose pas d'une entrée valide.");
                 }
                 else
                 {
@@ -762,12 +762,12 @@ public class Program
 
                 if (account.UpdateAccountParameters())
                 {
-                    CustomNotification notif = new CustomNotification(NotificationType.Success, "Banque", $"Compte mis à jour avec {editCounter} modification(s)");
+                    CustomNotification notif = new(NotificationType.Success, "Banque", $"Compte mis à jour avec {editCounter} modification(s)");
                     await modal.RespondAsync(embed: notif.BuildEmbed());
                 }
                 else
                 {
-                    CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Erreur lors de la mise à jour du compte");
+                    CustomNotification notif = new(NotificationType.Error, "Banque", "Erreur lors de la mise à jour du compte");
                     await modal.RespondAsync(embed: notif.BuildEmbed());
                 }
             }
@@ -782,17 +782,17 @@ public class Program
 
             if (GlobalElements.ModulePaycheckEnabled == true)
             {
-                SnoutUser paycheckUser = new SnoutUser(discordId: modal.User.Username + "#" + modal.User.Discriminator);
-                Paycheck paycheck = new Paycheck(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+                SnoutUser paycheckUser = new(discordId: modal.User.Username + "#" + modal.User.Discriminator);
+                Paycheck paycheck = new(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
                 GlobalElements.PaycheckQueue.Enqueue(paycheck);
             }
 
-            Account account = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "deposit_account_textbox").Value));
+            Account account = new(int.Parse(modal.Data.Components.First(x => x.CustomId == "deposit_account_textbox").Value));
             account.GetParameters(int.Parse(modal.Data.Components.First(x => x.CustomId == "deposit_account_textbox").Value));
 
             if (account.Type == AccountType.Unknown) // On vérifie que le compte existe
             {
-                CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Ce compte n'existe pas");
+                CustomNotification notif = new(NotificationType.Error, "Banque", "Ce compte n'existe pas");
                 await modal.RespondAsync(embed: notif.BuildEmbed());
                 return;
             }
@@ -802,17 +802,17 @@ public class Program
 
                 if (string.IsNullOrEmpty(input)) // On vérifie que le montant n'est pas vide
                 {
-                    throw new Exception("DATA DEPOSIT : Amount ne dispose pas d'une entrée valide.");
+                    throw new("DATA DEPOSIT : Amount ne dispose pas d'une entrée valide.");
                 }
                 else if (!double.TryParse(input, NumberStyles.Number, new CultureInfo("fr-FR"), out double importedAmount))
                 {
-                    throw new Exception("DATA DEPOSIT : Amount ne dispose pas d'une entrée valide.");
+                    throw new("DATA DEPOSIT : Amount ne dispose pas d'une entrée valide.");
                 }
                 else
                 {
                     if (importedAmount <= 0)
                     {
-                        CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Le montant doit être strictement supérieur à 0");
+                        CustomNotification notif = new(NotificationType.Error, "Banque", "Le montant doit être strictement supérieur à 0");
                         await modal.RespondAsync(embed: notif.BuildEmbed());
                         return;
                     }
@@ -820,12 +820,12 @@ public class Program
                     {
                         if (await account.AddMoneyAsync(importedAmount))
                         {
-                            CustomNotification notif = new CustomNotification(NotificationType.Success, "Banque", $"Dépôt de {importedAmount} € effectué");
+                            CustomNotification notif = new(NotificationType.Success, "Banque", $"Dépôt de {importedAmount} € effectué");
                             await modal.RespondAsync(embed: notif.BuildEmbed());
                         }
                         else
                         {
-                            CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Erreur lors du dépôt");
+                            CustomNotification notif = new(NotificationType.Error, "Banque", "Erreur lors du dépôt");
                             await modal.RespondAsync(embed: notif.BuildEmbed());
                         }
                     }
@@ -842,17 +842,17 @@ public class Program
         {
             if (GlobalElements.ModulePaycheckEnabled == true)
             {
-                SnoutUser paycheckUser = new SnoutUser(discordId: modal.User.Username + "#" + modal.User.Discriminator);
-                Paycheck paycheck = new Paycheck(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+                SnoutUser paycheckUser = new(discordId: modal.User.Username + "#" + modal.User.Discriminator);
+                Paycheck paycheck = new(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
                 GlobalElements.PaycheckQueue.Enqueue(paycheck);
             }
 
-            Account account = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "withdraw_account_textbox").Value));
+            Account account = new(int.Parse(modal.Data.Components.First(x => x.CustomId == "withdraw_account_textbox").Value));
             account.GetParameters(int.Parse(modal.Data.Components.First(x => x.CustomId == "withdraw_account_textbox").Value));
 
             if (account.Type == AccountType.Unknown) // On vérifie que le compte existe
             {
-                CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Ce compte n'existe pas");
+                CustomNotification notif = new(NotificationType.Error, "Banque", "Ce compte n'existe pas");
                 await modal.RespondAsync(embed: notif.BuildEmbed());
                 return;
             }
@@ -862,17 +862,17 @@ public class Program
 
                 if (string.IsNullOrEmpty(input)) // On vérifie que le montant n'est pas vide
                 {
-                    throw new Exception("DATA WITHDRAW : Amount ne dispose pas d'une entrée valide.");
+                    throw new("DATA WITHDRAW : Amount ne dispose pas d'une entrée valide.");
                 }
                 else if (!double.TryParse(input, NumberStyles.Number, new CultureInfo("fr-FR"), out double importedAmount))
                 {
-                    throw new Exception("DATA WITHDRAW : Amount ne dispose pas d'une entrée valide.");
+                    throw new("DATA WITHDRAW : Amount ne dispose pas d'une entrée valide.");
                 }
                 else
                 {
                     if (importedAmount <= 0)
                     {
-                        CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Le montant doit être strictement supérieur à 0");
+                        CustomNotification notif = new(NotificationType.Error, "Banque", "Le montant doit être strictement supérieur à 0");
                         await modal.RespondAsync(embed: notif.BuildEmbed());
                         return;
                     }
@@ -880,12 +880,12 @@ public class Program
                     {
                         if (await account.RemoveMoneyAsync(importedAmount))
                         {
-                            CustomNotification notif = new CustomNotification(NotificationType.Success, "Banque", $"Retrait de {importedAmount} € effectué");
+                            CustomNotification notif = new(NotificationType.Success, "Banque", $"Retrait de {importedAmount} € effectué");
                             await modal.RespondAsync(embed: notif.BuildEmbed());
                         }
                         else
                         {
-                            CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Erreur lors du retrait");
+                            CustomNotification notif = new(NotificationType.Error, "Banque", "Erreur lors du retrait");
                             await modal.RespondAsync(embed: notif.BuildEmbed());
                         }
                     }
@@ -902,17 +902,17 @@ public class Program
         {
             if (GlobalElements.ModulePaycheckEnabled == true)
             {
-                SnoutUser paycheckUser = new SnoutUser(discordId: modal.User.Username + "#" + modal.User.Discriminator);
-                Paycheck paycheck = new Paycheck(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+                SnoutUser paycheckUser = new(discordId: modal.User.Username + "#" + modal.User.Discriminator);
+                Paycheck paycheck = new(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
                 GlobalElements.PaycheckQueue.Enqueue(paycheck);
             }
 
-            Account account = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_source_textbox").Value));
+            Account account = new(int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_source_textbox").Value));
             account.GetParameters(int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_source_textbox").Value));
 
             if (account.Type == AccountType.Unknown) // On vérifie que le compte existe
             {
-                CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Ce compte n'existe pas");
+                CustomNotification notif = new(NotificationType.Error, "Banque", "Ce compte n'existe pas");
                 await modal.RespondAsync(embed: notif.BuildEmbed());
                 return;
             }
@@ -922,29 +922,29 @@ public class Program
 
                 if (string.IsNullOrEmpty(input)) // On vérifie que le montant n'est pas vide
                 {
-                    throw new Exception("DATA TRANSFER : Amount ne dispose pas d'une entrée valide.");
+                    throw new("DATA TRANSFER : Amount ne dispose pas d'une entrée valide.");
                 }
                 else if (!double.TryParse(input, NumberStyles.Number, new CultureInfo("fr-FR"), out double importedAmount))
                 {
-                    throw new Exception("DATA TRANSFER : Amount ne dispose pas d'une entrée valide.");
+                    throw new("DATA TRANSFER : Amount ne dispose pas d'une entrée valide.");
                 }
                 else
                 {
 
                     if (importedAmount <= 0)
                     {
-                        CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Le montant doit être strictement supérieur à 0");
+                        CustomNotification notif = new(NotificationType.Error, "Banque", "Le montant doit être strictement supérieur à 0");
                         await modal.RespondAsync(embed: notif.BuildEmbed());
                         return;
                     }
                     else
                     {
-                        Account targetAccount = new Account(int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_destination_textbox").Value));
+                        Account targetAccount = new(int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_destination_textbox").Value));
                         targetAccount.GetParameters(int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_destination_textbox").Value));
 
                         if (targetAccount.Type == AccountType.Unknown) // On vérifie que le compte existe
                         {
-                            CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Ce compte n'existe pas");
+                            CustomNotification notif = new(NotificationType.Error, "Banque", "Ce compte n'existe pas");
                             await modal.RespondAsync(embed: notif.BuildEmbed());
                             return;
                         }
@@ -952,12 +952,12 @@ public class Program
                         {
                             if (await account.TransferMoneyAsync(importedAmount, int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_destination_textbox").Value)))
                             {
-                                CustomNotification notif = new CustomNotification(NotificationType.Success, "Banque", $"Transfert de {importedAmount} € effectué");
+                                CustomNotification notif = new(NotificationType.Success, "Banque", $"Transfert de {importedAmount} € effectué");
                                 await modal.RespondAsync(embed: notif.BuildEmbed());
                             }
                             else
                             {
-                                CustomNotification notif = new CustomNotification(NotificationType.Error, "Banque", "Erreur lors du transfert");
+                                CustomNotification notif = new(NotificationType.Error, "Banque", "Erreur lors du transfert");
                                 await modal.RespondAsync(embed: notif.BuildEmbed());
                             }
                         }
@@ -976,15 +976,15 @@ public class Program
 
             if (GlobalElements.ModulePaycheckEnabled == true)
             {
-                SnoutUser paycheckUser = new SnoutUser(discordId: modal.User.Username + "#" + modal.User.Discriminator);
-                Paycheck paycheck = new Paycheck(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+                SnoutUser paycheckUser = new(discordId: modal.User.Username + "#" + modal.User.Discriminator);
+                Paycheck paycheck = new(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
                 GlobalElements.PaycheckQueue.Enqueue(paycheck);
             }
 
-            CustomNotification notif = new CustomNotification(NotificationType.Info, "Traduction", "Traduction en cours ...");
+            CustomNotification notif = new(NotificationType.Info, "Traduction", "Traduction en cours ...");
             await modal.RespondAsync(embed: notif.BuildEmbed());
 
-            SnoutTranslator translator = new SnoutTranslator(_deepl, "api-free.deepl.com", GlobalElements.GlobalSnoutVersion, "application/x-www-form-urlencoded");
+            SnoutTranslator translator = new(_deepl, "api-free.deepl.com", GlobalElements.GlobalSnoutVersion, "application/x-www-form-urlencoded");
             string translatorInput = modal.Data.Components.First(x => x.CustomId == "translate_textbox").Value;
             string translaterTargetLanguage = modal.Data.Components.First(x => x.CustomId == "translate_language_to_textbox").Value;
 
@@ -993,7 +993,7 @@ public class Program
             string detectedSource = answer.Split('|')[0];
             string translatedText = answer.Split('|')[1];
 
-            CustomNotification notif2 = new CustomNotification(NotificationType.Success, $"Langue source : {detectedSource} ", translatedText);
+            CustomNotification notif2 = new(NotificationType.Success, $"Langue source : {detectedSource} ", translatedText);
             await modal.Channel.SendMessageAsync(embed: notif2.BuildEmbed());
 
         }
@@ -1006,25 +1006,25 @@ public class Program
         
         if (GlobalElements.ModulePaycheckEnabled == true)
         {
-            SnoutUser paycheckUser = new SnoutUser(discordId: menu.User.Username + "#" + menu.User.Discriminator);
-            Paycheck paycheck = new Paycheck(paycheckUser, "action_SELECT_MENU_EXECUTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+            SnoutUser paycheckUser = new(discordId: menu.User.Username + "#" + menu.User.Discriminator);
+            Paycheck paycheck = new(paycheckUser, "action_SELECT_MENU_EXECUTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
             GlobalElements.PaycheckQueue.Enqueue(paycheck);
         }
 
         var selectedUserData = string.Join(", ", menu.Data.Values);
 
-        SnoutUser userToDelete = new SnoutUser(selectedUserData);
+        SnoutUser userToDelete = new(selectedUserData);
 
         Console.WriteLine("DATA : Utilisateur supprimé / Discord ID = " + selectedUserData);
 
         if (await userToDelete.DeleteUserAsync())
         {
-            CustomNotification notifOk = new CustomNotification(NotificationType.Success, "Base de données", "L'utilisateur à été supprimé");
+            CustomNotification notifOk = new(NotificationType.Success, "Base de données", "L'utilisateur à été supprimé");
             await menu.RespondAsync(embed: notifOk.BuildEmbed());
         }
         else
         {
-            CustomNotification notif = new CustomNotification(NotificationType.Error, "Base de données", "Erreur lors de la suppression de l'utilisateur");
+            CustomNotification notif = new(NotificationType.Error, "Base de données", "Erreur lors de la suppression de l'utilisateur");
             await menu.RespondAsync(embed: notif.BuildEmbed());
         }
 
@@ -1039,7 +1039,7 @@ public class Program
             return;
 
         // Récupérez l'utilisateur à partir de leur ID
-        var user = client.GetUser(userId);
+        SocketUser? user = client.GetUser(userId);
 
         // Vérifiez que l'utilisateur existe
         if (user == null)
@@ -1056,7 +1056,7 @@ public class Program
             {
                 if (GlobalElements.PaycheckQueue.Count > 0)
                 {
-                    if (GlobalElements.PaycheckQueue.TryDequeue(out var paycheck))
+                    if (GlobalElements.PaycheckQueue.TryDequeue(out Paycheck? paycheck))
                     {
                         if (await paycheck.CreatePaycheckAsync())
                         {

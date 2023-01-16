@@ -18,7 +18,7 @@ public class HllSniffer {
 
                 try
                 {
-                    var response = client.Send(new HttpRequestMessage(HttpMethod.Head, extractedUrl));
+                    HttpResponseMessage? response = client.Send(new(HttpMethod.Head, extractedUrl));
                     if (response.IsSuccessStatusCode)
                     {
                         // Le site est accessible extraire son contenu
@@ -27,12 +27,12 @@ public class HllSniffer {
 
                         var url = extractedUrl;
                         var web = new HtmlWeb();
-                        var doc = web.Load(url);
+                        HtmlDocument? doc = web.Load(url);
 
-                        var title = doc.DocumentNode.SelectSingleNode("/html/body/div/div/div[2]/div[2]/ol/li[3]/a/span");
-                        var playerCount = doc.DocumentNode.SelectSingleNode("/html/body/div/div/div[2]/div[2]/div/div/div[1]/div[1]/dl/dd[2]");
-                        var status = doc.DocumentNode.SelectSingleNode("/html/body/div/div/div[2]/div[2]/div/div/div[1]/div[1]/dl/dd[4]");
-                        var ipPort = doc.DocumentNode.SelectSingleNode("/html/body/div/div/div[2]/div[2]/div/div/div[1]/div[1]/dl/dd[3]/span[2]");
+                        HtmlNode? title = doc.DocumentNode.SelectSingleNode("/html/body/div/div/div[2]/div[2]/ol/li[3]/a/span");
+                        HtmlNode? playerCount = doc.DocumentNode.SelectSingleNode("/html/body/div/div/div[2]/div[2]/div/div/div[1]/div[1]/dl/dd[2]");
+                        HtmlNode? status = doc.DocumentNode.SelectSingleNode("/html/body/div/div/div[2]/div[2]/div/div/div[1]/div[1]/dl/dd[4]");
+                        HtmlNode? ipPort = doc.DocumentNode.SelectSingleNode("/html/body/div/div/div[2]/div[2]/div/div/div[1]/div[1]/dl/dd[3]/span[2]");
 
                         if (title != null)
                         {
@@ -41,11 +41,11 @@ public class HllSniffer {
                             if (answer == null || answer == "")
                             {
                                 // Le site est accessible mais il n'y a pas de contenu (anti-ddos actif ?)
-                                EmbedBuilder emptyAnswerEmbed = new EmbedBuilder();
+                                EmbedBuilder emptyAnswerEmbed = new();
                                 emptyAnswerEmbed.WithTitle("🇫🇷 Hell Let Loose - Serveurs de la communauté");
                                 emptyAnswerEmbed.WithDescription(":x: Protections DDOS actives. Les résultats peuvent être *incomplets* ou *indisponibles*.");
                                 emptyAnswerEmbed.WithThumbnailUrl("https://static.wixstatic.com/media/da3421_111b24ae66f64f73aa94efeb80b08f58~mv2.png/v1/fit/w_2500,h_1330,al_c/da3421_111b24ae66f64f73aa94efeb80b08f58~mv2.png");
-                                emptyAnswerEmbed.WithColor(new Color(0, 0, 255));
+                                emptyAnswerEmbed.WithColor(new(0, 0, 255));
                                 emptyAnswerEmbed.WithFooter(Program.GlobalElements.GlobalSnoutVersion + " | Source : Battlemetrics.com");
                                 emptyAnswerEmbed.WithTimestamp(DateTimeOffset.UtcNow);
 
@@ -77,11 +77,11 @@ public class HllSniffer {
         var listed = splitted.ToList();
         listed.RemoveAt(0);
         
-        var embed = new EmbedBuilder()
+        EmbedBuilder? embed = new EmbedBuilder()
             .WithTitle("🇫🇷 Hell Let Loose - Serveurs de la communauté")
             .WithDescription("---")
             .WithThumbnailUrl("https://static.wixstatic.com/media/da3421_111b24ae66f64f73aa94efeb80b08f58~mv2.png/v1/fit/w_2500,h_1330,al_c/da3421_111b24ae66f64f73aa94efeb80b08f58~mv2.png")
-            .WithColor(new Color(0, 0, 255))
+            .WithColor(new(0, 0, 255))
             .WithFooter(Program.GlobalElements.GlobalSnoutVersion + " | Source : Battlemetrics")
             .WithTimestamp(DateTimeOffset.UtcNow);
 
@@ -108,7 +108,7 @@ public class HllSniffer {
             embed.AddField(field.Name, field.Value);
         }
 
-        var endResult = embed.Build();
+        Embed? endResult = embed.Build();
 
         return endResult;
     }

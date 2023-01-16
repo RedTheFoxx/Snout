@@ -39,14 +39,14 @@ internal class Events
     {
         if (GlobalElements.ModulePaycheckEnabled)
         {
-            SnoutUser user = new SnoutUser(discordId: arg.Author.Username + "#" + arg.Author.Discriminator);
-            Paycheck paycheck = new Paycheck(user, "action_MESSAGE_SENT", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+            SnoutUser user = new(discordId: arg.Author.Username + "#" + arg.Author.Discriminator);
+            Paycheck paycheck = new(user, "action_MESSAGE_SENT", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
             GlobalElements.PaycheckQueue.Enqueue(paycheck);
 
             // Check if there is any attachment or file in the message and reward the user
             if (arg.Attachments.Count > 0)
             {
-                Paycheck attachmentPaycheck = new Paycheck(user, "action_MESSAGE_SENT_WITH_FILE", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+                Paycheck attachmentPaycheck = new(user, "action_MESSAGE_SENT_WITH_FILE", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
                 GlobalElements.PaycheckQueue.Enqueue(attachmentPaycheck);
             }
 
@@ -54,12 +54,12 @@ internal class Events
             var messageContentTags = arg.Tags;
             if (messageContentTags.Count > 0) // Any tags in the message ?
             {
-                foreach (var tag in messageContentTags)
+                foreach (ITag? tag in messageContentTags)
                 {
                     if (tag.Type == TagType.UserMention)
                     {
-                        SnoutUser tagingUser = new SnoutUser(discordId: arg.Author.Username + "#" + arg.Author.Discriminator);
-                        Paycheck taguingUserPaycheck = new Paycheck(tagingUser, "action_TAGUED_SOMEONE", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+                        SnoutUser tagingUser = new(discordId: arg.Author.Username + "#" + arg.Author.Discriminator);
+                        Paycheck taguingUserPaycheck = new(tagingUser, "action_TAGUED_SOMEONE", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
                         GlobalElements.PaycheckQueue.Enqueue(taguingUserPaycheck);
 
                         // Get the user mentionned and clean it
@@ -70,8 +70,8 @@ internal class Events
                         // If the user mentionned is not the author of the message
                         if (cleanUserMentionned != (arg.Author.Username + "#" + arg.Author.Discriminator))
                         {
-                            SnoutUser cleanMentionnedSnoutUser = new SnoutUser(discordId: cleanUserMentionned);
-                            Paycheck userMentionnedPaycheck = new Paycheck(cleanMentionnedSnoutUser, "action_TAGUED_BY", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+                            SnoutUser cleanMentionnedSnoutUser = new(discordId: cleanUserMentionned);
+                            Paycheck userMentionnedPaycheck = new(cleanMentionnedSnoutUser, "action_TAGUED_BY", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
                             GlobalElements.PaycheckQueue.Enqueue(userMentionnedPaycheck);
                         }
                     }
@@ -86,12 +86,12 @@ internal class Events
     {
         if (GlobalElements.ModulePaycheckEnabled)
         {
-            var cacheableMessage = await arg1.GetOrDownloadAsync();
+            IMessage? cacheableMessage = await arg1.GetOrDownloadAsync();
 
             if (cacheableMessage != null)
             {
-                SnoutUser user = new SnoutUser(discordId: cacheableMessage.Author.Username + "#" + cacheableMessage.Author.Discriminator);
-                Paycheck paycheck = new Paycheck(user, "action_MESSAGE_UPDATED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+                SnoutUser user = new(discordId: cacheableMessage.Author.Username + "#" + cacheableMessage.Author.Discriminator);
+                Paycheck paycheck = new(user, "action_MESSAGE_UPDATED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
                 GlobalElements.PaycheckQueue.Enqueue(paycheck);
             }
             
@@ -105,8 +105,8 @@ internal class Events
     {
         if (GlobalElements.ModulePaycheckEnabled)
         {
-            SnoutUser user = new SnoutUser(discordId: arg1.Username + "#" + arg1.Discriminator);
-            Paycheck paycheck = new Paycheck(user, "action_CHANGED_STATUS", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+            SnoutUser user = new(discordId: arg1.Username + "#" + arg1.Discriminator);
+            Paycheck paycheck = new(user, "action_CHANGED_STATUS", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
             GlobalElements.PaycheckQueue.Enqueue(paycheck);
             
             return Task.CompletedTask;
@@ -123,8 +123,8 @@ internal class Events
 
             if (optionalUser.IsSpecified)
             {
-                SnoutUser user = new SnoutUser(discordId: optionalUser.Value.Username + "#" + optionalUser.Value.Discriminator);
-                Paycheck paycheck = new Paycheck(user, "action_REACTION_ADDED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+                SnoutUser user = new(discordId: optionalUser.Value.Username + "#" + optionalUser.Value.Discriminator);
+                Paycheck paycheck = new(user, "action_REACTION_ADDED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
                 GlobalElements.PaycheckQueue.Enqueue(paycheck);
             }
             
@@ -141,8 +141,8 @@ internal class Events
 
             if (optionalUser.IsSpecified)
             {
-                SnoutUser user = new SnoutUser(discordId: optionalUser.Value.Username + "#" + optionalUser.Value.Discriminator);
-                Paycheck paycheck = new Paycheck(user, "action_REACTION_REMOVED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+                SnoutUser user = new(discordId: optionalUser.Value.Username + "#" + optionalUser.Value.Discriminator);
+                Paycheck paycheck = new(user, "action_REACTION_REMOVED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
                 GlobalElements.PaycheckQueue.Enqueue(paycheck);
             }
 
@@ -159,8 +159,8 @@ internal class Events
            
             if (cacheableUser != null)
             {
-                SnoutUser user = new SnoutUser(discordId: cacheableUser.Username + "#" + cacheableUser.Discriminator);
-                Paycheck paycheck = new Paycheck(user, "action_TYPING", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+                SnoutUser user = new(discordId: cacheableUser.Username + "#" + cacheableUser.Discriminator);
+                Paycheck paycheck = new(user, "action_TYPING", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
                 GlobalElements.PaycheckQueue.Enqueue(paycheck);
 
             }
@@ -174,8 +174,8 @@ internal class Events
     {
         if (GlobalElements.ModulePaycheckEnabled)
         {
-            SnoutUser user = new SnoutUser(arg1.Username + "#" + arg1.Discriminator);
-            Paycheck paycheck = new Paycheck(user, "action_VOICE_CHANNEL_USER_STATUS_UPDATED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+            SnoutUser user = new(arg1.Username + "#" + arg1.Discriminator);
+            Paycheck paycheck = new(user, "action_VOICE_CHANNEL_USER_STATUS_UPDATED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
             GlobalElements.PaycheckQueue.Enqueue(paycheck);
 
             return Task.CompletedTask;

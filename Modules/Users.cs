@@ -16,7 +16,7 @@ public class SnoutUser
     }
     public async Task<int> CreateUserAsync()
     {
-        using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
+        await using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
         {
             await connection.OpenAsync();
 
@@ -37,7 +37,7 @@ public class SnoutUser
             {
                 // L'utilisateur existe déjà, retourner son ID
 
-                command = new SQLiteCommand("SELECT UserId FROM Users WHERE DiscordId = @discordId", connection);
+                command = new("SELECT UserId FROM Users WHERE DiscordId = @discordId", connection);
                 command.Parameters.AddWithValue("@discordId", DiscordId);
                 var result2 = await command.ExecuteScalarAsync();
 
@@ -57,7 +57,7 @@ public class SnoutUser
             }
 
             // L'utilisateur n'existe pas, l'insérer dans la table
-            command = new SQLiteCommand("INSERT INTO Users (DiscordId) VALUES (@discordId)", connection);
+            command = new("INSERT INTO Users (DiscordId) VALUES (@discordId)", connection);
             command.Parameters.AddWithValue("@discordId", DiscordId);
             await command.ExecuteNonQueryAsync();
 
@@ -68,12 +68,11 @@ public class SnoutUser
 
     public async Task<bool> DeleteUserAsync()
     {
-
-        using (var connection = new SQLiteConnection("Data Source=dynamic_data.db; Version=3;"))
+        await using (var connection = new SQLiteConnection("Data Source=dynamic_data.db; Version=3;"))
         {
             await connection.OpenAsync();
 
-            using (var command = connection.CreateCommand())
+            await using (SQLiteCommand? command = connection.CreateCommand())
             {
                 command.CommandText = "DELETE FROM Users WHERE DiscordId = @DiscordId";
                 command.Parameters.AddWithValue("@DiscordId", DiscordId);
@@ -88,7 +87,7 @@ public class SnoutUser
     {
         // Trouve l'userID en fonction du DiscordID renseigné et retourne le.
 
-        using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
+        await using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
         {
             await connection.OpenAsync();
 
@@ -117,7 +116,7 @@ public class SnoutUser
     {
         // Trouve le DiscordID en fonction de l'userID renseigné et retourne le.
 
-        using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
+        await using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
         {
             await connection.OpenAsync();
 
