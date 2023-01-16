@@ -28,6 +28,7 @@ public class Program
         public static bool modulePaycheckEnabled;
         public static ConcurrentQueue<Paycheck> paycheckQueue = new ConcurrentQueue<Paycheck>();
         public static Thread paycheckDequeuerThread = new Thread(PaycheckDequeuer);
+        public static bool paycheckDequeuerThreadSwitch = true;
         public static Timer? dailyUpdaterTimerUniqueReference = null;
         public static Timer? dailyPaycheckTimerUniqueReference = null;
     }
@@ -177,25 +178,25 @@ public class Program
                 .WithName("account")
                 .WithDescription("Créer un nouveau compte bancaire"),
 
-            new SlashCommandBuilder()
-                .WithName("myaccounts")
-                .WithDescription("Afficher ses comptes bancaires"),
+            //new SlashCommandBuilder()
+            //    .WithName("myaccounts")
+            //    .WithDescription("Afficher ses comptes bancaires"),
 
             //new SlashCommandBuilder()
             //    .WithName("checkaccounts")
             //    .WithDescription("Afficher les comptes bancaires d'un utilisateur"),
 
-            new SlashCommandBuilder()
-                .WithName("editaccount")
-                .WithDescription("Modifier un compte bancaire"),
+            //new SlashCommandBuilder()
+            //    .WithName("editaccount")
+            //    .WithDescription("Modifier un compte bancaire"),
 
             new SlashCommandBuilder()
                 .WithName("deposit")
                 .WithDescription("Déposer de l'argent sur un compte bancaire"),
 
-            new SlashCommandBuilder()
-                .WithName("withdraw")
-                .WithDescription("Retirer de l'argent d'un compte bancaire"),
+            //new SlashCommandBuilder()
+            //    .WithName("withdraw")
+            //    .WithDescription("Retirer de l'argent d'un compte bancaire"),
 
             //new SlashCommandBuilder()
             //    .WithName("transfer")
