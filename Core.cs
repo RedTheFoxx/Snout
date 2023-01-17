@@ -233,10 +233,8 @@ public class Program
         #endregion
 
 
-        #region Génération de la base de donnée
         // Vérification de l'existence de la DB, sinon création par appel de "GenerateDB.sql"
-
-
+        
         // Création de la chaîne de connexion à la base de données
         string connectionString = "Data Source=dynamic_data.db; Version=3;";
 
@@ -248,46 +246,53 @@ public class Program
         }
         else
         {
-            Console.WriteLine("DATABASE : Base de données déjà existante. Contrôle structurel ...");
+            Console.WriteLine("DATABASE : Base existante = dynamic_data.db");
         }
 
-        // Ouvre une connexion à la base de données
-        await using SQLiteConnection connection = new(connectionString);
-        await connection.OpenAsync();
-        Console.WriteLine("DATABASE : Ouverte");
-
-        // Lit et exécute le contenu du fichier GenerateDB.sql
-        string sql = await File.ReadAllTextAsync("SQL\\GenerateDB.sql"); // A modifier avant release, chercher le fichier dans le dossier "SQL"
-
-        await using (SQLiteCommand command = new(sql, connection))
+        if (File.Exists("SQL\\GenerateDB.sql"))
         {
-            await command.ExecuteNonQueryAsync();
-            Console.WriteLine("DATABASE : Structure contrôlée et mise à jour !");
+            // Lit et exécute le contenu du fichier GenerateDB.sql
+            string sql = await File.ReadAllTextAsync("SQL\\GenerateDB.sql");
 
-            string selectSql = "SELECT url FROM urls";
-            await using SQLiteCommand selectCommand = new(selectSql, connection);
-            await using DbDataReader reader = await selectCommand.ExecuteReaderAsync();
+            // Ouvre une connexion à la base de données
+            await using SQLiteConnection connection = new(connectionString);
+            await connection.OpenAsync();
+            Console.WriteLine("DATABASE : Ouverte");
 
-            while (await reader.ReadAsync())
+            await using (SQLiteCommand command = new(sql, connection))
             {
-                _listUrl.Add(reader.GetString(0));
-                Console.WriteLine("DATABASE : " + reader.GetString(0) + " -> ajouté à la liste des urls du module Fetcher (HLL)");
+                await command.ExecuteNonQueryAsync();
+                Console.WriteLine("DATABASE : Structure contrôlée et mise à jour !");
+
+                string selectSql = "SELECT url FROM urls";
+                await using SQLiteCommand selectCommand = new(selectSql, connection);
+                await using DbDataReader reader = await selectCommand.ExecuteReaderAsync();
+
+                while (await reader.ReadAsync())
+                {
+                    _listUrl.Add(reader.GetString(0));
+                    Console.WriteLine("DATABASE : " + reader.GetString(0) + " -> ajouté à la liste des urls du module Fetcher (HLL)");
+                }
+
+                Console.WriteLine("DATABASE : Fin des opérations sur la base de données");
+
+                connection.Close();
+                connection.Dispose();
+
+                Console.WriteLine("DATABASE : Fermée");
+
             }
 
-            Console.WriteLine("DATABASE : Fin des opérations sur la base de données");
-
+            // Ferme la connexion à la base de données
             connection.Close();
-            connection.Dispose();
-
-            Console.WriteLine("DATABASE : Fermée");
-            
+            Console.WriteLine("DATABASE : Connexion fermée");
         }
-
-        // Ferme la connexion à la base de données
-        connection.Close();
-        Console.WriteLine("DATABASE : Connexion fermée");
-
-        #endregion
+        else
+        {
+            Console.WriteLine("DATABASE : Fichier de structure SQL introuvable. Veillez à placer le fichier GenerateDB.sql dans le dossier SQL");
+            Console.ReadLine();
+        }
+        
     }
 
     private async void Timer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
