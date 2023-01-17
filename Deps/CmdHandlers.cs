@@ -1,18 +1,15 @@
 ﻿using System.Data.Common;
-using Discord.WebSocket;
-using Discord;
-using Snout;
 using System.Data.SQLite;
 using System.Net.NetworkInformation;
+using Discord;
+using Discord.WebSocket;
 using Snout.Modules;
 using static Snout.Program;
 
-namespace Snout.CoreDeps;
+namespace Snout.Deps;
 class SnoutHandler
 
 {
-    public SnoutHandler() { }
-
     public async Task HandlePingCommand(SocketSlashCommand command)
     {
         string url = "gateway.discord.gg";
