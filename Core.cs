@@ -85,7 +85,7 @@ public class Program
 
         // Check if file "token.txt" exist at the root of the project
 
-        if (!File.Exists("token.txt"))
+        if (!File.Exists("Tokens\\token.txt"))
         {
             Console.WriteLine("Le fichier token.txt n'existe pas. Veuillez le créer à la racine du programme et y insérer votre token.");
             Console.ReadLine();
@@ -93,7 +93,7 @@ public class Program
         }
         else
         {
-            string token = await File.ReadAllTextAsync("token.txt");
+            string token = await File.ReadAllTextAsync("Tokens\\token.txt");
             Console.WriteLine("CORE : Token Discord enregistré");
             Console.WriteLine("CORE : " + token);
             await _client.LoginAsync(TokenType.Bot, token);
@@ -102,7 +102,7 @@ public class Program
 
         // Check DeepL API key at the root & care about API domain (https://www.deepl.com/fr/account/summary)
 
-        if (!File.Exists("deepl.txt"))
+        if (!File.Exists("Tokens\\deepl.txt"))
         {
             Console.WriteLine("TRANSLATOR : Le fichier deepl.txt n'existe pas. Veuillez le créer à la racine du programme et y insérer votre clé API.");
             Console.ReadLine();
@@ -111,7 +111,7 @@ public class Program
         }
         else
         {
-            _deepl = await File.ReadAllTextAsync("deepl.txt");
+            _deepl = await File.ReadAllTextAsync("Tokens\\deepl.txt");
             Console.WriteLine("TRANSLATOR : Clé API DeepL enregistrée");
             Console.WriteLine("TRANSLATOR : " + _deepl);
         }
