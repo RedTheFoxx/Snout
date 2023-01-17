@@ -150,39 +150,35 @@ class SnoutHandler
 
     public async Task HandleUnregisterCommand(SocketSlashCommand command)
     {
-        await using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
+        await using var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;");
+        await connection.OpenAsync();
+        var sqlCommand = new SQLiteCommand("SELECT UserId, DiscordId FROM Users", connection);
+
+        await using DbDataReader? reader = await sqlCommand.ExecuteReaderAsync();
+        if (!reader.HasRows)
         {
-            await connection.OpenAsync();
-            var sqlCommand = new SQLiteCommand("SELECT UserId, DiscordId FROM Users", connection);
 
-            await using (DbDataReader? reader = await sqlCommand.ExecuteReaderAsync())
-            {
-                if (!reader.HasRows)
-                {
+            CustomNotification notifDbVide = new(NotificationType.Error, "Base de données", "La base de données est vide : opération impossible");
 
-                    CustomNotification notifDbVide = new(NotificationType.Error, "Base de données", "La base de données est vide : opération impossible");
+            await command.RespondAsync(embed: notifDbVide.BuildEmbed());
 
-                    await command.RespondAsync(embed: notifDbVide.BuildEmbed());
-
-                    return;
-                }
-
-                SelectMenuBuilder? menuBuilder = new SelectMenuBuilder()
-                    .WithPlaceholder("Sélectionnez un utilisateur")
-                    .WithCustomId("del_user_menu");
-
-                while (await reader.ReadAsync())
-                {
-                    var userId = reader.GetInt32(0);
-                    var discordId = reader.GetString(1);
-                    menuBuilder.AddOption($"ID {userId}", $"{discordId}", $"{discordId}");
-                }
-
-                ComponentBuilder? menuComponent = new ComponentBuilder().WithSelectMenu(menuBuilder);
-
-                await command.RespondAsync("Quel utilisateur faut-il supprimer ?", components: menuComponent.Build());
-            }
+            return;
         }
+
+        SelectMenuBuilder? menuBuilder = new SelectMenuBuilder()
+            .WithPlaceholder("Sélectionnez un utilisateur")
+            .WithCustomId("del_user_menu");
+
+        while (await reader.ReadAsync())
+        {
+            var userId = reader.GetInt32(0);
+            var discordId = reader.GetString(1);
+            menuBuilder.AddOption($"ID {userId}", $"{discordId}", $"{discordId}");
+        }
+
+        ComponentBuilder? menuComponent = new ComponentBuilder().WithSelectMenu(menuBuilder);
+
+        await command.RespondAsync("Quel utilisateur faut-il supprimer ?", components: menuComponent.Build());
     }
 
     public async Task HandleMyAccountsCommand(SocketSlashCommand command, DiscordSocketClient client)

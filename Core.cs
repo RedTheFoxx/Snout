@@ -40,7 +40,7 @@ public class Program
     {
         _client = new(new()
         {
-            LogLevel = LogSeverity.Verbose,
+            LogLevel = LogSeverity.Info,
             MessageCacheSize = 200,
             AlwaysDownloadUsers = true,
             GatewayIntents = GatewayIntents.All
@@ -172,9 +172,9 @@ public class Program
             //    .WithName("unregister")
             //    .WithDescription("Désinscrire un utilisateur de Snout Bot"),
 
-            new SlashCommandBuilder()
-                .WithName("account")
-                .WithDescription("Créer un nouveau compte bancaire"),
+            //new SlashCommandBuilder()
+            //    .WithName("account")
+            //    .WithDescription("Créer un nouveau compte bancaire"),
 
             //new SlashCommandBuilder()
             //    .WithName("myaccounts")
@@ -188,9 +188,9 @@ public class Program
             //    .WithName("editaccount")
             //    .WithDescription("Modifier un compte bancaire"),
 
-            new SlashCommandBuilder()
-                .WithName("deposit")
-                .WithDescription("Déposer de l'argent sur un compte bancaire"),
+            //new SlashCommandBuilder()
+            //    .WithName("deposit")
+            //    .WithDescription("Déposer de l'argent sur un compte bancaire"),
 
             //new SlashCommandBuilder()
             //    .WithName("withdraw")
@@ -200,13 +200,13 @@ public class Program
             //    .WithName("transfer")
             //    .WithDescription("Transférer de l'argent d'un compte bancaire à un autre"),
 
-            //new SlashCommandBuilder()
-            //    .WithName("t")
-            //    .WithDescription("Permet de traduire un texte vers une langue cible"),
+            new SlashCommandBuilder()
+                .WithName("t")
+                .WithDescription("Permet de traduire un texte vers une langue cible"),
 
-            //new SlashCommandBuilder()
-            //    .WithName("thelp")
-            //    .WithDescription("Afficher l'aide du traducteur de texte et les utilisations restantes"),
+            new SlashCommandBuilder()
+                .WithName("thelp")
+                .WithDescription("Afficher l'aide du traducteur de texte et les utilisations restantes"),
 
             new SlashCommandBuilder()
                 .WithName("mpaycheck")
@@ -250,50 +250,45 @@ public class Program
         }
 
         // Ouvre une connexion à la base de données
-        await using (SQLiteConnection connection = new(connectionString))
+        await using SQLiteConnection connection = new(connectionString);
+        await connection.OpenAsync();
+        Console.WriteLine("DATABASE : Connexion à la base de données ouverte");
+
+        // Lit et exécute le contenu du fichier GenerateDB.sql
+        string sql = await File.ReadAllTextAsync("C:\\Users\\moris\\Desktop\\Snout\\SQL\\GenerateDB.sql"); // A modifier avant release, chercher le fichier dans le dossier "SQL"
+
+        await using (SQLiteCommand command = new(sql, connection))
         {
-            await connection.OpenAsync();
-            Console.WriteLine("DATABASE : Connexion à la base de données ouverte");
+            await command.ExecuteNonQueryAsync();
+            Console.WriteLine("DATABASE : Requêtes SQL exécutées : la structure est à jour");
 
-            // Lit et exécute le contenu du fichier GenerateDB.sql
-            string sql = await File.ReadAllTextAsync("C:\\Users\\moris\\Desktop\\Snout\\SQL\\GenerateDB.sql"); // A modifier avant release, chercher le fichier dans le dossier "SQL"
-
-            await using (SQLiteCommand command = new(sql, connection))
+            foreach (string url in _listUrl)
             {
-                await command.ExecuteNonQueryAsync();
-                Console.WriteLine("DATABASE : Requêtes SQL exécutées : la structure est à jour");
-
-                foreach (string url in _listUrl)
+                // Vérifiez si l'URL existe déjà dans la table
+                string selectSql = "SELECT COUNT(*) FROM urls WHERE url = @url";
+                await using SQLiteCommand selectCommand = new(selectSql, connection);
+                selectCommand.Parameters.AddWithValue("@url", url);
+                Int64 count = (Int64)selectCommand.ExecuteScalar();
+                if (count == 0)
                 {
-                    // Vérifiez si l'URL existe déjà dans la table
-                    string selectSql = "SELECT COUNT(*) FROM urls WHERE url = @url";
-                    await using (SQLiteCommand selectCommand = new(selectSql, connection))
-                    {
-                        selectCommand.Parameters.AddWithValue("@url", url);
-                        Int64 count = (Int64)selectCommand.ExecuteScalar();
-                        if (count == 0)
-                        {
-                            // L'URL n'existe pas encore dans la table, ajoutez-la
-                            string insertSql = "INSERT INTO urls (url) VALUES (@url)";
-                            await using (SQLiteCommand insertCommand = new(insertSql, connection))
-                            {
-                                insertCommand.Parameters.AddWithValue("@url", url);
-                                await insertCommand.ExecuteNonQueryAsync();
-                                Console.WriteLine("DATABASE : " + url + " -> Ajouté");
-                            }
-                        }
-                        else
-                        {
-                            Console.WriteLine("DATABASE : " + url + " // existait déjà.");
-                        }
-                    }
+                    // L'URL n'existe pas encore dans la table, ajoutez-la
+                    string insertSql = "INSERT INTO urls (url) VALUES (@url)";
+                    await using SQLiteCommand insertCommand = new(insertSql, connection);
+                    insertCommand.Parameters.AddWithValue("@url", url);
+                    await insertCommand.ExecuteNonQueryAsync();
+                    Console.WriteLine("DATABASE : " + url + " -> Ajouté");
+                }
+                else
+                {
+                    Console.WriteLine("DATABASE : " + url + " // existait déjà.");
                 }
             }
-
-            // Ferme la connexion à la base de données
-            connection.Close();
-            Console.WriteLine("DATABASE : Connexion fermée");
         }
+
+        // Ferme la connexion à la base de données
+        connection.Close();
+        Console.WriteLine("DATABASE : Connexion fermée");
+
         #endregion
     }
 
