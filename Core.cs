@@ -585,39 +585,20 @@ public class Program
                 await modal.RespondAsync(embed: ajoutNok.BuildEmbed());
                 throw new("L'utilisateur n'existe pas dans la base de données !");
             }
+            
+            // Définir un overdraft par défaut à 200, des intérêts à 2% et des frais bancaires à 9€. Solde de base à 0€.
 
-            // 4. Prendre l'overdraft
-
-            string input0 = components.First(x => x.CustomId == "new_account_overdraft_textbox").Value;
-
-            if (!double.TryParse(input0, NumberStyles.Number, new CultureInfo("fr-FR"), out double importedOverdraftLimit))
-            {
-                throw new("Overdraft ne dispose pas d'une entrée valide.");
-            }
-
-            // 5. Prendre l'interest
-
-            string input = components.First(x => x.CustomId == "new_account_interest_textbox").Value;
-
-            if (!double.TryParse(input, NumberStyles.Number, new CultureInfo("fr-FR"), out double importedInterest))
-            {
-                throw new("Interest ne dispose pas d'une entrée valide.");
-            }
-
-            // 6. Prendre la fee
-
-            string input2 = components.First(x => x.CustomId == "new_account_fees_textbox").Value;
-
-            if (!double.TryParse(input2, NumberStyles.Number, new CultureInfo("fr-FR"), out double importedFee))
-            {
-                throw new("Fee ne dispose pas d'une entrée valide.");
-            }
-
-            Account account = new(randomAccountNumber, importedAccountType, importedSnoutUser, 0.0, "€", importedOverdraftLimit, importedInterest, importedFee);
+            Account account = new(randomAccountNumber, importedAccountType, importedSnoutUser, 0, "€", 200, 0.2, 9);
 
             if (account.RegisterAccount())
             {
-                CustomNotification ajoutOk = new(NotificationType.Success, "Banque", $"Nouveau compte crée avec le numéro {randomAccountNumber}");
+                CustomNotification ajoutOk = new(NotificationType.Success, "Banque", "Nouveau compte crée avec le numéro " + randomAccountNumber + "\n" +
+                    "Type de compte : " + importedAccountType + "\n" +
+                    "Propriétaire : " + importedSnoutUser.GetDiscordIdAsync().Result + "\n" +
+                    "Solde : " + account.Balance + " €" + "\n" +
+                    "Limite de découvert : " + account.OverdraftLimit + " € (pénalités au-delà)" + "\n" +
+                    "Intérêts : " + account.InterestRate.ToString("0.## %") + " % / jour\n" +
+                    "Frais de service : " + account.AccountFees + " € / jour");
                 await modal.RespondAsync(embed: ajoutOk.BuildEmbed());
             }
             else
