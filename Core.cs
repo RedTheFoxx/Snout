@@ -7,6 +7,7 @@ using Snout.Modules;
 using System.Collections.Concurrent;
 using System.Data.SQLite;
 using System.Globalization;
+using Snout.Deps;
 
 #pragma warning disable CS8602
 
@@ -976,7 +977,7 @@ public class Program
                 GlobalElements.PaycheckQueue.Enqueue(paycheck);
             }
 
-            CustomNotification notif = new(NotificationType.Info, "Traduction", "Traduction en cours ...");
+            CustomNotification notif = new(NotificationType.Info, "Traduction", "Requête envoyée");
             await modal.RespondAsync(embed: notif.BuildEmbed());
 
             SnoutTranslator translator = new(_deepl, "api-free.deepl.com", GlobalElements.GlobalSnoutVersion, "application/x-www-form-urlencoded");
