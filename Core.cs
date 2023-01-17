@@ -154,7 +154,7 @@ public class Program
             //    .WithDescription("Envoyer un ping vers la gateway Discord"),
 
             //new SlashCommandBuilder()
-            //    .WithName("fetch")
+            //    .WithName("mfetcher")
             //    .WithDescription("Assigne un canal au fetch automatique HLL et déclenche ce dernier"),
 
             //new SlashCommandBuilder()
@@ -344,9 +344,9 @@ public class Program
                 await pingHandlerReference.HandlePingCommand(command);
                 break;
 
-            case "fetch":
+            case "mfetcher":
                 SnoutHandler fetchHandlerReference = new();
-                await fetchHandlerReference.HandleFetchCommand(command, _client, _liveChannels, _timerFetcher);
+                await fetchHandlerReference.HandleMfetcherCommand(command, _client, _liveChannels, _timerFetcher);
                 break;
 
             case "stop":

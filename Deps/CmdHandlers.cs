@@ -53,7 +53,7 @@ class SnoutHandler
 
     }
 
-    public async Task HandleFetchCommand(SocketSlashCommand command, DiscordSocketClient client, List<IMessageChannel> liveChannels, System.Timers.Timer timer)
+    public async Task HandleMfetcherCommand(SocketSlashCommand command, DiscordSocketClient client, List<IMessageChannel> liveChannels, System.Timers.Timer timer)
     {
         // var localSniffer = new HllSniffer();
         // var embed = localSniffer.Pull(_listUrl);
