@@ -38,7 +38,7 @@ public class HllSniffer {
                         {
                             var answer = title.InnerText + "_" + playerCount.InnerText + "_" + status.InnerText + "_" + ipPort.InnerText;
 
-                            if (answer == null || answer == "")
+                            if (string.IsNullOrEmpty(answer))
                             {
                                 // Le site est accessible mais il n'y a pas de contenu (anti-ddos actif ?)
                                 EmbedBuilder emptyAnswerEmbed = new();
