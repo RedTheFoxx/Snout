@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using Snout.CoreDeps;
 using Snout.Modules;
 using System.Collections.Concurrent;
+using System.Data.Common;
 using System.Data.SQLite;
 using System.Globalization;
 using Snout.Deps;
@@ -115,13 +116,13 @@ public class Program
             Console.WriteLine("TRANSLATOR : " + _deepl);
         }
 
-        _listUrl.Add("https://www.battlemetrics.com/servers/hll/17380658");
-        _listUrl.Add("https://www.battlemetrics.com/servers/hll/10626575");
-        _listUrl.Add("https://www.battlemetrics.com/servers/hll/15169632");
-        _listUrl.Add("https://www.battlemetrics.com/servers/hll/13799070");
-        _listUrl.Add("https://www.battlemetrics.com/servers/hll/14971018");
-        _listUrl.Add("https://www.battlemetrics.com/servers/hll/14245343");
-        _listUrl.Add("https://www.battlemetrics.com/servers/hll/12973888");
+        //_listUrl.Add("https://www.battlemetrics.com/servers/hll/17380658");
+        //_listUrl.Add("https://www.battlemetrics.com/servers/hll/10626575");
+        //_listUrl.Add("https://www.battlemetrics.com/servers/hll/15169632");
+        //_listUrl.Add("https://www.battlemetrics.com/servers/hll/13799070");
+        //_listUrl.Add("https://www.battlemetrics.com/servers/hll/14971018");
+        //_listUrl.Add("https://www.battlemetrics.com/servers/hll/14245343");
+        //_listUrl.Add("https://www.battlemetrics.com/servers/hll/12973888");
 
         // Block this task until the program is closed.
         await Task.Delay(-1);
@@ -253,37 +254,33 @@ public class Program
         // Ouvre une connexion à la base de données
         await using SQLiteConnection connection = new(connectionString);
         await connection.OpenAsync();
-        Console.WriteLine("DATABASE : Connexion à la base de données ouverte");
+        Console.WriteLine("DATABASE : Ouverte");
 
         // Lit et exécute le contenu du fichier GenerateDB.sql
-        string sql = await File.ReadAllTextAsync("C:\\Users\\moris\\Desktop\\Snout\\SQL\\GenerateDB.sql"); // A modifier avant release, chercher le fichier dans le dossier "SQL"
+        string sql = await File.ReadAllTextAsync("SQL\\GenerateDB.sql"); // A modifier avant release, chercher le fichier dans le dossier "SQL"
 
         await using (SQLiteCommand command = new(sql, connection))
         {
             await command.ExecuteNonQueryAsync();
-            Console.WriteLine("DATABASE : Requêtes SQL exécutées : la structure est à jour");
+            Console.WriteLine("DATABASE : Structure contrôlée et mise à jour !");
 
-            foreach (string url in _listUrl)
+            string selectSql = "SELECT url FROM urls";
+            await using SQLiteCommand selectCommand = new(selectSql, connection);
+            await using DbDataReader reader = await selectCommand.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
             {
-                // Vérifiez si l'URL existe déjà dans la table
-                string selectSql = "SELECT COUNT(*) FROM urls WHERE url = @url";
-                await using SQLiteCommand selectCommand = new(selectSql, connection);
-                selectCommand.Parameters.AddWithValue("@url", url);
-                Int64 count = (Int64)selectCommand.ExecuteScalar();
-                if (count == 0)
-                {
-                    // L'URL n'existe pas encore dans la table, ajoutez-la
-                    string insertSql = "INSERT INTO urls (url) VALUES (@url)";
-                    await using SQLiteCommand insertCommand = new(insertSql, connection);
-                    insertCommand.Parameters.AddWithValue("@url", url);
-                    await insertCommand.ExecuteNonQueryAsync();
-                    Console.WriteLine("DATABASE : " + url + " -> Ajouté");
-                }
-                else
-                {
-                    Console.WriteLine("DATABASE : " + url + " // existait déjà.");
-                }
+                _listUrl.Add(reader.GetString(0));
+                Console.WriteLine("DATABASE : " + reader.GetString(0) + " -> ajouté à la liste des urls du module Fetcher (HLL)");
             }
+
+            Console.WriteLine("DATABASE : Fin des opérations sur la base de données");
+
+            connection.Close();
+            connection.Dispose();
+
+            Console.WriteLine("DATABASE : Fermée");
+            
         }
 
         // Ferme la connexion à la base de données
