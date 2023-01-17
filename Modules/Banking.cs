@@ -71,6 +71,19 @@ public class Account
             return false;
         }
 
+        // check if user already have a "checkings" account
+        if (Type == AccountType.Checkings)
+        {
+            command.CommandText = "SELECT COUNT(*) FROM Accounts WHERE AccountHolder = @AccountHolder AND Type = @Type";
+            command.Parameters.AddWithValue("@AccountHolder", AccountHolder.UserId);
+            command.Parameters.AddWithValue("@Type", AccountType.Checkings);
+            count = (long)command.ExecuteScalar();
+            if (count > 0)
+            {
+                return false;
+            }
+        }
+
         // Enregistre le compte s'il n'existe pas déjà
         command.CommandText = "INSERT INTO Accounts (AccountNumber, UserId, Type, Balance, Currency, OverdraftLimit, InterestRate, AccountFees) VALUES (@AccountNumber, @UserId, @Type, @Balance, @Currency, @OverdraftLimit, @InterestRate, @AccountFees)";
         command.Parameters.AddWithValue("@AccountNumber", AccountNumber);

@@ -174,7 +174,7 @@ public class Program
             //    .WithDescription("Désinscrire un utilisateur de Snout Bot"),
 
             //new SlashCommandBuilder()
-            //    .WithName("account")
+            //    .WithName("newaccount")
             //    .WithDescription("Créer un nouveau compte bancaire"),
 
             //new SlashCommandBuilder()
@@ -368,9 +368,9 @@ public class Program
                 SnoutHandler unregisterHandlerReference = new();
                 await unregisterHandlerReference.HandleUnregisterCommand(command);
                 break;
-            case "account":
+            case "newaccount":
                 SnoutHandler accountHandlerReference = new();
-                await accountHandlerReference.HandleAccountCommand(command);
+                await accountHandlerReference.HandleNewAccountCommand(command);
                 break;
 
             case "myaccounts":
@@ -613,8 +613,6 @@ public class Program
                 throw new("Fee ne dispose pas d'une entrée valide.");
             }
 
-            // TODO : Construire l'objet ACCOUNT et l'envoyer en base.
-
             Account account = new(randomAccountNumber, importedAccountType, importedSnoutUser, 0.0, "€", importedOverdraftLimit, importedInterest, importedFee);
 
             if (account.RegisterAccount())
@@ -624,7 +622,7 @@ public class Program
             }
             else
             {
-                await modal.RespondAsync(embed: ajoutNok.BuildEmbed());
+                await modal.RespondAsync(embed: ajoutNok.BuildEmbed()); // Ici, il est possible que le compte "checkings" existait déjà.
             }
 
         }
