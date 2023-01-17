@@ -1,6 +1,6 @@
 ﻿using Discord;
 
-namespace Snout;
+namespace Snout.Deps;
 
 // Cette classe permet l'utilisation des notifications personnalisées sous un format plus esthéthique. Elle retourne un embed.
 
@@ -35,7 +35,7 @@ public class CustomNotification
             case NotificationType.Success:
                 color = new(0, 255, 0); // vert
                 imageUrl = "https://cdn-icons-png.flaticon.com/512/1709/1709977.png"; // image : coche verte
-                break; 
+                break;
             default:
                 color = new(0, 0, 0); // noir
                 imageUrl = ""; // image vide
