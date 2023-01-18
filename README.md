@@ -4,9 +4,11 @@ Snout est un ensemble de fonctionnalités utilitaires et de divertissement desti
 
 Divisé en modules interactifs et désactivables, il s'étend à chaque mise à jour.
 
-Il est initialement développé afin de répondre à un besoin de web-fetching vers le site Battlemetrics.com et ainsi faire remonter le statut des serveurs francophones du jeu Hell Let Loose™.
-
 A ce jour, le module de banking est le plus important et vise à représenter à simuler un système bancaire simplifié. Les utilisateurs gagnent des € virtuels sur la base de rémunération de l'activité qu'ils effectuent sur les serveurs Discord que Snout surveille.
+
+Un compte courant *("checkings")* est __unique__ et reçoit les paiements issus de l'activité Discord. C'est un compte à intérêts limités. 
+
+Un compte d'épargne *("savings")* ne sert qu'au dépôt afin de sécuriser ses gains. Un utilisateur peut en avoir une infinité. Il est recommandé d'associer des taux d'intérêts plus forts sur ces derniers, tout en limitant les frais de service.
 
 ## ℹ️ Commandes
 
