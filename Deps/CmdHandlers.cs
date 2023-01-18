@@ -39,10 +39,10 @@ class SnoutHandler
 
         modal.WithTitle("Créer un nouveau compte")
             .WithCustomId("new_account_modal")
-            .AddTextInput("Propriétaire", "new_account_userid_textbox", TextInputStyle.Short, placeholder: "0 (ID DB)",
+            .AddTextInput("Propriétaire", "new_account_userid_textbox", TextInputStyle.Short, placeholder: "Snout User ID (/register)",
                 required: true)
             .AddTextInput("Type de compte", "new_account_type_textbox", TextInputStyle.Short,
-                placeholder: "checkings (unique) / savings / locked", required: true);
+                placeholder: "checkings (1x) / savings (∞)", required: true);
         
             //.AddTextInput("Limite de découvert", "new_account_overdraft_textbox", TextInputStyle.Short, placeholder: "1000", required: true)
             //.AddTextInput("Taux d'intérêt", "new_account_interest_textbox", TextInputStyle.Short, placeholder: "0,02", required: true)
