@@ -74,9 +74,9 @@ public class Account
         // check if user already have a "checkings" account
         if (Type == AccountType.Checkings)
         {
-            command.CommandText = "SELECT COUNT(*) FROM Accounts WHERE AccountHolder = @AccountHolder AND Type = @Type";
+            command.CommandText = "SELECT COUNT(*) FROM Accounts WHERE UserId = @AccountHolder AND Type = @Type";
             command.Parameters.AddWithValue("@AccountHolder", AccountHolder.UserId);
-            command.Parameters.AddWithValue("@Type", AccountType.Checkings);
+            command.Parameters.AddWithValue("@Type", "checkings");
             count = (long)command.ExecuteScalar();
             if (count > 0)
             {
@@ -149,7 +149,7 @@ public class Account
             }
 
             accountInfoEmbedBuilder.WithTitle($"Solde : {reader.GetDouble(3)} {reader.GetString(4)}");
-            accountInfoEmbedBuilder.WithDescription("● Paramètres :");
+            accountInfoEmbedBuilder.WithDescription("Paramètres :");
 
             bool isOverdraftLimitHit = CheckOverdraftLimit(reader.GetInt32(0));
 
