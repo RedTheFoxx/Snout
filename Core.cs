@@ -148,58 +148,58 @@ public class Program
 
         var commands = new List<SlashCommandBuilder>
         {
+            
+            new SlashCommandBuilder()
+                .WithName("mfetcher")
+                .WithDescription("Assigne un canal au fetch automatique HLL et déclenche ce dernier"),
 
-            //new SlashCommandBuilder()
-            //    .WithName("ping")
-            //    .WithDescription("Envoyer un ping vers la gateway Discord"),
+            new SlashCommandBuilder()
+                .WithName("mpaycheck")
+                .WithDescription("Activer / Désactiver le module paycheck"),
 
-            //new SlashCommandBuilder()
-            //    .WithName("mfetcher")
-            //    .WithDescription("Assigne un canal au fetch automatique HLL et déclenche ce dernier"),
+            new SlashCommandBuilder()
+                .WithName("ping")
+                .WithDescription("Envoyer un ping vers la gateway Discord"),
 
-            //new SlashCommandBuilder()
-            //    .WithName("stop")
-            //    .WithDescription("Purger les canaux et arrêter le fetch automatique HLL"),
+            new SlashCommandBuilder()
+                .WithName("add")
+                .WithDescription("Ajouter un serveur HLL à la liste de fetch automatique"),
 
-            //new SlashCommandBuilder()
-            //    .WithName("add")
-            //    .WithDescription("Ajouter un serveur HLL à la liste de fetch automatique"),
+            new SlashCommandBuilder()
+                .WithName("register")
+                .WithDescription("Inscrire un utilisateur dans Snout Bot"),
 
-            //new SlashCommandBuilder()
-            //    .WithName("register")
-            //    .WithDescription("Inscrire un utilisateur dans Snout Bot"),
+            new SlashCommandBuilder()
+                .WithName("unregister")
+                .WithDescription("Désinscrire un utilisateur de Snout Bot"),
 
-            //new SlashCommandBuilder()
-            //    .WithName("unregister")
-            //    .WithDescription("Désinscrire un utilisateur de Snout Bot"),
+            new SlashCommandBuilder()
+                .WithName("newaccount")
+                .WithDescription("Créer un nouveau compte bancaire"),
 
-            //new SlashCommandBuilder()
-            //    .WithName("newaccount")
-            //    .WithDescription("Créer un nouveau compte bancaire"),
+            new SlashCommandBuilder()
+                .WithName("myaccounts")
+                .WithDescription("Afficher ses comptes bancaires"),
 
-            //new SlashCommandBuilder()
-            //    .WithName("myaccounts")
-            //    .WithDescription("Afficher ses comptes bancaires"),
+            new SlashCommandBuilder()
+                .WithName("checkaccounts")
+                .WithDescription("Afficher les comptes bancaires d'un utilisateur"),
 
-            //new SlashCommandBuilder()
-            //    .WithName("checkaccounts")
-            //    .WithDescription("Afficher les comptes bancaires d'un utilisateur"),
+            new SlashCommandBuilder()
+                .WithName("editaccount")
+                .WithDescription("Modifier un compte bancaire"),
 
-            //new SlashCommandBuilder()
-            //    .WithName("editaccount")
-            //    .WithDescription("Modifier un compte bancaire"),
+            new SlashCommandBuilder()
+                .WithName("deposit")
+                .WithDescription("Déposer de l'argent sur un compte bancaire"),
 
-            //new SlashCommandBuilder()
-            //    .WithName("deposit")
-            //    .WithDescription("Déposer de l'argent sur un compte bancaire"),
+            new SlashCommandBuilder()
+                .WithName("withdraw")
+                .WithDescription("Retirer de l'argent d'un compte bancaire"),
 
-            //new SlashCommandBuilder()
-            //    .WithName("withdraw")
-            //    .WithDescription("Retirer de l'argent d'un compte bancaire"),
-
-            //new SlashCommandBuilder()
-            //    .WithName("transfer")
-            //    .WithDescription("Transférer de l'argent d'un compte bancaire à un autre"),
+            new SlashCommandBuilder()
+                .WithName("transfer")
+                .WithDescription("Transférer de l'argent d'un compte bancaire à un autre"),
 
             new SlashCommandBuilder()
                 .WithName("t")
@@ -208,11 +208,7 @@ public class Program
             new SlashCommandBuilder()
                 .WithName("thelp")
                 .WithDescription("Afficher l'aide du traducteur de texte et les utilisations restantes"),
-
-            new SlashCommandBuilder()
-                .WithName("mpaycheck")
-                .WithDescription("Activer / Désactiver le module paycheck")
-
+            
         };
 
         foreach (SlashCommandBuilder? command in commands)
@@ -342,12 +338,7 @@ public class Program
                 SnoutHandler fetchHandlerReference = new();
                 await fetchHandlerReference.HandleMfetcherCommand(command, _client, _liveChannels, _timerFetcher);
                 break;
-
-            case "stop":
-                SnoutHandler stopHandlerReference = new();
-                await stopHandlerReference.HandleStopCommand(command, _client, _liveChannels, _timerFetcher);
-                break;
-
+                
             case "add":
                 SnoutHandler addHandlerReference = new();
                 await addHandlerReference.HandleAddCommand(command);
@@ -575,16 +566,16 @@ public class Program
             
             // Définir un overdraft par défaut à 200, des intérêts à 2% et des frais bancaires à 9€. Solde de base à 0€.
 
-            Account account = new(randomAccountNumber, importedAccountType, importedSnoutUser, 0, "€", 200, 0.2, 9);
+            Account account = new(randomAccountNumber, importedAccountType, importedSnoutUser, 0, "€", 200, 0.02, 9);
 
             if (account.RegisterAccount())
             {
                 CustomNotification ajoutOk = new(NotificationType.Success, "Banque", "Nouveau compte crée avec le numéro " + randomAccountNumber + "\n" +
                     "Type de compte : " + importedAccountType + "\n" +
-                    "Propriétaire : " + importedSnoutUser.GetDiscordIdAsync().Result + "\n" +
+                    "Propriétaire : " + importedSnoutUser.UserId + "\n" +
                     "Solde : " + account.Balance + " €" + "\n" +
                     "Limite de découvert : " + account.OverdraftLimit + " € (pénalités au-delà)" + "\n" +
-                    "Intérêts : " + account.InterestRate.ToString("0.## %") + " % / jour\n" +
+                    "Intérêts : " + account.InterestRate.ToString("0.## %") + " / jour\n" +
                     "Frais de service : " + account.AccountFees + " € / jour");
                 await modal.RespondAsync(embed: ajoutOk.BuildEmbed());
             }
