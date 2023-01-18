@@ -37,13 +37,13 @@ Un compte d'épargne *("savings")* ne sert qu'au dépôt afin de sécuriser ses 
 - **/mfetcher** : active/désactive l'auto-fetcher dans le canal ciblé par la commande. Il est recommandé de dédier un canal pour cette action, sur votre serveur. *(admin)*
 - **/add** : permet d'ajouter un nouveau serveur au fetcher par utilisation de son URL battlemetrics
 
-
 ## 🔑 Authentification & Droits
 
 | Parameter | Type     | Description                |
 | :-------- | :------- | :------------------------- |
 | `Tokens/[token.txt]` | `file w/ string` | **Requis**. Token de bot Discord  |
 | `Tokens/[deepl.txt]` | `file w/ string` | **Requis**. Clef d'API DeepL (gratuite, à récupérer sur https://www.deepl.com/fr/pro-api?cta=header-pro-api/)  |
+
 
 ⚠ **Commandes admin-only à définir dans les paramètres du serveur Discord** ⚠️:
 ```
