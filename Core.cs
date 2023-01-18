@@ -2,7 +2,6 @@ using Discord;
 using Discord.Net;
 using Discord.WebSocket;
 using Newtonsoft.Json;
-using Snout.CoreDeps;
 using Snout.Modules;
 using System.Collections.Concurrent;
 using System.Data.Common;

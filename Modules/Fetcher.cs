@@ -1,9 +1,10 @@
 using Discord;
 using HtmlAgilityPack;
 
-namespace Snout;
+namespace Snout.Modules;
 
-public class HllSniffer {
+public class HllSniffer
+{
 
     public Embed Pull(List<string> listUrl)
 
@@ -76,7 +77,7 @@ public class HllSniffer {
         var splitted = endAnswer.Split('~');
         var listed = splitted.ToList();
         listed.RemoveAt(0);
-        
+
         EmbedBuilder? embed = new EmbedBuilder()
             .WithTitle("🇫🇷 Hell Let Loose - Serveurs de la communauté")
             .WithDescription("---")
@@ -86,7 +87,8 @@ public class HllSniffer {
             .WithTimestamp(DateTimeOffset.UtcNow);
 
         var sortedFields = listed
-            .Select(element => {
+            .Select(element =>
+            {
                 var trimmedElement = element.Split('_', 4, StringSplitOptions.RemoveEmptyEntries);
                 string pastille = trimmedElement[2] == "online" ? ":white_check_mark:" : ":x:";
                 var joueurs = trimmedElement[1].Split('/');

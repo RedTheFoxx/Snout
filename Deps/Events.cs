@@ -5,7 +5,7 @@ using Snout.Modules;
 using System.Collections.Concurrent;
 using static Snout.Program;
 
-namespace Snout.CoreDeps;
+namespace Snout.Deps;
 internal class Events
 {
 
@@ -68,7 +68,7 @@ internal class Events
                         cleanUserMentionned = cleanUserMentionned.Remove(cleanUserMentionned.IndexOf("#") - 1, 1);  // Delete the caracter just before the #
 
                         // If the user mentionned is not the author of the message
-                        if (cleanUserMentionned != (arg.Author.Username + "#" + arg.Author.Discriminator))
+                        if (cleanUserMentionned != arg.Author.Username + "#" + arg.Author.Discriminator)
                         {
                             SnoutUser cleanMentionnedSnoutUser = new(discordId: cleanUserMentionned);
                             Paycheck userMentionnedPaycheck = new(cleanMentionnedSnoutUser, "action_TAGUED_BY", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
@@ -94,13 +94,13 @@ internal class Events
                 Paycheck paycheck = new(user, "action_MESSAGE_UPDATED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
                 GlobalElements.PaycheckQueue.Enqueue(paycheck);
             }
-            
+
             return Task.CompletedTask;
         }
-        
+
         return Task.CompletedTask;
     }
-    
+
     internal static Task PresenceUpdated(SocketUser arg1, SocketPresence arg2, SocketPresence arg3)
     {
         if (GlobalElements.ModulePaycheckEnabled)
@@ -108,10 +108,10 @@ internal class Events
             SnoutUser user = new(discordId: arg1.Username + "#" + arg1.Discriminator);
             Paycheck paycheck = new(user, "action_CHANGED_STATUS", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
             GlobalElements.PaycheckQueue.Enqueue(paycheck);
-            
+
             return Task.CompletedTask;
         }
-        
+
         return Task.CompletedTask;
     }
 
@@ -127,7 +127,7 @@ internal class Events
                 Paycheck paycheck = new(user, "action_REACTION_ADDED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
                 GlobalElements.PaycheckQueue.Enqueue(paycheck);
             }
-            
+
             return Task.CompletedTask;
         }
         return Task.CompletedTask;
@@ -156,7 +156,7 @@ internal class Events
         if (GlobalElements.ModulePaycheckEnabled)
         {
             IUser cacheableUser = await arg1.GetOrDownloadAsync();
-           
+
             if (cacheableUser != null)
             {
                 SnoutUser user = new(discordId: cacheableUser.Username + "#" + cacheableUser.Discriminator);
@@ -166,7 +166,7 @@ internal class Events
             }
             return Task.CompletedTask;
         }
-        
+
         return Task.CompletedTask;
     }
 
