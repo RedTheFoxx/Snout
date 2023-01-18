@@ -281,10 +281,7 @@ public class Program
                 Console.WriteLine("DATABASE : Fermée");
 
             }
-
-            // Ferme la connexion à la base de données
-            connection.Close();
-            Console.WriteLine("DATABASE : Connexion fermée");
+            
         }
         else
         {
@@ -556,18 +553,11 @@ public class Program
             switch (components.First(x => x.CustomId == "new_account_type_textbox").Value.ToLower())
             {
                 case "checkings":
-                    // importedAccountType = components.First(x => x.CustomId == "new_account_type_textbox").Value.ToLower();
                     importedAccountType = AccountType.Checkings;
                     break;
 
                 case "savings":
-                    // importedAccountType = components.First(x => x.CustomId == "new_account_type_textbox").Value.ToLower();
                     importedAccountType = AccountType.Savings;
-                    break;
-
-                case "locked":
-                    // importedAccountType = components.First(x => x.CustomId == "new_account_type_textbox").Value.ToLower();
-                    importedAccountType = AccountType.Locked;
                     break;
 
                 default:
@@ -576,7 +566,7 @@ public class Program
             }
 
             // 3. On construit un SnoutUser sur la base de son UserID (et pas son DiscordID)
-
+            
             SnoutUser importedSnoutUser = new(userId: int.Parse(components.First(x => x.CustomId == "new_account_userid_textbox").Value));
 
             // Check if this user exists in the database
