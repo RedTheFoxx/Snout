@@ -67,12 +67,7 @@ class SnoutHandler
                 await chnl.SendMessageAsync(embed: notif.BuildEmbed());
                 Console.WriteLine("AUTO-FETCHER : Canal ajouté / ID = " + chnl.Id);
             }
-            else
-            {
-                CustomNotification notif = new(NotificationType.Info, "AUTO-FETCHER", "Ce canal de diffusion est déjà enregistré");
-                await chnl.SendMessageAsync(embed: notif.BuildEmbed());
-                Console.WriteLine("AUTO-FETCHER : Le canal existe déjà ! / ID = " + chnl.Id);
-            }
+            
         }
 
         if (timer.Enabled == false)
@@ -84,25 +79,12 @@ class SnoutHandler
         }
         else
         {
-            CustomNotification notif = new(NotificationType.Info, "AUTO-FETCHER", "Auto-fetcher déjà actif");
-            await command.RespondAsync(embed: notif.BuildEmbed());
-            Console.WriteLine("AUTO-FETCHER : Déjà actif !");
+            var chnl2 = client.GetChannel(command.Channel.Id) as IMessageChannel;
 
-        }
-    }
-
-    public async Task HandleStopCommand(SocketSlashCommand command, DiscordSocketClient client, List<IMessageChannel> liveChannels, System.Timers.Timer timer)
-    {
-        // /stop : Stoppe l'auto-fetcher et purge tous les canaux de diffusion (global)
-
-        var chnl = client.GetChannel(command.Channel.Id) as IMessageChannel;
-
-        if (timer.Enabled)
-        {
             timer.Stop();
 
             CustomNotification notifFetcher = new(NotificationType.Success, "AUTO-FETCHER", "Auto-fetcher désactivé");
-            await chnl.SendMessageAsync(embed: notifFetcher.BuildEmbed());
+            await chnl2.SendMessageAsync(embed: notifFetcher.BuildEmbed());
             Console.WriteLine("AUTO-FETCHER : OFF");
 
             liveChannels.Clear();
@@ -111,20 +93,47 @@ class SnoutHandler
             await command.RespondAsync(embed: notifCanaux.BuildEmbed());
             Console.WriteLine("AUTO-FETCHER : Canaux purgés !");
 
-        }
-        else
-        {
-            liveChannels.Clear();
+            //CustomNotification notif = new(NotificationType.Info, "AUTO-FETCHER", "Auto-fetcher déjà actif");
+            //await command.RespondAsync(embed: notif.BuildEmbed());
+            //Console.WriteLine("AUTO-FETCHER : Déjà actif !");
 
-            CustomNotification notifCanaux = new(NotificationType.Info, "AUTO-FETCHER", "Liste des canaux de diffusion purgée");
-            CustomNotification notifFetcher = new(NotificationType.Error, "AUTO-FETCHER", "Auto-fetcher déjà désactivé");
-
-            await chnl.SendMessageAsync(embed: notifCanaux.BuildEmbed());
-            Console.WriteLine("AUTO-FETCHER : Canaux purgés !");
-            await command.RespondAsync(embed: notifFetcher.BuildEmbed());
-            Console.WriteLine("AUTO-FETCHER : Déjà OFF !");
         }
     }
+
+    //public async Task HandleStopCommand(SocketSlashCommand command, DiscordSocketClient client, List<IMessageChannel> liveChannels, System.Timers.Timer timer)
+    //{
+    //    // /stop : Stoppe l'auto-fetcher et purge tous les canaux de diffusion (global)
+
+    //    var chnl = client.GetChannel(command.Channel.Id) as IMessageChannel;
+
+    //    if (timer.Enabled)
+    //    {
+    //        timer.Stop();
+
+    //        CustomNotification notifFetcher = new(NotificationType.Success, "AUTO-FETCHER", "Auto-fetcher désactivé");
+    //        await chnl.SendMessageAsync(embed: notifFetcher.BuildEmbed());
+    //        Console.WriteLine("AUTO-FETCHER : OFF");
+
+    //        liveChannels.Clear();
+
+    //        CustomNotification notifCanaux = new(NotificationType.Info, "AUTO-FETCHER", "Liste des canaux de diffusion purgée");
+    //        await command.RespondAsync(embed: notifCanaux.BuildEmbed());
+    //        Console.WriteLine("AUTO-FETCHER : Canaux purgés !");
+
+    //    }
+    //    else
+    //    {
+    //        liveChannels.Clear();
+
+    //        CustomNotification notifCanaux = new(NotificationType.Info, "AUTO-FETCHER", "Liste des canaux de diffusion purgée");
+    //        CustomNotification notifFetcher = new(NotificationType.Error, "AUTO-FETCHER", "Auto-fetcher déjà désactivé");
+
+    //        await chnl.SendMessageAsync(embed: notifCanaux.BuildEmbed());
+    //        Console.WriteLine("AUTO-FETCHER : Canaux purgés !");
+    //        await command.RespondAsync(embed: notifFetcher.BuildEmbed());
+    //        Console.WriteLine("AUTO-FETCHER : Déjà OFF !");
+    //    }
+    //}
 
     public async Task HandleAddCommand(SocketSlashCommand command)
     {
