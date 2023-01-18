@@ -44,20 +44,12 @@ class SnoutHandler
             .AddTextInput("Type de compte", "new_account_type_textbox", TextInputStyle.Short,
                 placeholder: "checkings (1x) / savings (∞)", required: true);
         
-            //.AddTextInput("Limite de découvert", "new_account_overdraft_textbox", TextInputStyle.Short, placeholder: "1000", required: true)
-            //.AddTextInput("Taux d'intérêt", "new_account_interest_textbox", TextInputStyle.Short, placeholder: "0,02", required: true)
-            //.AddTextInput("Frais de service", "new_account_fees_textbox", TextInputStyle.Short, placeholder: "8", required: true);
-
-
         await command.RespondWithModalAsync(modal.Build());
-
     }
 
     public async Task HandleMfetcherCommand(SocketSlashCommand command, DiscordSocketClient client, List<IMessageChannel> liveChannels, System.Timers.Timer timer)
     {
-        // var localSniffer = new HllSniffer();
-        // var embed = localSniffer.Pull(_listUrl);
-
+        
         if (client.GetChannel(command.Channel.Id) is IMessageChannel chnl)
         {
             if (liveChannels.Contains(chnl) == false)
@@ -92,49 +84,10 @@ class SnoutHandler
             CustomNotification notifCanaux = new(NotificationType.Info, "AUTO-FETCHER", "Liste des canaux de diffusion purgée");
             await command.RespondAsync(embed: notifCanaux.BuildEmbed());
             Console.WriteLine("AUTO-FETCHER : Canaux purgés !");
-
-            //CustomNotification notif = new(NotificationType.Info, "AUTO-FETCHER", "Auto-fetcher déjà actif");
-            //await command.RespondAsync(embed: notif.BuildEmbed());
-            //Console.WriteLine("AUTO-FETCHER : Déjà actif !");
-
+            
         }
     }
-
-    //public async Task HandleStopCommand(SocketSlashCommand command, DiscordSocketClient client, List<IMessageChannel> liveChannels, System.Timers.Timer timer)
-    //{
-    //    // /stop : Stoppe l'auto-fetcher et purge tous les canaux de diffusion (global)
-
-    //    var chnl = client.GetChannel(command.Channel.Id) as IMessageChannel;
-
-    //    if (timer.Enabled)
-    //    {
-    //        timer.Stop();
-
-    //        CustomNotification notifFetcher = new(NotificationType.Success, "AUTO-FETCHER", "Auto-fetcher désactivé");
-    //        await chnl.SendMessageAsync(embed: notifFetcher.BuildEmbed());
-    //        Console.WriteLine("AUTO-FETCHER : OFF");
-
-    //        liveChannels.Clear();
-
-    //        CustomNotification notifCanaux = new(NotificationType.Info, "AUTO-FETCHER", "Liste des canaux de diffusion purgée");
-    //        await command.RespondAsync(embed: notifCanaux.BuildEmbed());
-    //        Console.WriteLine("AUTO-FETCHER : Canaux purgés !");
-
-    //    }
-    //    else
-    //    {
-    //        liveChannels.Clear();
-
-    //        CustomNotification notifCanaux = new(NotificationType.Info, "AUTO-FETCHER", "Liste des canaux de diffusion purgée");
-    //        CustomNotification notifFetcher = new(NotificationType.Error, "AUTO-FETCHER", "Auto-fetcher déjà désactivé");
-
-    //        await chnl.SendMessageAsync(embed: notifCanaux.BuildEmbed());
-    //        Console.WriteLine("AUTO-FETCHER : Canaux purgés !");
-    //        await command.RespondAsync(embed: notifFetcher.BuildEmbed());
-    //        Console.WriteLine("AUTO-FETCHER : Déjà OFF !");
-    //    }
-    //}
-
+    
     public async Task HandleAddCommand(SocketSlashCommand command)
     {
         var modal = new ModalBuilder();
