@@ -35,8 +35,7 @@ public class Program
 
     public static void Main(string[] args)
         => new Program().MainAsync().GetAwaiter().GetResult();
-
-    // Thread principal
+    
     private async Task MainAsync()
     {
         _client = new(new()
@@ -49,7 +48,7 @@ public class Program
         
         // Modules init & global switches
 
-        _timerFetcher.Interval = 300000; // Vitesse de l'auto-updater (= 5 minutes entre chaque Fetch vers Battlemetrics)
+        _timerFetcher.Interval = 300000; // Fetcher speed (updated every 5 minutes = 300000ms)
         _timerFetcher.AutoReset = true;
 
         _liveSniffer = new();
@@ -57,29 +56,28 @@ public class Program
 
         GlobalElements.ModulePaycheckEnabled = false;
         Thread paycheckDequeuerThread = new(PaycheckDequeuer);
-        paycheckDequeuerThread.Start(); // Lancement du thread de défilement de la queue des paychecks. Un paycheck par seconde.
+        paycheckDequeuerThread.Start(); 
 
-        // Default events
+        // Default core events
 
         _client.Log += Log;
         _client.Ready += ClientReady;
-        _client.SlashCommandExecuted += SlashCommandHandler; // action_SNOUT_COMMAND_USED
-        _client.ModalSubmitted += ModalHandler; // action_MODAL_SUBMITTED
-        _client.SelectMenuExecuted += SelectMenuHandler; // action_SELECT_MENU_EXECUTED
+        _client.SlashCommandExecuted += SlashCommandHandler; 
+        _client.ModalSubmitted += ModalHandler;
+        _client.SelectMenuExecuted += SelectMenuHandler; 
 
-        // Ci - dessous, les évènements traités par le LiveHandler(module(s) client(s) : paycheck)
+        // More events (used by paycheck at the moment)
 
-        _client.PresenceUpdated += Events.PresenceUpdated; // action_CHANGED_STATUS
+        _client.PresenceUpdated += Events.PresenceUpdated; 
+        _client.MessageReceived += Events.MessageReceived; 
+        _client.MessageUpdated += Events.MessageUpdated; 
+        _client.ReactionAdded += Events.ReactionAdded; 
+        _client.ReactionRemoved += Events.ReactionRemoved;
+        _client.UserIsTyping += Events.UserIsTyping; 
+        _client.UserVoiceStateUpdated += Events.UserVoiceStateUpdated; 
 
-        _client.MessageReceived += Events.MessageReceived; // action_MESSAGE & MESSAGE_SENT_WITH_FILE & TAGUED_BY & TAGUED_SOMEONE
-        _client.MessageUpdated += Events.MessageUpdated; // action_MESSAGE_UPDATED
-
-        _client.ReactionAdded += Events.ReactionAdded; // action_REACTION_ADDED
-        _client.ReactionRemoved += Events.ReactionRemoved; // action_REACTION_REMOVED
-
-        _client.UserIsTyping += Events.UserIsTyping; // action_TYPING
-        _client.UserVoiceStateUpdated += Events.UserVoiceStateUpdated; // action_VOICE_CHANNEL_USER_STATUS_UPDATED
-
+        // Fetcher timer event
+        
         _timerFetcher.Elapsed += Timer_Elapsed;
 
         // Check if file "token.txt" exist at the root of the project
@@ -114,16 +112,7 @@ public class Program
             Console.WriteLine("TRANSLATOR : Clé API DeepL enregistrée");
             Console.WriteLine("TRANSLATOR : " + _deepl);
         }
-
-        //_listUrl.Add("https://www.battlemetrics.com/servers/hll/17380658");
-        //_listUrl.Add("https://www.battlemetrics.com/servers/hll/10626575");
-        //_listUrl.Add("https://www.battlemetrics.com/servers/hll/15169632");
-        //_listUrl.Add("https://www.battlemetrics.com/servers/hll/13799070");
-        //_listUrl.Add("https://www.battlemetrics.com/servers/hll/14971018");
-        //_listUrl.Add("https://www.battlemetrics.com/servers/hll/14245343");
-        //_listUrl.Add("https://www.battlemetrics.com/servers/hll/12973888");
-
-        // Block this task until the program is closed.
+        
         await Task.Delay(-1);
     }
 
