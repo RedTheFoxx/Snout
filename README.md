@@ -1,65 +1,67 @@
-# 🦊 Snout - Bot utilitaire
+# 🦊 SnoutBot - Outils et virtual banking
 
-Snout est un ensemble de fonctionnalités utilitaires et de divertissement destinées à un usage privé déployées sur un bot Discord. 
-Il fonctionne sur la base de .NET 7.0 et implémente la librairie Discord.NET.
+Snout est un ensemble de fonctionnalités utilitaires et de divertissement destinés à un usage local, sur des serveurs à petite population. Conçu grâce .NET 7.0, framework réputé bien plus rapide que ses prédecesseurs, et sur la base du nouveau système de slash-commands introduit par l'API Discord, il est intégralement asynchrone dans son exécution. Sans exploiter de serveur SQL, il est léger et fait usage d'un fichier de base de données SQLite.
 
-Sa toute première fonctionnalité est implémentée dans le  **core**, elle consiste 
-en un ensemble de requêtes HTTP dirigées vers Battlemetrics.com afin de récupérer le 
-statut des serveurs Français du jeu *Hell  Let Loose™*. Elle n'est pas directement détachable.
+Divisé en modules interactifs et désactivables, il s'étend à chaque mise à jour.
 
-Le reste est divisé en plugins stockés dans le dossier "Modules" ajoutés au fil des 
-mise à jour.
-Ses fonctions reposent sur l'utilisation du nouveau système de *slash-commands* implémenté par Discord et
-qui facilite ses interactions sans code superflu.
+Il est initialement développé afin de répondre à un besoin de web-fetching vers le site Battlemetrics.com et ainsi faire remonter le statut des serveurs francophones du jeu Hell Let Loose™.
 
-Il est essentiellement développé de façon asynchrone dans son exécution.
-
+A ce jour, le module de banking est le plus important et vise à représenter à simuler un système bancaire simplifié. Les utilisateurs gagnent des € virtuels sur la base de rémunération de l'activité qu'ils effectuent sur les serveurs Discord que Snout surveille.
 
 ## ℹ️ Commandes
 
-:office: **Commandes généralistes**
-- **/ping** : renvoie le ping de la gateway API Discord.
-- **/register** : inscrit un utilisateur dans la base de données de Snout, utilisée dans les modules.
-- **/unregister** : retire un utilisateur de la base de données de Snout
+🛠️ **Commandes généralistes**
+- **/ping** : renvoie le ping de la gateway API Discord
+- **/register** : inscrit un utilisateur dans la base de données de Snout, utilisée dans les modules
+- **/unregister** : retire un utilisateur de la base de données de Snout *(admin)*
 
-:moneybag: **Commandes du banking**
-- **/account** : créer un nouveau compte bancaire et l'assigne à un utilisateur (/register non requis)
-- **/editaccount** : éditer les paramètres d'un compte bancaire, tels que la limite de découvert, les frais de service ou le taux d'intérêt.
-- **/myaccounts** : afficher le statut de ses comptes bancaires. (résultats en messages privés)
-- **/checkaccounts** : vérifier le statut des comptes bancaires d'un utilisateur. (résultats en messages privés)
-- **/deposit** : ajouter de l'argent à un compte bancaire.
-- **/withdraw** : retirer de l'argent d'un compte bancaire.
-- **/transfer** : faire un virement entre deux comptes.
+🌍 **Commande du traducteur**
+- **/t** : traduire un texte vers l'une des langues supportées par DeepL™
+- **/thelp** : connaître les langues cibles et le quota mensuel autorisé
 
-:arrow_right: **Commandes du fetcher** *(Hell Let Loose™ uniquement)*
-- **/add** : permet d'ajouter un nouveau serveur à l'auto-fetcher par utilisation de son URL battlemetrics.
-- **/stop** : interrompt l'auto-fetcher de manière globale et purge la liste des canaux de diffusion.
-- **/fetch** : assigne l'auto-fetcher au canal ciblé par la commande (+ déclenche ce premier) et si il était déjà actif, se contente d'ajouter un nouveau canal de diffusion.
+💶 **Commandes du module de paycheck**
+- **/mpaycheck** : active/désactive le système de rémunération basé sur des évènements Discord *(gère aussi la mise à jour quotidienne des comptes - admin)*
+
+🏦 **Commandes du module de banking**
+- **/newaccount** : créer un nouveau compte bancaire courant ou d'épargne et l'assigne à un utilisateur (l'utilisateur doit avoir utilisé */register*)
+- **/editaccount** : éditer les paramètres d'un compte bancaire, tels que la limite de découvert, les frais de service ou le taux d'intérêt *(admin)*
+- **/myaccounts** : afficher le statut de ses comptes bancaires. *(résultats en messages privés)*
+- **/checkaccounts** : vérifier le statut des comptes bancaires d'un utilisateur. *(résultats en messages privés - admin)*
+- **/deposit** : ajouter de l'argent à un compte bancaire *(admin)*
+- **/withdraw** : retirer de l'argent d'un compte bancaire
+- **/transfer** : faire un virement entre deux comptes
+
+🪖 **Commandes du module web-fetcher** *(Hell Let Loose™ uniquement, via Battlemetrics.com)*
+- **/mfetcher** : active/désactive l'auto-fetcher dans le canal ciblé par la commande. Il est recommandé de dédier un canal pour cette action, sur votre serveur. *(admin)*
+- **/add** : permet d'ajouter un nouveau serveur au fetcher par utilisation de son URL battlemetrics
+
 
 ## 🔑 Authentification & Droits
-*Cette section évoluera en 1.2 afin de sécuriser l'utilisation du token*
 
 | Parameter | Type     | Description                |
 | :-------- | :------- | :------------------------- |
-| `./core.cs/L:44[token]` | `string` | **Requis**. Token de bot Discord  |
+| `Tokens/[token.txt]` | `file w/ string` | **Requis**. Token de bot Discord  |
+| `Tokens/[deepl.txt]` | `file w/ string` | **Requis**. Clef d'API DeepL (gratuite, à récupérer sur https://www.deepl.com/fr/pro-api?cta=header-pro-api/)  |
 
-⚠ **Commandes réservées aux admins** (à définir dans les paramètres de l'application)⚠️:
+⚠ **Commandes admin-only à définir dans les paramètres du serveur Discord** ⚠️:
 ```
-/account
 /unregister
 /editaccount
 /checkaccounts
 /deposit
+/mfetcher
+/mpaycheck
 ```
 
 ## 🗂️ Déploiement
-*Cette section évoluera en 1.2 avec l'automatisation de la database*
 
-Snout requiert l'utilisation d'une base de données type SQLITE (*version 3*) dont le générateur est disponible dans le
-dossier :
+Snout requiert l'utilisation d'une base de données type SQLITE (*version 3*) dont le fichier de génération doit être placé dans le
+dossier. Elle sera ensuite générée automatiquement :
 ```bash
-  ./SQL
+  ./SQL/[GenerateDB.sql]
 ```
+Sauvegardez vos données avant de mettre à jour le bot car la base de données peut évoluer en structure.
+
 Le runtime .NET 7.0 doit être installé sur la machine hôte.
 
 Une fois compilé, le bot est exécuté comme un programme Win64 :
@@ -72,12 +74,8 @@ Une fois compilé, le bot est exécuté comme un programme Win64 :
 ```
 
 ## 🚧 Roadmap
- 
-- **1.2** : Salaires (basés sur des *Discord Actions*) + Intégration DeepL™
 
-Rémunérer les utilisateurs sur leurs comptes virtuels en se basant sur un monitoring des activités liées à Discord & offrir un service de traduction basé sur l'API DeepL.
-
-- **1.3** : *soon™*
+- **1.3** : Bientôt
 
 ## 🦊 Développement
 
