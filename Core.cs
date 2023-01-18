@@ -258,30 +258,26 @@ public class Program
             await connection.OpenAsync();
             Console.WriteLine("DATABASE : Ouverte");
 
-            await using (SQLiteCommand command = new(sql, connection))
+            await using SQLiteCommand command = new(sql, connection);
+            await command.ExecuteNonQueryAsync();
+            Console.WriteLine("DATABASE : Structure contrôlée et mise à jour !");
+
+            string selectSql = "SELECT url FROM urls";
+            await using SQLiteCommand selectCommand = new(selectSql, connection);
+            await using DbDataReader reader = await selectCommand.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
             {
-                await command.ExecuteNonQueryAsync();
-                Console.WriteLine("DATABASE : Structure contrôlée et mise à jour !");
-
-                string selectSql = "SELECT url FROM urls";
-                await using SQLiteCommand selectCommand = new(selectSql, connection);
-                await using DbDataReader reader = await selectCommand.ExecuteReaderAsync();
-
-                while (await reader.ReadAsync())
-                {
-                    _listUrl.Add(reader.GetString(0));
-                    Console.WriteLine("DATABASE : " + reader.GetString(0) + " -> ajouté à la liste des urls du module Fetcher (HLL)");
-                }
-
-                Console.WriteLine("DATABASE : Fin des opérations sur la base de données");
-
-                connection.Close();
-                connection.Dispose();
-
-                Console.WriteLine("DATABASE : Fermée");
-
+                _listUrl.Add(reader.GetString(0));
+                Console.WriteLine("DATABASE : " + reader.GetString(0) + " -> ajouté à la liste des urls du module Fetcher (HLL)");
             }
-            
+
+            Console.WriteLine("DATABASE : Fin des opérations sur la base de données");
+
+            connection.Close();
+            connection.Dispose();
+
+            Console.WriteLine("DATABASE : Fermée");
         }
         else
         {
