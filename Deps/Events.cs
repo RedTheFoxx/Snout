@@ -6,7 +6,7 @@ using System.Collections.Concurrent;
 using static Snout.Program;
 
 namespace Snout.Deps;
-internal class Events
+internal abstract class Events
 {
 
     /* This class is used to handle the event monitoring hooked in the Main() method. Each paycheck issued from an event is send to paycheckQueue which absorb bursts and regulate
