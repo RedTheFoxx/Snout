@@ -850,6 +850,7 @@ public class Program
 
             Account account = new(int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_source_textbox").Value));
             account.GetParameters(int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_source_textbox").Value));
+            account.GetHolderFromAccount();
 
             if (account.Type == AccountType.Unknown) // On vérifie que le compte existe
             {
@@ -859,6 +860,16 @@ public class Program
             }
             else
             {
+                SnoutUser transferingUser = new(discordId: modal.User.Username + "#" + modal.User.Discriminator);
+                await transferingUser.GetUserIdAsync();
+                
+                if (transferingUser.UserId != account.AccountHolder.UserId) // On vérifie que le compte appartient bien à l'utilisateur
+                {
+                    CustomNotification notif = new(NotificationType.Error, "Banque", "Le compte source ne vous appartient pas !");
+                    await modal.RespondAsync(embed: notif.BuildEmbed());
+                    return;
+                }
+                
                 string input = modal.Data.Components.First(x => x.CustomId == "transfer_amount_textbox").Value;
 
                 if (string.IsNullOrEmpty(input)) // On vérifie que le montant n'est pas vide
@@ -1009,6 +1020,7 @@ public class Program
                         {
                             Console.WriteLine("PAYCHECK - SKIP : Utilisateur " + paycheck.User.DiscordId + " inconnu de Snout");
                             await Task.Delay(1000);
+
                         }
                     }
                 }

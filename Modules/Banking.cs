@@ -10,7 +10,7 @@ public class Account
 {
     public int AccountNumber { get; private set; }
     public AccountType Type { get; private set; }
-    private SnoutUser? AccountHolder { get; }
+    public SnoutUser? AccountHolder { get; set; }
     public double Balance { get; private set; }
     private string? Currency { get; }
     public double OverdraftLimit { get; set; }
@@ -593,6 +593,7 @@ public class Account
             throw new("Le compte de destination n'a pas été trouvé");
         }
 
+
         // Mise à jour de la balance du compte de destination et du compte courant
         await using SQLiteTransaction? transac = connection.BeginTransaction();
         // Mise à jour de la balance du compte de destination
@@ -633,6 +634,26 @@ public class Account
             return false;
         }
 
+    }
+
+    public void GetHolderFromAccount()
+    {
+        using var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;");
+        connection.Open();
+
+        using SQLiteCommand? command = connection.CreateCommand();
+        command.CommandText = "SELECT UserId FROM Accounts WHERE AccountNumber = @AccountNumber";
+        command.Parameters.AddWithValue("@UserID", AccountNumber);
+        using SQLiteDataReader? reader = command.ExecuteReader();
+        if (reader.Read())
+        {
+            SnoutUser holder = new SnoutUser(reader.GetInt32(0));
+            AccountHolder = holder;
+        }
+        else
+        {
+            throw new("Le propriétaire du compte n'a pas été trouvé");
+        }
     }
 }
 
