@@ -259,6 +259,9 @@ public class Account
                 case TransactionType.DailyUpdate:
                     toStringType = "Mise à jour quotidienne";
                     break;
+                case TransactionType.Paycheck:
+                    toStringType = "Salaire";
+                    break;
                 case TransactionType.LockAction:
                     toStringType = "Compte verrouillé";
                     break;
