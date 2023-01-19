@@ -211,8 +211,11 @@ public class Account
                 case "Transfer":
                     convertedType = TransactionType.Transfer;
                     break;
-                case "Dailyupdate":
+                case "DailyUpdate":
                     convertedType = TransactionType.DailyUpdate;
+                    break;
+                case "Paycheck":
+                    convertedType = TransactionType.Paycheck;
                     break;
                 case "Lock":
                     convertedType = TransactionType.LockAction;
