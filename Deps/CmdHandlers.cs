@@ -303,7 +303,7 @@ class SnoutHandler
     public async Task HandleMpaycheckCommand(SocketSlashCommand command)
     {
         
-        if (GlobalElements.ModulePaycheckEnabled == true)
+        if (GlobalElements.ModulePaycheckEnabled)
         {
             GlobalElements.ModulePaycheckEnabled = false;
             CustomNotification notifSwitchedToFalse = new(NotificationType.Success, "MODULE CONTROL", "Module paycheck désactivé.");
