@@ -1,4 +1,6 @@
-﻿public enum TransactionType
+﻿namespace Snout.Deps;
+
+public enum TransactionType
 {
     Deposit,
     Withdrawal,

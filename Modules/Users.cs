@@ -1,9 +1,11 @@
 using System.Data.SQLite;
 
+namespace Snout.Modules;
+
 public class SnoutUser
 {
-    public int? UserId { get; set; }
-    public string? DiscordId { get; set; }
+    public int? UserId { get; private set; }
+    public string? DiscordId { get; private set; }
 
     public SnoutUser(int userId)
     {

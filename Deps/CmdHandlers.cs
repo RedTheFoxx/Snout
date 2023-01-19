@@ -1,5 +1,6 @@
 ﻿using System.Data.Common;
 using System.Data.SQLite;
+using System.Diagnostics;
 using System.Net.NetworkInformation;
 using Discord;
 using Discord.WebSocket;
@@ -39,9 +40,9 @@ class SnoutHandler
 
         modal.WithTitle("Créer un nouveau compte")
             .WithCustomId("new_account_modal")
-            .AddTextInput("Propriétaire", "new_account_userid_textbox", TextInputStyle.Short, placeholder: "Snout User ID (/register)",
+            .AddTextInput("Propriétaire", "new_account_userid_textbox", placeholder: "Snout User ID (/register)",
                 required: true)
-            .AddTextInput("Type de compte", "new_account_type_textbox", TextInputStyle.Short,
+            .AddTextInput("Type de compte", "new_account_type_textbox",
                 placeholder: "checkings (1x) / savings (∞)", required: true);
         
         await command.RespondWithModalAsync(modal.Build());
@@ -76,6 +77,7 @@ class SnoutHandler
             timer.Stop();
 
             CustomNotification notifFetcher = new(NotificationType.Success, "AUTO-FETCHER", "Auto-fetcher désactivé");
+            Debug.Assert(chnl2 != null, nameof(chnl2) + " != null");
             await chnl2.SendMessageAsync(embed: notifFetcher.BuildEmbed());
             Console.WriteLine("AUTO-FETCHER : OFF");
 
@@ -94,7 +96,7 @@ class SnoutHandler
 
         modal.WithTitle("Configuration de l'auto-fetcher")
             .WithCustomId("new_url_modal")
-            .AddTextInput("Ajouter l'URL", "new_url_textbox", TextInputStyle.Short, placeholder: "https://www.battlemetrics.com/servers/hll/[SERVER_ID]", required: true);
+            .AddTextInput("Ajouter l'URL", "new_url_textbox", placeholder: "https://www.battlemetrics.com/servers/hll/[SERVER_ID]", required: true);
 
         await command.RespondWithModalAsync(modal.Build());
     }
@@ -105,7 +107,7 @@ class SnoutHandler
 
         modal.WithTitle("Inscrire un utilisateur")
             .WithCustomId("new_user_modal")
-            .AddTextInput("Discord ID", "new_user_textbox", TextInputStyle.Short, placeholder: "RedFox#9999", required: true);
+            .AddTextInput("Discord ID", "new_user_textbox", placeholder: "RedFox#9999", required: true);
 
         await command.RespondWithModalAsync(modal.Build());
     }
@@ -116,7 +118,7 @@ class SnoutHandler
         await connection.OpenAsync();
         var sqlCommand = new SQLiteCommand("SELECT UserId, DiscordId FROM Users", connection);
 
-        await using DbDataReader? reader = await sqlCommand.ExecuteReaderAsync();
+        await using DbDataReader reader = await sqlCommand.ExecuteReaderAsync();
         if (!reader.HasRows)
         {
 
@@ -176,7 +178,6 @@ class SnoutHandler
         else
         {
             CustomNotification noAccountNotif = new(NotificationType.Error, "Banque", "Vous ne disposez d'aucun compte");
-            IMessageChannel? channel = await command.GetChannelAsync();
             await command.Channel.SendMessageAsync(embed: noAccountNotif.BuildEmbed());
         }
 
@@ -188,7 +189,7 @@ class SnoutHandler
 
         modal.WithTitle("Vérifier les comptes d'un utilisateur")
             .WithCustomId("check_accounts_modal")
-            .AddTextInput("Discord ID", "check_accounts_textbox", TextInputStyle.Short, placeholder: "RedFox#9999", required: true);
+            .AddTextInput("Discord ID", "check_accounts_textbox", placeholder: "RedFox#9999", required: true);
 
         await command.RespondWithModalAsync(modal.Build());
 
@@ -200,10 +201,10 @@ class SnoutHandler
 
         modal.WithTitle("Éditer un compte bancaire")
             .WithCustomId("edit_account_modal")
-            .AddTextInput("Numéro de compte", "edit_account_textbox", TextInputStyle.Short, placeholder: "N°", required: true)
-            .AddTextInput("Nouveau découvert autorisé", "edit_account_overdraft_textbox", TextInputStyle.Short, placeholder: "999", required: false)
-            .AddTextInput("Nouveau taux d'intérêt", "edit_account_interest_textbox", TextInputStyle.Short, placeholder: "0,09", required: false)
-            .AddTextInput("Nouveaux frais de service", "edit_account_fees_textbox", TextInputStyle.Short, placeholder: "9", required: false);
+            .AddTextInput("Numéro de compte", "edit_account_textbox", placeholder: "N°", required: true)
+            .AddTextInput("Nouveau découvert autorisé", "edit_account_overdraft_textbox", placeholder: "999", required: false)
+            .AddTextInput("Nouveau taux d'intérêt", "edit_account_interest_textbox", placeholder: "0,09", required: false)
+            .AddTextInput("Nouveaux frais de service", "edit_account_fees_textbox", placeholder: "9", required: false);
 
         await command.RespondWithModalAsync(modal.Build());
     }
@@ -214,8 +215,8 @@ class SnoutHandler
 
         modal.WithTitle("Déposer de l'argent")
             .WithCustomId("deposit_modal")
-            .AddTextInput("Numéro de compte", "deposit_account_textbox", TextInputStyle.Short, placeholder: "N°", required: true)
-            .AddTextInput("Montant", "deposit_amount_textbox", TextInputStyle.Short, placeholder: "123,45", required: true);
+            .AddTextInput("Numéro de compte", "deposit_account_textbox", placeholder: "N°", required: true)
+            .AddTextInput("Montant", "deposit_amount_textbox", placeholder: "123,45", required: true);
 
         await command.RespondWithModalAsync(modal.Build());
     }
@@ -226,9 +227,9 @@ class SnoutHandler
 
         modal.WithTitle("Transférer de l'argent")
             .WithCustomId("transfer_modal")
-            .AddTextInput("Numéro de compte source", "transfer_source_textbox", TextInputStyle.Short, placeholder: "N°", required: true)
-            .AddTextInput("Numéro de compte destination", "transfer_destination_textbox", TextInputStyle.Short, placeholder: "N°", required: true)
-            .AddTextInput("Montant", "transfer_amount_textbox", TextInputStyle.Short, placeholder: "123,45", required: true);
+            .AddTextInput("Numéro de compte source", "transfer_source_textbox", placeholder: "N°", required: true)
+            .AddTextInput("Numéro de compte destination", "transfer_destination_textbox", placeholder: "N°", required: true)
+            .AddTextInput("Montant", "transfer_amount_textbox", placeholder: "123,45", required: true);
 
         await command.RespondWithModalAsync(modal.Build());
     }
@@ -239,8 +240,8 @@ class SnoutHandler
 
         modal.WithTitle("Retirer de l'argent")
             .WithCustomId("withdraw_modal")
-            .AddTextInput("Numéro de compte", "withdraw_account_textbox", TextInputStyle.Short, placeholder: "N°", required: true)
-            .AddTextInput("Montant", "withdraw_amount_textbox", TextInputStyle.Short, placeholder: "123,45", required: true);
+            .AddTextInput("Numéro de compte", "withdraw_account_textbox", placeholder: "N°", required: true)
+            .AddTextInput("Montant", "withdraw_amount_textbox", placeholder: "123,45", required: true);
 
         await command.RespondWithModalAsync(modal.Build());
     }
@@ -253,7 +254,7 @@ class SnoutHandler
         modal.WithTitle("Traduire un texte")
             .WithCustomId("translate_modal")
             .AddTextInput("Texte à traduire", "translate_textbox", TextInputStyle.Paragraph, placeholder: "Texte à traduire", required: true, maxLength: 2999)
-            .AddTextInput("Langue cible", "translate_language_to_textbox", TextInputStyle.Short, placeholder: "BG,CS,DA,DE,EL,EN-GB,EN-US,ES,ET,FI,FR,HU,ID,IT,JA,LT,LV,NL,PL,PT-BR,PT-PT,RO,RU,SK,SL,SV,TR,UK,ZH", required: true);
+            .AddTextInput("Langue cible", "translate_language_to_textbox", placeholder: "BG,CS,DA,DE,EL,EN-GB,EN-US,ES,ET,FI,FR,HU,ID,IT,JA,LT,LV,NL,PL,PT-BR,PT-PT,RO,RU,SK,SL,SV,TR,UK,ZH", required: true);
 
         await command.RespondWithModalAsync(modal.Build());
     }
@@ -262,7 +263,7 @@ class SnoutHandler
     
     {
         // check if deepl exists 
-        if (deepl == "null" && deepl == "")
+        if (deepl is "null" or "")
         {
             
             var embed = new EmbedBuilder();
@@ -273,7 +274,7 @@ class SnoutHandler
                 .AddField("🗃 Langues cibles disponibles", "BG,CS,DA,DE,EL,EN-GB,EN-US,ES,ET,FI,FR,HU,ID,IT,JA,LT,LV,NL,PL,PT-BR,PT-PT,RO,RU,SK,SL,SV,TR,UK,ZH")
                 .AddField("📝 Caractères utilisés ce mois-ci", "*Affichage impossible - Aucun token DeepL n'a été renseigné*")
                 .WithColor(Color.Blue)
-                .WithFooter(Program.GlobalElements.GlobalSnoutVersion + " & DeepL API v2.0")
+                .WithFooter(GlobalElements.GlobalSnoutVersion + " & DeepL API v2.0")
                 .WithTimestamp(DateTimeOffset.UtcNow);
 
             await command.RespondAsync(ephemeral: true, embed: embed.Build());
@@ -291,7 +292,7 @@ class SnoutHandler
                 .AddField("🗃 Langues cibles disponibles", "BG,CS,DA,DE,EL,EN-GB,EN-US,ES,ET,FI,FR,HU,ID,IT,JA,LT,LV,NL,PL,PT-BR,PT-PT,RO,RU,SK,SL,SV,TR,UK,ZH")
                 .AddField("📝 Caractères utilisés ce mois-ci", remainingCharacters + " / 500.000")
                 .WithColor(Color.Blue)
-                .WithFooter(Program.GlobalElements.GlobalSnoutVersion + " & DeepL API v2.0")
+                .WithFooter(GlobalElements.GlobalSnoutVersion + " & DeepL API v2.0")
                 .WithTimestamp(DateTimeOffset.UtcNow);
 
             await command.RespondAsync(ephemeral: true, embed: embed.Build());

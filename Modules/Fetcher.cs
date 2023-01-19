@@ -19,7 +19,7 @@ public class HllSniffer
 
                 try
                 {
-                    HttpResponseMessage? response = client.Send(new(HttpMethod.Head, extractedUrl));
+                    HttpResponseMessage response = client.Send(new(HttpMethod.Head, extractedUrl));
                     if (response.IsSuccessStatusCode)
                     {
                         // Le site est accessible extraire son contenu

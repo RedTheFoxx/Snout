@@ -2,7 +2,7 @@ using System.Data.Common;
 using Discord;
 using System.Data.SQLite;
 using static Snout.Program;
-using System.Collections.Generic;
+using Snout.Deps;
 
 namespace Snout.Modules;
 
@@ -75,7 +75,7 @@ public class Account
         if (Type == AccountType.Checkings)
         {
             command.CommandText = "SELECT COUNT(*) FROM Accounts WHERE UserId = @AccountHolder AND Type = @Type";
-            command.Parameters.AddWithValue("@AccountHolder", AccountHolder.UserId);
+            command.Parameters.AddWithValue("@AccountHolder", AccountHolder!.UserId);
             command.Parameters.AddWithValue("@Type", "checkings");
             count = (long)command.ExecuteScalar();
             if (count > 0)
@@ -87,7 +87,7 @@ public class Account
         // Enregistre le compte s'il n'existe pas déjà
         command.CommandText = "INSERT INTO Accounts (AccountNumber, UserId, Type, Balance, Currency, OverdraftLimit, InterestRate, AccountFees) VALUES (@AccountNumber, @UserId, @Type, @Balance, @Currency, @OverdraftLimit, @InterestRate, @AccountFees)";
         command.Parameters.AddWithValue("@AccountNumber", AccountNumber);
-        command.Parameters.AddWithValue("@UserId", AccountHolder.UserId);
+        command.Parameters.AddWithValue("@UserId", AccountHolder!.UserId);
 
         // Traduire le type de compte en string pour le stockage en DB
         switch (Type)
@@ -124,7 +124,7 @@ public class Account
 
         await using SQLiteCommand? command = connection.CreateCommand();
         command.CommandText = "SELECT * FROM Accounts WHERE UserId = @UserId";
-        command.Parameters.AddWithValue("@UserId", AccountHolder.UserId);
+        command.Parameters.AddWithValue("@UserId", AccountHolder!.UserId);
         await using DbDataReader reader = await command.ExecuteReaderAsync();
         while (await reader.ReadAsync())
         {
@@ -168,7 +168,7 @@ public class Account
 
             accountInfoEmbedBuilder.AddField("Frais de service", reader.GetDouble(7) + " " + reader.GetString(4) + " / jour", true);
 
-            accountInfoEmbedBuilder.WithFooter(Program.GlobalElements.GlobalSnoutVersion);
+            accountInfoEmbedBuilder.WithFooter(GlobalElements.GlobalSnoutVersion);
             accountInfoEmbedBuilder.WithTimestamp(DateTimeOffset.UtcNow);
             accountInfoEmbedBuilder.WithColor(Color.Green);
             accountInfoEmbedBuilder.WithThumbnailUrl("https://cdn-icons-png.flaticon.com/512/1365/1365895.png");
@@ -225,7 +225,7 @@ public class Account
                     break;
             }
 
-            int? existingDestinationAccountNumber = null;
+            int? existingDestinationAccountNumber;
             if (reader.IsDBNull(4))
             {
                 existingDestinationAccountNumber = null;
@@ -244,7 +244,7 @@ public class Account
 
             );
 
-            string toStringType = "";
+            string toStringType;
             switch (selectedTransaction.Type)
             {
                 case TransactionType.Deposit:
@@ -265,11 +265,9 @@ public class Account
                 default:
                     toStringType = "Inconnu";
                     break;
-                {
-                }
             }
 
-            string? destinationAccount = "";
+            string? destinationAccount;
             if (selectedTransaction.DestinationAccountNumber == 0 || selectedTransaction.DestinationAccountNumber.HasValue == false)
             {
                 destinationAccount = "";
@@ -292,7 +290,7 @@ public class Account
 
         transactionEmbedBuilder.WithTitle($"Transactions récentes du compte n°{AccountNumber}");
         transactionEmbedBuilder.WithDescription(concatDescriptionFromList);
-        transactionEmbedBuilder.WithFooter(Program.GlobalElements.GlobalSnoutVersion);
+        transactionEmbedBuilder.WithFooter(GlobalElements.GlobalSnoutVersion);
         transactionEmbedBuilder.WithTimestamp(DateTimeOffset.UtcNow);
 
         return transactionEmbedBuilder;
@@ -344,23 +342,19 @@ public class Account
         return parameters;
     }
 
-    private double GetBalance(int accountNumber)
+    private void GetBalance(int accountNumber)
     {
-        using (var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;"))
+        using var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;");
+        connection.Open();
+
+        using SQLiteCommand? command = connection.CreateCommand();
+        command.CommandText = "SELECT Balance FROM Accounts WHERE AccountNumber = @AccountNumber";
+        command.Parameters.AddWithValue("@AccountNumber", accountNumber);
+        using SQLiteDataReader? reader = command.ExecuteReader();
+        while (reader.Read())
         {
-            connection.Open();
-
-            using SQLiteCommand? command = connection.CreateCommand();
-            command.CommandText = "SELECT Balance FROM Accounts WHERE AccountNumber = @AccountNumber";
-            command.Parameters.AddWithValue("@AccountNumber", accountNumber);
-            using SQLiteDataReader? reader = command.ExecuteReader();
-            while (reader.Read())
-            {
-                Balance = reader.GetDouble(0);
-            }
+            Balance = reader.GetDouble(0);
         }
-
-        return Balance;
     }
     public double GetDistantBalance(int destinationAccountNumber)
     {
@@ -381,7 +375,7 @@ public class Account
         return distantBalance;
     }
 
-    private AccountType GetDistantAccountType(AccountType destinationAccountType, int destinationAccountNumber)
+    private AccountType GetDistantAccountType(int destinationAccountNumber)
     {
         string stringType = "";
 
@@ -399,6 +393,7 @@ public class Account
             }
         }
 
+        AccountType destinationAccountType;
         switch (stringType)
         {
             case "savings":
@@ -564,7 +559,7 @@ public class Account
             return false;
         }
 
-        if (GetDistantAccountType(Type, destinationAccountNumber) == AccountType.Locked)
+        if (GetDistantAccountType(destinationAccountNumber) == AccountType.Locked)
         {
             return false;
         }
@@ -896,7 +891,7 @@ public class DailyAccountUpdater
         int dueTime = (int)timeToGo.TotalMilliseconds;
 
         Func<Task<bool>> callback = ExecuteDailyUpdateAsync;
-        Timer timer = new(state => callback(), null, dueTime, Timeout.Infinite);
+        Timer timer = new(_ => callback(), null, dueTime, Timeout.Infinite);
 
         return Task.FromResult(timer);
     }
@@ -913,7 +908,7 @@ public class DailyAccountUpdater
         int dueTime = (int)timeToGo.TotalMilliseconds;
 
         Func<Task<bool>> callback = ExecuteDailyPaycheckAsync;
-        Timer timer = new(state => callback(), null, dueTime, Timeout.Infinite);
+        Timer timer = new(_ => callback(), null, dueTime, Timeout.Infinite);
 
         return Task.FromResult(timer);
     }

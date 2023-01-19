@@ -37,8 +37,8 @@ internal class SnoutTranslator
 
         var result = await response.Content.ReadAsStringAsync();
         var json = JObject.Parse(result);
-        var detectedSourceLanguage = json["translations"][0]["detected_source_language"].ToString();
-        var translatedText = json["translations"][0]["text"].ToString();
+        var detectedSourceLanguage = json["translations"]![0]!["detected_source_language"]!.ToString();
+        var translatedText = json["translations"]![0]!["text"]!.ToString();
 
         return (detectedSourceLanguage + "|" +translatedText);
     }
@@ -55,7 +55,7 @@ internal class SnoutTranslator
 
         var result = await response.Content.ReadAsStringAsync();
         var json = JObject.Parse(result);
-        var remainingCharacters = json["character_count"].ToString();
+        var remainingCharacters = json["character_count"]!.ToString();
 
         return int.Parse(remainingCharacters);
     }   

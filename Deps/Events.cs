@@ -1,8 +1,6 @@
 ﻿using Discord;
-using Discord.Rest;
 using Discord.WebSocket;
 using Snout.Modules;
-using System.Collections.Concurrent;
 using static Snout.Program;
 
 namespace Snout.Deps;
@@ -64,15 +62,18 @@ internal abstract class Events
 
                         // Get the user mentionned and clean it
                         string? userMentionned = tag.Value.ToString();
-                        string cleanUserMentionned = userMentionned.Remove(0, 1); // Delete the first caracter 
-                        cleanUserMentionned = cleanUserMentionned.Remove(cleanUserMentionned.IndexOf("#") - 1, 1);  // Delete the caracter just before the #
-
-                        // If the user mentionned is not the author of the message
-                        if (cleanUserMentionned != arg.Author.Username + "#" + arg.Author.Discriminator)
+                        if (userMentionned != null)
                         {
-                            SnoutUser cleanMentionnedSnoutUser = new(discordId: cleanUserMentionned);
-                            Paycheck userMentionnedPaycheck = new(cleanMentionnedSnoutUser, "action_TAGUED_BY", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
-                            GlobalElements.PaycheckQueue.Enqueue(userMentionnedPaycheck);
+                            string cleanUserMentionned = userMentionned.Remove(0, 1); // Delete the first caracter 
+                            cleanUserMentionned = cleanUserMentionned.Remove(cleanUserMentionned.IndexOf("#", StringComparison.Ordinal) - 1, 1);  // Delete the caracter just before the #
+
+                            // If the user mentionned is not the author of the message
+                            if (cleanUserMentionned != arg.Author.Username + "#" + arg.Author.Discriminator)
+                            {
+                                SnoutUser cleanMentionnedSnoutUser = new(discordId: cleanUserMentionned);
+                                Paycheck userMentionnedPaycheck = new(cleanMentionnedSnoutUser, "action_TAGUED_BY", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+                                GlobalElements.PaycheckQueue.Enqueue(userMentionnedPaycheck);
+                            }
                         }
                     }
                 }
