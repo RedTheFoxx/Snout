@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS Accounts (
     FOREIGN KEY ("UserId") REFERENCES Users(UserId)
 );
 
--- Listage des données de la table dynamic_data.Accounts : 0 rows
+-- Listage des donnÃ©es de la table dynamic_data.Accounts : 0 rows
 /*!40000 ALTER TABLE "Accounts" DISABLE KEYS */;
 /*!40000 ALTER TABLE "Accounts" ENABLE KEYS */;
 
@@ -36,8 +36,22 @@ CREATE TABLE IF NOT EXISTS "Actions" (
   value REAL
   );
 
--- Listage des données de la table dynamic_data.Actions : 0 rows
+-- Listage des donnÃ©es de la table dynamic_data.Actions : 0 rows
 /*!40000 ALTER TABLE "Actions" DISABLE KEYS */;
+INSERT INTO "Actions" ("id", "name", "value") VALUES
+	(1, 'action_TYPING', 1.25),
+	(2, 'action_MESSAGE_SENT', 2.57),
+	(3, 'action_MESSAGE_UPDATED', 3.21),
+	(4, 'action_REACTION_ADDED', 1.79),
+	(5, 'action_REACTION_REMOVED', 3.1),
+	(6, 'action_CHANGED_STATUS', 0.69),
+	(7, 'action_VOICE_CHANNEL_USER_STATUS_UPDATED', 1.21),
+	(8, 'action_USED_SNOUT_COMMAND', 3.29),
+	(9, 'action_MODAL_SUBMITTED', 2.1),
+	(10, 'action_SELECT_MENU_EXECUTED', 2.39),
+	(11, 'action_TAGUED_BY', 5.87),
+	(12, 'action_TAGUED_SOMEONE', 3.19),
+	(13, 'action_MESSAGE_SENT_WITH_FILE', 5.29);
 /*!40000 ALTER TABLE "Actions" ENABLE KEYS */;
 
 -- Listage de la structure de table dynamic_data. Action_logs
@@ -49,7 +63,7 @@ CREATE TABLE IF NOT EXISTS "Action_logs" (
 	PRIMARY KEY ("id")
 );
 
--- Listage des données de la table dynamic_data.Action_logs : 0 rows
+-- Listage des donnÃ©es de la table dynamic_data.Action_logs : 0 rows
 /*!40000 ALTER TABLE "Action_logs" DISABLE KEYS */;
 /*!40000 ALTER TABLE "Action_logs" ENABLE KEYS */;
 
@@ -63,14 +77,14 @@ CREATE TABLE IF NOT EXISTS Transactions (
     FOREIGN KEY (AccountNumber) REFERENCES Accounts(AccountNumber)
 );
 
--- Listage des données de la table dynamic_data.Transactions : 0 rows
+-- Listage des donnÃ©es de la table dynamic_data.Transactions : 0 rows
 /*!40000 ALTER TABLE "Transactions" DISABLE KEYS */;
 /*!40000 ALTER TABLE "Transactions" ENABLE KEYS */;
 
 -- Listage de la structure de table dynamic_data. urls
 CREATE TABLE IF NOT EXISTS urls (id INTEGER PRIMARY KEY, url TEXT);
 
--- Listage des données de la table dynamic_data.urls : 7 rows
+-- Listage des donnÃ©es de la table dynamic_data.urls : 7 rows
 /*!40000 ALTER TABLE "urls" DISABLE KEYS */;
 /*!40000 ALTER TABLE "urls" ENABLE KEYS */;
 
@@ -80,7 +94,7 @@ CREATE TABLE IF NOT EXISTS Users (
     DiscordId TEXT UNIQUE NOT NULL
 );
 
--- Listage des données de la table dynamic_data.Users : 0 rows
+-- Listage des donnÃ©es de la table dynamic_data.Users : 0 rows
 /*!40000 ALTER TABLE "Users" DISABLE KEYS */;
 /*!40000 ALTER TABLE "Users" ENABLE KEYS */;
 
