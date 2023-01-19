@@ -275,7 +275,7 @@ public class Program
     private async void Timer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
     {
 
-        Embed? embed = _liveSniffer.Pull(_listUrl);
+        Embed embed = _liveSniffer.Pull(_listUrl);
 
         foreach (IMessageChannel channel in _liveChannels)
         {
@@ -309,7 +309,7 @@ public class Program
     private async Task SlashCommandHandler(SocketSlashCommand command)
     {
 
-        if (GlobalElements.ModulePaycheckEnabled == true)
+        if (GlobalElements.ModulePaycheckEnabled)
         {
             SnoutUser snoutCommandUser = new(command.User.Username + "#" + command.User.Discriminator);
             Paycheck snoutCommandUsedPaycheck = new(snoutCommandUser, "action_USED_SNOUT_COMMAND", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
@@ -402,7 +402,7 @@ public class Program
 
         if (modal.Data.CustomId == "new_url_modal")
         {
-            if (GlobalElements.ModulePaycheckEnabled == true)
+            if (GlobalElements.ModulePaycheckEnabled)
             {
                 SnoutUser paycheckUser = new(discordId: modal.User.Username + "#" + modal.User.Discriminator);
                 Paycheck paycheck = new(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
@@ -474,7 +474,7 @@ public class Program
 
         if (modal.Data.CustomId == "new_user_modal")
         {
-            if (GlobalElements.ModulePaycheckEnabled == true)
+            if (GlobalElements.ModulePaycheckEnabled)
             {
                 SnoutUser paycheckUser = new(discordId: modal.User.Username + "#" + modal.User.Discriminator);
                 Paycheck paycheck = new(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
@@ -507,7 +507,7 @@ public class Program
 
         if (modal.Data.CustomId == "new_account_modal")
         {
-            if (GlobalElements.ModulePaycheckEnabled == true)
+            if (GlobalElements.ModulePaycheckEnabled)
             {
                 SnoutUser paycheckUser = new(discordId: modal.User.Username + "#" + modal.User.Discriminator);
                 Paycheck paycheck = new(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
@@ -581,7 +581,7 @@ public class Program
         if (modal.Data.CustomId == "check_accounts_modal")
         {
 
-            if (GlobalElements.ModulePaycheckEnabled == true)
+            if (GlobalElements.ModulePaycheckEnabled)
             {
                 SnoutUser paycheckUser = new(discordId: modal.User.Username + "#" + modal.User.Discriminator);
                 Paycheck paycheck = new(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
@@ -618,7 +618,6 @@ public class Program
             else
             {
                 CustomNotification noAccountNotif = new(NotificationType.Error, "Banque", "L'utilisateur ne dispose d'aucun compte");
-                IMessageChannel? channel = await modal.GetChannelAsync();
                 await modal.Channel.SendMessageAsync(embed: noAccountNotif.BuildEmbed());
             }
         }
@@ -629,7 +628,7 @@ public class Program
         if (modal.Data.CustomId == "edit_account_modal")
         {
 
-            if (GlobalElements.ModulePaycheckEnabled == true)
+            if (GlobalElements.ModulePaycheckEnabled)
             {
                 SnoutUser paycheckUser = new(discordId: modal.User.Username + "#" + modal.User.Discriminator);
                 Paycheck paycheck = new(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
@@ -722,7 +721,7 @@ public class Program
         if (modal.Data.CustomId == "deposit_modal")
         {
 
-            if (GlobalElements.ModulePaycheckEnabled == true)
+            if (GlobalElements.ModulePaycheckEnabled)
             {
                 SnoutUser paycheckUser = new(discordId: modal.User.Username + "#" + modal.User.Discriminator);
                 Paycheck paycheck = new(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
@@ -782,7 +781,7 @@ public class Program
 
         if (modal.Data.CustomId == "withdraw_modal")
         {
-            if (GlobalElements.ModulePaycheckEnabled == true)
+            if (GlobalElements.ModulePaycheckEnabled)
             {
                 SnoutUser paycheckUser = new(discordId: modal.User.Username + "#" + modal.User.Discriminator);
                 Paycheck paycheck = new(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
@@ -842,7 +841,7 @@ public class Program
 
         if (modal.Data.CustomId == "transfer_modal")
         {
-            if (GlobalElements.ModulePaycheckEnabled == true)
+            if (GlobalElements.ModulePaycheckEnabled)
             {
                 SnoutUser paycheckUser = new(discordId: modal.User.Username + "#" + modal.User.Discriminator);
                 Paycheck paycheck = new(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
@@ -916,7 +915,7 @@ public class Program
         if (modal.Data.CustomId == "translate_modal")
         {
 
-            if (GlobalElements.ModulePaycheckEnabled == true)
+            if (GlobalElements.ModulePaycheckEnabled)
             {
                 SnoutUser paycheckUser = new(discordId: modal.User.Username + "#" + modal.User.Discriminator);
                 Paycheck paycheck = new(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
@@ -946,7 +945,7 @@ public class Program
     private async Task SelectMenuHandler(SocketMessageComponent menu)
     {
         
-        if (GlobalElements.ModulePaycheckEnabled == true)
+        if (GlobalElements.ModulePaycheckEnabled)
         {
             SnoutUser paycheckUser = new(discordId: menu.User.Username + "#" + menu.User.Discriminator);
             Paycheck paycheck = new(paycheckUser, "action_SELECT_MENU_EXECUTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
@@ -990,7 +989,8 @@ public class Program
         // Envoyez le message privé
         await user.SendMessageAsync(embed: embedBuilder.Build());
     }
-    public static async void PaycheckDequeuer()
+
+    private static async void PaycheckDequeuer()
     {
         while (true)
         {
@@ -1014,6 +1014,6 @@ public class Program
                 }
             }
         }
+        // ReSharper disable once FunctionNeverReturns
     }
-
 }
