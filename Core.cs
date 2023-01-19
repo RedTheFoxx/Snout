@@ -1009,6 +1009,7 @@ public class Program
                         {
                             Console.WriteLine("PAYCHECK - SKIP : Utilisateur " + paycheck.User.DiscordId + " inconnu de Snout");
                             await Task.Delay(1000);
+
                         }
                     }
                 }
