@@ -72,14 +72,6 @@ CREATE TABLE IF NOT EXISTS urls (id INTEGER PRIMARY KEY, url TEXT);
 
 -- Listage des données de la table dynamic_data.urls : 7 rows
 /*!40000 ALTER TABLE "urls" DISABLE KEYS */;
-INSERT INTO "urls" ("id", "url") VALUES
-	(1, 'https://www.battlemetrics.com/servers/hll/17380658'),
-	(2, 'https://www.battlemetrics.com/servers/hll/10626575'),
-	(3, 'https://www.battlemetrics.com/servers/hll/15169632'),
-	(4, 'https://www.battlemetrics.com/servers/hll/13799070'),
-	(5, 'https://www.battlemetrics.com/servers/hll/14971018'),
-	(6, 'https://www.battlemetrics.com/servers/hll/14245343'),
-	(7, 'https://www.battlemetrics.com/servers/hll/12973888');
 /*!40000 ALTER TABLE "urls" ENABLE KEYS */;
 
 -- Listage de la structure de table dynamic_data. Users
