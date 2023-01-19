@@ -10,7 +10,7 @@ public class Account
 {
     public int AccountNumber { get; private set; }
     public AccountType Type { get; private set; }
-    public SnoutUser? AccountHolder { get; set; }
+    public SnoutUser? AccountHolder { get; private set; }
     public double Balance { get; private set; }
     private string? Currency { get; }
     public double OverdraftLimit { get; set; }
