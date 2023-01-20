@@ -78,7 +78,7 @@ public class SnoutUser
         return rowsAffected > 0;
     }
 
-    public async Task<bool> GetUserIdAsync()
+    public async Task<bool> CheckUserIdExistsAsync()
 
     {
         // Trouve l'userID en fonction du DiscordID renseigné et retourne le.
@@ -103,6 +103,32 @@ public class SnoutUser
         {
             // count est null
             return false;
+        }
+    }
+    
+    public async Task<Int32> GetUserIdAsync()
+    {
+        // Trouve l'userID en fonction du DiscordID renseigné et retourne le.
+
+        await using var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;");
+        await connection.OpenAsync();
+
+        var command = new SQLiteCommand("SELECT UserId FROM Users WHERE DiscordId = @discordId", connection);
+        command.Parameters.AddWithValue("@discordId", DiscordId);
+
+        var result = await command.ExecuteScalarAsync();
+
+        long? count = (long?)result;
+
+        if (count.HasValue)
+        {
+            // count est un long non-null
+            return (int)count.Value;
+        }
+        else
+        {
+            // count est null
+            return 0;
         }
     }
 
