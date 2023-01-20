@@ -593,7 +593,7 @@ public class Program
             var modalUser = modal.Data.Components.First(x => x.CustomId == "check_accounts_textbox").Value;
 
             SnoutUser requested = new(discordId: modalUser);
-            bool userExists = await requested.GetUserIdAsync();
+            bool userExists = await requested.CheckUserIdExistsAsync();
 
             if (!userExists)
             {
@@ -848,11 +848,12 @@ public class Program
                 GlobalElements.PaycheckQueue.Enqueue(paycheck);
             }
 
-            Account account = new(int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_source_textbox").Value));
+            SnoutUser accountUser = new SnoutUser(modal.User.Username + "#" + modal.User.Discriminator);
+            Account account = new(int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_source_textbox").Value), accountHolder: accountUser);
             account.GetParameters(int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_source_textbox").Value));
-            account.GetHolderFromAccount();
+            // account.GetAccountType();
 
-            if (account.Type == AccountType.Unknown) // On vérifie que le compte existe
+            if (account.GetAccountType() == AccountType.Unknown) // On vérifie que le compte existe
             {
                 CustomNotification notif = new(NotificationType.Error, "Banque", "Ce compte n'existe pas");
                 await modal.RespondAsync(embed: notif.BuildEmbed());
@@ -860,23 +861,21 @@ public class Program
             }
             else
             {
-                SnoutUser transferingUser = new(discordId: modal.User.Username + "#" + modal.User.Discriminator);
-                await transferingUser.GetUserIdAsync();
-                
-                if (transferingUser.UserId != account.AccountHolder.UserId) // On vérifie que le compte appartient bien à l'utilisateur
+                if (!account.CheckAccountNumberBelongsToId())
                 {
-                    CustomNotification notif = new(NotificationType.Error, "Banque", "Le compte source ne vous appartient pas !");
+                    CustomNotification notif = new(NotificationType.Error, "Banque", "Ce compte ne vous appartient pas !");
                     await modal.RespondAsync(embed: notif.BuildEmbed());
                     return;
                 }
-                
+
                 string input = modal.Data.Components.First(x => x.CustomId == "transfer_amount_textbox").Value;
 
                 if (string.IsNullOrEmpty(input)) // On vérifie que le montant n'est pas vide
                 {
                     throw new("DATA TRANSFER : Amount ne dispose pas d'une entrée valide.");
                 }
-                else if (!double.TryParse(input, NumberStyles.Number, new CultureInfo("fr-FR"), out double importedAmount))
+                else if (!double.TryParse(input, NumberStyles.Number, new CultureInfo("fr-FR"),
+                             out double importedAmount))
                 {
                     throw new("DATA TRANSFER : Amount ne dispose pas d'une entrée valide.");
                 }
@@ -885,37 +884,43 @@ public class Program
 
                     if (importedAmount <= 0)
                     {
-                        CustomNotification notif = new(NotificationType.Error, "Banque", "Le montant doit être strictement supérieur à 0");
+                        CustomNotification notif = new(NotificationType.Error, "Banque",
+                            "Le montant doit être strictement supérieur à 0");
                         await modal.RespondAsync(embed: notif.BuildEmbed());
                         return;
                     }
                     else
                     {
-                        Account targetAccount = new(int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_destination_textbox").Value));
-                        targetAccount.GetParameters(int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_destination_textbox").Value));
+                        Account targetAccount = new(int.Parse(modal.Data.Components
+                            .First(x => x.CustomId == "transfer_destination_textbox").Value));
+                        targetAccount.GetParameters(int.Parse(modal.Data.Components
+                            .First(x => x.CustomId == "transfer_destination_textbox").Value));
 
                         if (targetAccount.Type == AccountType.Unknown) // On vérifie que le compte existe
                         {
-                            CustomNotification notif = new(NotificationType.Error, "Banque", "Ce compte n'existe pas");
+                            CustomNotification notif = new(NotificationType.Error, "Banque",
+                                "Ce compte n'existe pas");
                             await modal.RespondAsync(embed: notif.BuildEmbed());
                             return;
                         }
                         else
                         {
-                            if (await account.TransferMoneyAsync(importedAmount, int.Parse(modal.Data.Components.First(x => x.CustomId == "transfer_destination_textbox").Value)))
+                            if (await account.TransferMoneyAsync(importedAmount,
+                                    int.Parse(modal.Data.Components
+                                        .First(x => x.CustomId == "transfer_destination_textbox").Value)))
                             {
-                                CustomNotification notif = new(NotificationType.Success, "Banque", $"Transfert de {importedAmount} € effectué");
+                                CustomNotification notif = new(NotificationType.Success, "Banque",
+                                    $"Transfert de {importedAmount} € effectué");
                                 await modal.RespondAsync(embed: notif.BuildEmbed());
                             }
                             else
                             {
-                                CustomNotification notif = new(NotificationType.Error, "Banque", "Erreur lors du transfert");
+                                CustomNotification notif = new(NotificationType.Error, "Banque",
+                                    "Erreur lors du transfert");
                                 await modal.RespondAsync(embed: notif.BuildEmbed());
                             }
                         }
                     }
-
-
                 }
             }
         }
