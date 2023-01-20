@@ -56,6 +56,73 @@ public class Account
         AccountFees = 0.0;
     }
 
+    public Account(int accountNumber, SnoutUser accountHolder)
+    {
+        AccountNumber = accountNumber;
+        Type = AccountType.Unknown;
+        AccountHolder = accountHolder;
+        Balance = 0.0;
+        Currency = "€";
+        OverdraftLimit = 0.0;
+        InterestRate = 0.0;
+        AccountFees = 0.0;
+    }
+
+    // Method to check if passed account number belongs to accountHolder in database
+    
+    public bool CheckAccountNumberBelongsToId()
+    {
+        using var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;");
+        connection.Open();
+        using var command = new SQLiteCommand(connection);
+        command.CommandText = "SELECT * FROM Accounts WHERE AccountNumber = @AccountNumber AND UserId = @AccountHolder";
+        command.Parameters.AddWithValue("@AccountNumber", AccountNumber);
+        command.Parameters.AddWithValue("@AccountHolder", AccountHolder!.GetUserIdAsync().Result);
+        using var reader = command.ExecuteReader();
+        if (reader.HasRows)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    
+    // Get account type from database
+    
+    public AccountType GetAccountType()
+    {
+        using var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;");
+        connection.Open();
+        using var command = new SQLiteCommand(connection);
+        command.CommandText = "SELECT * FROM Accounts WHERE AccountNumber = @AccountNumber";
+        command.Parameters.AddWithValue("@AccountNumber", AccountNumber);
+        using var reader = command.ExecuteReader();
+        if (reader.HasRows)
+        {
+            while (reader.Read())
+            {
+                switch (reader.GetString(2))
+                {
+                    case "checkings":
+                        Type = AccountType.Checkings;
+                        break;
+                    case "savings":
+                        Type = AccountType.Savings;
+                        break;
+                    case "locked":
+                        Type = AccountType.Locked;
+                        break;
+                    default:
+                        Type = AccountType.Unknown;
+                        break;
+                }
+            }
+        }
+        return Type;
+    }
+    
     public bool RegisterAccount()
     {
         using var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;");
@@ -638,26 +705,6 @@ public class Account
         }
 
     }
-
-    public void GetHolderFromAccount()
-    {
-        using var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;");
-        connection.Open();
-
-        using SQLiteCommand? command = connection.CreateCommand();
-        command.CommandText = "SELECT UserId FROM Accounts WHERE AccountNumber = @AccountNumber";
-        command.Parameters.AddWithValue("@UserID", AccountNumber);
-        using SQLiteDataReader? reader = command.ExecuteReader();
-        if (reader.Read())
-        {
-            SnoutUser holder = new SnoutUser(reader.GetInt32(0));
-            AccountHolder = holder;
-        }
-        else
-        {
-            throw new("Le propriétaire du compte n'a pas été trouvé");
-        }
-    }
 }
 
 public class Transaction
@@ -722,7 +769,7 @@ public class Paycheck
 
     public async Task<bool> CreatePaycheckAsync() // Create a paycheck (Action_logs) in the database
     {
-        if (await User.GetUserIdAsync())
+        if (await User.CheckUserIdExistsAsync())
         {
             await using var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;");
             await connection.OpenAsync();
