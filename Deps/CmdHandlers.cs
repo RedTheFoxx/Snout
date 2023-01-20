@@ -153,7 +153,7 @@ class SnoutHandler
         var commandUser = command.User.Username + "#" + command.User.Discriminator;
 
         SnoutUser requestor = new(discordId: commandUser);
-        bool userExists = await requestor.GetUserIdAsync();
+        bool userExists = await requestor.CheckUserIdExistsAsync();
 
         if (!userExists)
         {
