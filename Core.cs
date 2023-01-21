@@ -25,7 +25,7 @@ public class Program
 
     public static class GlobalElements
     {
-        public const string GlobalSnoutVersion = "Snout v1.2.2";
+        public const string GlobalSnoutVersion = "Snout v1.2.3";
         public static bool ModulePaycheckEnabled;
         public static readonly ConcurrentQueue<Paycheck> PaycheckQueue = new();
         public static Timer? DailyUpdaterTimerUniqueReference = null;
@@ -130,74 +130,106 @@ public class Program
 
         // SUPPR. DE TOUTES LES GLOBAL COMMANDS :
 
-        // await _client.Rest.DeleteAllGlobalCommandsAsync();
-        // Console.WriteLine("CORE : Global commands purgées");
+        await _client.Rest.DeleteAllGlobalCommandsAsync();
+        Console.WriteLine("CORE : Global commands purgées");
 
         // REINSCRIPTION DE TOUTES LES GLOBAL COMMANDS :
 
-        var commands = new List<SlashCommandBuilder>
+        var commands = new List<SlashCommandBuilder> // Constructeur de commandes
         {
+            new SlashCommandBuilder()
+                .WithName("module")
+                .WithDescription("Modules de Snout Bot")
+                    .AddOption(new SlashCommandOptionBuilder()
+                        .WithName("fetcher")
+                        .WithDescription("Activer/désactiver le module fetcher")
+                        .WithType(ApplicationCommandOptionType.SubCommand)
+                        .WithRequired(true))
+                    .AddOption(new SlashCommandOptionBuilder()
+                        .WithName("paycheck")
+                        .WithDescription("Activer/désactiver le module paycheck")
+                        .WithType(ApplicationCommandOptionType.SubCommand)
+                        .WithRequired(true)),
             
-            /*new SlashCommandBuilder()
-                .WithName("mfetcher")
-                .WithDescription("Assigne un canal au fetch automatique HLL et déclenche ce dernier"),
-
             new SlashCommandBuilder()
-                .WithName("mpaycheck")
-                .WithDescription("Activer / Désactiver le module paycheck"),
-
-            new SlashCommandBuilder()
-                .WithName("ping")
-                .WithDescription("Envoyer un ping vers la gateway Discord"),
-
-            new SlashCommandBuilder()
-                .WithName("add")
-                .WithDescription("Ajouter un serveur HLL à la liste de fetch automatique"),
-
-            new SlashCommandBuilder()
-                .WithName("register")
-                .WithDescription("Inscrire un utilisateur dans Snout Bot"),
-
-            new SlashCommandBuilder()
-                .WithName("unregister")
-                .WithDescription("Désinscrire un utilisateur de Snout Bot"),
-
-            new SlashCommandBuilder()
-                .WithName("newaccount")
-                .WithDescription("Créer un nouveau compte bancaire"),
-
-            new SlashCommandBuilder()
-                .WithName("myaccounts")
-                .WithDescription("Afficher ses comptes bancaires"),
-
-            new SlashCommandBuilder()
-                .WithName("checkaccounts")
-                .WithDescription("Afficher les comptes bancaires d'un utilisateur"),
-
-            new SlashCommandBuilder()
-                .WithName("editaccount")
-                .WithDescription("Modifier un compte bancaire"),
-
-            new SlashCommandBuilder()
-                .WithName("deposit")
-                .WithDescription("Déposer de l'argent sur un compte bancaire"),
-
-            new SlashCommandBuilder()
-                .WithName("withdraw")
-                .WithDescription("Retirer de l'argent d'un compte bancaire"),
-
-            new SlashCommandBuilder()
-                .WithName("transfer")
-                .WithDescription("Transférer de l'argent d'un compte bancaire à un autre"),
+                .WithName("url")
+                .WithDescription("Gérer les URL du HLL fetcher")
+                .AddOption(new SlashCommandOptionBuilder()
+                        .WithName("ajouter")
+                        .WithDescription("Ajouter une URL au fetcher")
+                        .WithType(ApplicationCommandOptionType.SubCommand)
+                        .AddOption("url", ApplicationCommandOptionType.String, "...", isRequired: true)),
 
             new SlashCommandBuilder()
                 .WithName("t")
-                .WithDescription("Permet de traduire un texte vers une langue cible"),
-
-            new SlashCommandBuilder()
-                .WithName("thelp")
-                .WithDescription("Afficher l'aide du traducteur de texte et les utilisations restantes"),*/
+                .WithDescription("Module de traduction de texte")
+                .AddOption(new SlashCommandOptionBuilder()
+                    .WithName("traduire")
+                    .WithDescription("Traduire un bloc de texte avec DeepL")
+                    .WithType(ApplicationCommandOptionType.SubCommand)
+                    .WithRequired(true))
+                .AddOption(new SlashCommandOptionBuilder()
+                    .WithName("aide")
+                    .WithDescription("Afficher l'aide du traducteur de texte et les utilisations restantes")
+                    .WithType(ApplicationCommandOptionType.SubCommand)
+                    .WithRequired(true)),
             
+            new SlashCommandBuilder()
+                .WithName("utilisateurs")
+                .WithDescription("Gestion de la base de données")
+                .AddOption(new SlashCommandOptionBuilder()
+                    .WithName("enregistrer")
+                    .WithDescription("Ajouter un utilisateur à la base de données")
+                    .WithType(ApplicationCommandOptionType.SubCommand)
+                    .WithRequired(true))
+                .AddOption(new SlashCommandOptionBuilder()
+                    .WithName("delete")
+                    .WithDescription("Supprimer un utilisateur de la base de données")
+                    .WithType(ApplicationCommandOptionType.SubCommand)
+                    .WithRequired(true)),
+            
+            new SlashCommandBuilder()
+                .WithName("ping")
+                .WithDescription("Retourner le ping de la gateway Discord"),
+            
+            new SlashCommandBuilder()
+                .WithName("banque")
+                .WithDescription("Gérer les comptes bancaires")
+                .AddOption(new SlashCommandOptionBuilder()
+                    .WithName("nouveau")
+                    .WithDescription("Créer un nouveau compte courant (unique) ou un compte d'épargne (multiple)")
+                    .WithType(ApplicationCommandOptionType.SubCommand)
+                    .WithRequired(true))
+                .AddOption(new SlashCommandOptionBuilder()
+                    .WithName("mescomptes")
+                    .WithDescription("Afficher l'état de ses comptes bancaires et leurs paramètres associés")
+                    .WithType(ApplicationCommandOptionType.SubCommand)
+                    .WithRequired(true))
+                .AddOption(new SlashCommandOptionBuilder()
+                    .WithName("edit")
+                    .WithDescription("(Admin) Modifier les paramètres d'un compte bancaire")
+                    .WithType(ApplicationCommandOptionType.SubCommand)
+                    .WithRequired(true))
+                .AddOption(new SlashCommandOptionBuilder()
+                    .WithName("check")
+                    .WithDescription("(Admin) Afficher l'état des comptes bancaires d'un utilisateur")
+                    .WithType(ApplicationCommandOptionType.SubCommand)
+                    .WithRequired(true))
+                .AddOption(new SlashCommandOptionBuilder()
+                    .WithName("deposit")
+                    .WithDescription("(Admin) Ajouter de l'argent à un compte bancaire")
+                    .WithType(ApplicationCommandOptionType.SubCommand)
+                    .WithRequired(true))
+                .AddOption(new SlashCommandOptionBuilder()
+                    .WithName("retirer")
+                    .WithDescription("Retirer de l'argent d'un compte bancaire")
+                    .WithType(ApplicationCommandOptionType.SubCommand)
+                    .WithRequired(true))
+                .AddOption(new SlashCommandOptionBuilder()
+                    .WithName("virement")
+                    .WithDescription("Transférer de l'argent d'un compte bancaire à un autre (interne ou externe)")
+                    .WithType(ApplicationCommandOptionType.SubCommand)
+                    .WithRequired(true))
         };
 
         foreach (SlashCommandBuilder? command in commands)
