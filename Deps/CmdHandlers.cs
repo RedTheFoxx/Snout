@@ -11,6 +11,38 @@ namespace Snout.Deps;
 class SnoutHandler
 
 {
+    // TODO : Refactoriser les cmd handlers
+    
+    /*
+     *    module command:
+        - fetcher option: Activates/deactivates the fetcher module
+        - paycheck option: Activates/deactivates the paycheck module
+
+    url command:
+        - ajouter option: Add an URL to the fetcher
+
+    t command:
+        - traduire option: Translate a text block with DeepL
+        - aide option: Display the help of the text translator and the remaining uses
+
+    utilisateurs command:
+        - enregistrer option: Add a user to the database
+        - delete option: Remove a user from the database
+
+    ping command:
+        Returns the ping of the Discord gateway
+
+    banque command:
+        - nouveau option: Create a new current account (unique) or a savings account (multiple)
+        - mescomptes option: Show the status of your bank accounts and their associated parameters
+        - check option: Check the balance of a bank account
+        - edit option: (Admin) Modify the parameters of a bank account
+        - deposit option: Deposit money into a bank account
+        - withdraw option: Withdraw money from a bank account
+        - transfer option: Transfer money from one bank account to another
+     * 
+     */
+    
     public async Task HandlePingCommand(SocketSlashCommand command)
     {
         string url = "gateway.discord.gg";
