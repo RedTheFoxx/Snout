@@ -10,7 +10,7 @@ public class Account
 {
     public int AccountNumber { get; private set; }
     public AccountType Type { get; private set; }
-    public SnoutUser? AccountHolder { get; private set; }
+    public SnoutUser? AccountHolder { get; set; }
     public double Balance { get; private set; }
     private string? Currency { get; }
     public double OverdraftLimit { get; set; }
@@ -215,7 +215,7 @@ public class Account
                     break;
             }
 
-            accountInfoEmbedBuilder.WithTitle($"Solde : {reader.GetDouble(3)} {reader.GetString(4)}");
+            accountInfoEmbedBuilder.WithTitle("Solde : " + Math.Round(reader.GetDouble(3), 2) + " " + reader.GetString(4));
             accountInfoEmbedBuilder.WithDescription("Paramètres :");
 
             bool isOverdraftLimitHit = CheckOverdraftLimit(reader.GetInt32(0));
@@ -347,7 +347,7 @@ public class Account
                 destinationAccount = selectedTransaction.DestinationAccountNumber.ToString();
             }
 
-            convertedToStringTransactions.Add($"# ID {reader.GetInt32(0)} | {selectedTransaction.Date} - **{toStringType}** {destinationAccount} : {selectedTransaction.Amount} €");
+            convertedToStringTransactions.Add($"# ID {reader.GetInt32(0)} | {selectedTransaction.Date} - **{toStringType}** {destinationAccount} : {Math.Round(selectedTransaction.Amount, 2)} €");
 
         }
 
@@ -517,7 +517,7 @@ public class Account
         string currentDate = currentDateTime.ToString("dd MMMM yyyy");
         string currentTime = currentDateTime.ToString("HH:mm:ss");
 
-        Transaction transaction = new(AccountNumber, TransactionType.Deposit, amount, currentDate + " " + currentTime);
+        Transaction transaction = new(AccountNumber, TransactionType.Deposit, Math.Round(amount, 2), currentDate + " " + currentTime);
         await transaction.CreateTransactionAsync();
 
         await using var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;");
@@ -526,7 +526,7 @@ public class Account
         await using SQLiteCommand? command = connection.CreateCommand();
         command.CommandText = "UPDATE Accounts SET Balance = @Balance WHERE AccountNumber = @AccountNumber";
         command.Parameters.AddWithValue("@AccountNumber", AccountNumber);
-        command.Parameters.AddWithValue("@Balance", Balance);
+        command.Parameters.AddWithValue("@Balance", Math.Round(Balance, 2));
         command.ExecuteNonQuery();
 
         return true;
@@ -569,7 +569,7 @@ public class Account
         string currentTime = currentDateTime.ToString("HH:mm:ss");
 
         // Log in transaction the difference between the new and old balance
-        Transaction transaction = new(AccountNumber, TransactionType.DailyUpdate, Balance - oldBalance, currentDate + " " + currentTime); // Remplacer la Balance par le Daily Profit ici
+        Transaction transaction = new(AccountNumber, TransactionType.DailyUpdate, Math.Round(Balance - oldBalance, 2), currentDate + " " + currentTime); // Remplacer la Balance par le Daily Profit ici
         await transaction.CreateTransactionAsync();
 
         await using var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;");
@@ -602,7 +602,7 @@ public class Account
             string currentDate = currentDateTime.ToString("dd MMMM yyyy");
             string currentTime = currentDateTime.ToString("HH:mm:ss");
 
-            Transaction transaction = new(AccountNumber, TransactionType.Withdrawal, amount, currentDate + " " + currentTime);
+            Transaction transaction = new(AccountNumber, TransactionType.Withdrawal, Math.Round(amount, 2), currentDate + " " + currentTime);
             await transaction.CreateTransactionAsync();
 
             Balance = Balance - amount;
@@ -613,7 +613,7 @@ public class Account
             await using SQLiteCommand? command = connection.CreateCommand();
             command.CommandText = "UPDATE Accounts SET Balance = @Balance WHERE AccountNumber = @AccountNumber";
             command.Parameters.AddWithValue("@AccountNumber", AccountNumber);
-            command.Parameters.AddWithValue("@Balance", Balance);
+            command.Parameters.AddWithValue("@Balance", Math.Round(Balance, 2));
             command.ExecuteNonQuery();
 
             return true;
@@ -639,10 +639,10 @@ public class Account
         string currentDate = currentDateTime.ToString("dd MMMM yyyy");
         string currentTime = currentDateTime.ToString("HH:mm:ss");
 
-        Transaction transaction = new(AccountNumber, TransactionType.Transfer, amount, currentDate + " " + currentTime, destinationAccountNumber);
+        Transaction transaction = new(AccountNumber, TransactionType.Transfer, Math.Round(amount, 2), currentDate + " " + currentTime, destinationAccountNumber);
         await transaction.CreateTransactionAsync();
 
-        Transaction distantTransaction = new(destinationAccountNumber, TransactionType.Deposit, amount, currentDate + " " + currentTime);
+        Transaction distantTransaction = new(destinationAccountNumber, TransactionType.Deposit, Math.Round(amount, 2), currentDate + " " + currentTime);
         await distantTransaction.CreateTransactionAsync();
 
         await using var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;");
@@ -663,22 +663,22 @@ public class Account
             throw new("Le compte de destination n'a pas été trouvé");
         }
 
-
         // Mise à jour de la balance du compte de destination et du compte courant
         await using SQLiteTransaction? transac = connection.BeginTransaction();
+        
         // Mise à jour de la balance du compte de destination
         await using SQLiteCommand? updateCommand = connection.CreateCommand();
         updateCommand.CommandText = "UPDATE Accounts SET Balance = @destinationAccountBalance WHERE AccountNumber = @destinationAccountNumber";
-        updateCommand.Parameters.AddWithValue("@destinationAccountBalance", destinationAccountBalance + amount);
+        updateCommand.Parameters.AddWithValue("@destinationAccountBalance", Math.Round(destinationAccountBalance + amount, 2));
         updateCommand.Parameters.AddWithValue("@destinationAccountNumber", destinationAccountNumber);
         updateCommand.ExecuteNonQuery();
 
         // Mise à jour de la balance du compte courant
-        Balance = Balance - amount;
+        Balance -= amount;
 
         await using SQLiteCommand? updateCommand2 = connection.CreateCommand();
         updateCommand.CommandText = "UPDATE Accounts SET Balance = @Balance WHERE AccountNumber = @AccountNumber";
-        updateCommand.Parameters.AddWithValue("@Balance", Balance);
+        updateCommand.Parameters.AddWithValue("@Balance", Math.Round(Balance, 2));
         updateCommand.Parameters.AddWithValue("@AccountNumber", AccountNumber);
         updateCommand.ExecuteNonQuery();
 
