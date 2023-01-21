@@ -25,7 +25,7 @@ public class Program
 
     public static class GlobalElements
     {
-        public const string GlobalSnoutVersion = "Snout v1.2.1";
+        public const string GlobalSnoutVersion = "Snout v1.2.2";
         public static bool ModulePaycheckEnabled;
         public static readonly ConcurrentQueue<Paycheck> PaycheckQueue = new();
         public static Timer? DailyUpdaterTimerUniqueReference = null;
@@ -130,15 +130,15 @@ public class Program
 
         // SUPPR. DE TOUTES LES GLOBAL COMMANDS :
 
-        await _client.Rest.DeleteAllGlobalCommandsAsync();
-        Console.WriteLine("CORE : Global commands purgées");
+        // await _client.Rest.DeleteAllGlobalCommandsAsync();
+        // Console.WriteLine("CORE : Global commands purgées");
 
         // REINSCRIPTION DE TOUTES LES GLOBAL COMMANDS :
 
         var commands = new List<SlashCommandBuilder>
         {
             
-            new SlashCommandBuilder()
+            /*new SlashCommandBuilder()
                 .WithName("mfetcher")
                 .WithDescription("Assigne un canal au fetch automatique HLL et déclenche ce dernier"),
 
@@ -196,7 +196,7 @@ public class Program
 
             new SlashCommandBuilder()
                 .WithName("thelp")
-                .WithDescription("Afficher l'aide du traducteur de texte et les utilisations restantes"),
+                .WithDescription("Afficher l'aide du traducteur de texte et les utilisations restantes"),*/
             
         };
 
