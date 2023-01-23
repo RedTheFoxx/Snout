@@ -962,7 +962,7 @@ public class DailyAccountUpdater
         int dueTime = (int)timeToGo.TotalMilliseconds;
 
         Func<Task<bool>> callback = ExecuteDailyUpdateAsync;
-        Timer timer = new(_ => callback(), null, dueTime, Timeout.Infinite);
+        Timer timer = new(_ => callback(), null, dueTime, 86400000);
 
         return Task.FromResult(timer);
     }
@@ -979,7 +979,7 @@ public class DailyAccountUpdater
         int dueTime = (int)timeToGo.TotalMilliseconds;
 
         Func<Task<bool>> callback = ExecuteDailyPaycheckAsync;
-        Timer timer = new(_ => callback(), null, dueTime, Timeout.Infinite);
+        Timer timer = new(_ => callback(), null, dueTime, 86400000);
 
         return Task.FromResult(timer);
     }
