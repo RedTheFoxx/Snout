@@ -348,80 +348,36 @@ public class Program
             GlobalElements.PaycheckQueue.Enqueue(snoutCommandUsedPaycheck);
         }
 
-        switch (command.Data.Name)
+        switch (command.Data.Name) // Change this part to match the refactor of the command handlers
         {
             case "ping":
                 SnoutHandler pingHandlerReference = new();
                 await pingHandlerReference.HandlePingCommand(command);
                 break;
 
-            case "mfetcher":
-                SnoutHandler fetchHandlerReference = new();
-                await fetchHandlerReference.HandleMfetcherCommand(command, _client, _liveChannels, _timerFetcher);
+            case "module":
+                SnoutHandler moduleHandlerReference = new();
+                await moduleHandlerReference.HandleModuleCommand(command, _client, _liveChannels, _timerFetcher);
                 break;
                 
-            case "add":
-                SnoutHandler addHandlerReference = new();
-                await addHandlerReference.HandleAddCommand(command);
+            case "url":
+                SnoutHandler urlHandlerReference = new();
+                await urlHandlerReference.HandleUrlCommand(command);
                 break;
 
-            case "register":
-                SnoutHandler registerHandlerReference = new();
-                await registerHandlerReference.HandleRegisterCommand(command);
+            case "utilisateurs":
+                SnoutHandler utilisateursHandlerReference = new();
+                await utilisateursHandlerReference.HandleUtilisateursCommand(command);
                 break;
 
-            case "unregister":
-                SnoutHandler unregisterHandlerReference = new();
-                await unregisterHandlerReference.HandleUnregisterCommand(command);
+            case "banque":
+                SnoutHandler banqueHandlerReference = new();
+                await banqueHandlerReference.HandleBanqueCommand(command);
                 break;
-            case "newaccount":
-                SnoutHandler accountHandlerReference = new();
-                await accountHandlerReference.HandleNewAccountCommand(command);
-                break;
-
-            case "myaccounts":
-                SnoutHandler myaccountsHandlerReference = new();
-                await myaccountsHandlerReference.HandleMyAccountsCommand(command, _client);
-                break;
-
-            case "checkaccounts":
-                SnoutHandler checkaccountsHandlerReference = new();
-                await checkaccountsHandlerReference.HandleCheckAccountsCommand(command, _client);
-                break;
-
-            case "editaccount":
-                SnoutHandler editaccountHandlerReference = new();
-                await editaccountHandlerReference.HandleEditAccountCommand(command, _client);
-                break;
-
-            case "deposit":
-                SnoutHandler depositHandlerReference = new();
-                await depositHandlerReference.HandleDepositCommand(command);
-                break;
-
-            case "withdraw":
-                SnoutHandler withdrawHandlerReference = new();
-                await withdrawHandlerReference.HandleWithdrawCommand(command);
-                break;
-
-            case "transfer":
-                SnoutHandler transferHandlerReference = new();
-                await transferHandlerReference.HandleTransferCommand(command);
-                break;
-
+            
             case "t":
                 SnoutHandler tHandlerReference = new();
-                await tHandlerReference.HandleTCommand(command);
-                break;
-
-            case "thelp":
-                SnoutHandler thelpHandlerReference = new();
-                await thelpHandlerReference.HandleThelpCommand(command, _deepl);
-                break;
-
-            case "mpaycheck":
-                SnoutHandler mpaycheckHandlerReference = new();
-                await mpaycheckHandlerReference.HandleMpaycheckCommand(command);
+                await tHandlerReference.HandleTCommand(command, _deepl);
                 break;
         }
     } // Sélecteur de commandes envoyées au bot
