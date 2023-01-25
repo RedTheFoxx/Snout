@@ -155,8 +155,7 @@ public class Program
                 .AddOption(new SlashCommandOptionBuilder()
                         .WithName("ajouter")
                         .WithDescription("Ajouter une URL au fetcher")
-                        .WithType(ApplicationCommandOptionType.SubCommand)
-                        .AddOption("url", ApplicationCommandOptionType.String, "...", isRequired: true)),
+                        .WithType(ApplicationCommandOptionType.SubCommand)),
 
             new SlashCommandBuilder()
                 .WithName("t")
