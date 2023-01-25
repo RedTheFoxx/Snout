@@ -11,31 +11,34 @@ Un compte courant *("checkings")* est __unique__ et reçoit les paiements issus 
 Un compte d'épargne *("savings")* ne sert qu'au dépôt afin de sécuriser ses gains. Un utilisateur peut en avoir une infinité. Il est recommandé d'associer des taux d'intérêts plus forts sur ces derniers, tout en limitant les frais de service.
 
 ## ℹ️ Commandes
+_(Commands in english are considered higher risk than the others and must be monitored by admins)_
 
-🛠️ **Commandes généralistes**
-- **/ping** : renvoie le ping de la gateway API Discord
-- **/register** : inscrit un utilisateur dans la base de données de Snout, utilisée dans les modules
-- **/unregister** : retire un utilisateur de la base de données de Snout *(admin)*
+💶 **Administration des plugins**
+- **/module paycheck** : active/désactive le système de rémunération basé sur des évènements Discord *(gère aussi la mise à jour quotidienne des comptes)*
+- **/module fetcher** : active/désactive l'auto-fetcher dans le canal ciblé par la commande. Il est recommandé de dédier un canal pour cette action, sur votre serveur.
 
-🌍 **Commande du traducteur**
-- **/t** : traduire un texte vers l'une des langues supportées par DeepL™
-- **/thelp** : connaître les langues cibles et le quota mensuel autorisé
+🛠️ **Gestion des utilisateurs**
+- **/utilisateurs ajouter** : inscrit un utilisateur dans la base de données de Snout, utilisée dans les modules
+- **/utilisateurs delete** : retire un utilisateur de la base de données de Snout
 
-💶 **Commandes du module de paycheck**
-- **/mpaycheck** : active/désactive le système de rémunération basé sur des évènements Discord *(gère aussi la mise à jour quotidienne des comptes - admin)*
+🏦 **Gestion bancaire**
+- **/banque nouveau** : créer un nouveau compte bancaire courant ou d'épargne et l'assigne à un utilisateur (l'utilisateur doit être enregistré dans Snout)
+- **/banque edit** : éditer les paramètres d'un compte bancaire, tels que la limite de découvert, les frais de service ou le taux d'intérêt
+- **/banque mescomptes** : afficher le statut de ses comptes bancaires. *(résultats en messages privés)*
+- **/banque check** : vérifier le statut des comptes bancaires d'un utilisateur. *(résultats en messages privés)*
+- **/banque deposit** : ajouter de l'argent à un compte bancaire
+- **/banque retirer** : retirer de l'argent d'un compte bancaire
+- **/banque virement** : faire un virement entre deux comptes
 
-🏦 **Commandes du module de banking**
-- **/newaccount** : créer un nouveau compte bancaire courant ou d'épargne et l'assigne à un utilisateur (l'utilisateur doit avoir utilisé */register*)
-- **/editaccount** : éditer les paramètres d'un compte bancaire, tels que la limite de découvert, les frais de service ou le taux d'intérêt *(admin)*
-- **/myaccounts** : afficher le statut de ses comptes bancaires. *(résultats en messages privés)*
-- **/checkaccounts** : vérifier le statut des comptes bancaires d'un utilisateur. *(résultats en messages privés - admin)*
-- **/deposit** : ajouter de l'argent à un compte bancaire *(admin)*
-- **/withdraw** : retirer de l'argent d'un compte bancaire
-- **/transfer** : faire un virement entre deux comptes
+🌍 **Service de traduction**
+- **/t traduire** : traduire un texte vers l'une des langues supportées par DeepL™
+- **/t aide** : connaître les langues cibles et le quota mensuel autorisé
 
 🪖 **Commandes du module web-fetcher** *(Hell Let Loose™ uniquement, via Battlemetrics.com)*
-- **/mfetcher** : active/désactive l'auto-fetcher dans le canal ciblé par la commande. Il est recommandé de dédier un canal pour cette action, sur votre serveur. *(admin)*
-- **/add** : permet d'ajouter un nouveau serveur au fetcher par utilisation de son URL battlemetrics
+- **/url ajouter** : permet d'ajouter un nouveau serveur au fetcher par utilisation de son URL battlemetrics
+
+🛠️ **Généraliste**
+- **/ping** : renvoie le ping de la gateway API Discord
 
 ## 🔑 Authentification & Droits
 
@@ -43,17 +46,6 @@ Un compte d'épargne *("savings")* ne sert qu'au dépôt afin de sécuriser ses 
 | :-------- | :------- | :------------------------- |
 | `Tokens/[token.txt]` | `file w/ string` | **Requis**. Token de bot Discord  |
 | `Tokens/[deepl.txt]` | `file w/ string` | **Requis**. Clef d'API DeepL (gratuite, à récupérer sur https://www.deepl.com/fr/pro-api?cta=header-pro-api/)  |
-
-
-⚠ **Commandes admin-only à définir dans les paramètres du serveur Discord** ⚠️:
-```
-/unregister
-/editaccount
-/checkaccounts
-/deposit
-/mfetcher
-/mpaycheck
-```
 
 ## 🗂️ Déploiement
 
@@ -77,7 +69,7 @@ Une fois compilé, le bot est exécuté comme un programme Win64 :
 
 ## 🚧 Roadmap
 
-- **1.3** : Bientôt
+- **1.3** : _TBA_
 
 ## 🦊 Développement
 
