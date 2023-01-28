@@ -1,4 +1,5 @@
 using System.Data.SQLite;
+using Snout.Deps;
 
 namespace Snout.Modules;
 
@@ -6,6 +7,8 @@ public class SnoutUser
 {
     public int? UserId { get; private set; }
     public string? DiscordId { get; private set; }
+
+    private PermissionLevel PermissionLevel { get; set; }
 
     public SnoutUser(int userId)
     {
@@ -105,7 +108,80 @@ public class SnoutUser
             return false;
         }
     }
+
+    public async Task<bool> SetPermissionLevel(PermissionLevel newPermissionLevel)
+    {
+        // Edit the permission level of the user
+        
+        await using var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;");
+        await connection.OpenAsync();
+        
+        var command = new SQLiteCommand("UPDATE Users SET PermissionLevel = @newPermissionLevel WHERE UserId = @userId", connection);
+
+        int internalPermissionLevel;
+        switch (newPermissionLevel)
+        {
+            case PermissionLevel.User:
+                internalPermissionLevel = 1;
+                PermissionLevel = PermissionLevel.User;
+                break;
+            
+            case PermissionLevel.Admin:
+                internalPermissionLevel = 2;
+                PermissionLevel = PermissionLevel.Admin;
+                break;
+            
+            case PermissionLevel.SuperAdmin:
+                internalPermissionLevel = 3;
+                PermissionLevel = PermissionLevel.SuperAdmin;
+                break;
+            
+            default: 
+                internalPermissionLevel = 1;
+                PermissionLevel = PermissionLevel.User;
+                break;
+        }
+        
+        command.Parameters.AddWithValue("@newPermissionLevel", internalPermissionLevel);
+        command.Parameters.AddWithValue("@userId", UserId);
+        
+        var result = await command.ExecuteNonQueryAsync();
+        
+        return result > 0;
+    }
     
+    public async Task<PermissionLevel?> GetPermissionLevel ()
+    {
+        // Get the permission level of the user
+        
+        await using var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;");
+        await connection.OpenAsync();
+        
+        var command = new SQLiteCommand("SELECT PermissionLevel FROM Users WHERE UserId = @userId", connection);
+        command.Parameters.AddWithValue("@userId", UserId);
+        
+        var result = await command.ExecuteScalarAsync();
+        
+        long? count = (long?)result;
+
+        if (count.HasValue)
+        {
+            PermissionLevel = count.Value switch
+            {
+                1 => PermissionLevel.User,
+                2 => PermissionLevel.Admin,
+                3 => PermissionLevel.SuperAdmin,
+                _ => PermissionLevel.User
+            };
+        }
+        else
+        {
+            return null;
+        }
+
+        return PermissionLevel;
+    }
+
     public async Task<Int32> GetUserIdAsync()
     {
         // Trouve l'userID en fonction du DiscordID renseigné et retourne le.
