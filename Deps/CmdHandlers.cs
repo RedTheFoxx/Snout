@@ -218,7 +218,40 @@ class SnoutHandler
 
             await command.RespondAsync("Quel utilisateur faut-il supprimer ?", components: menuComponent.Build());
         }
-        
+
+        if (command.Data.Options.First().Name == "edit")
+        {
+            await using var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;");
+            await connection.OpenAsync();
+            var sqlCommand = new SQLiteCommand("SELECT UserId, DiscordId, PermissionLevel FROM Users", connection);
+
+            await using DbDataReader reader = await sqlCommand.ExecuteReaderAsync();
+            if (!reader.HasRows)
+            {
+
+                CustomNotification notifDbVide = new(NotificationType.Error, "Base de données", "La base de données est vide : opération impossible");
+
+                await command.RespondAsync(embed: notifDbVide.BuildEmbed());
+
+                return;
+            }
+
+            SelectMenuBuilder? menuBuilder = new SelectMenuBuilder()
+                .WithPlaceholder("Sélectionnez un utilisateur")
+                .WithCustomId("edit_user_menu");
+
+            while (await reader.ReadAsync())
+            {
+                var userId = reader.GetInt32(0);
+                var discordId = reader.GetString(1);
+                var permissionLevel = reader.GetInt32(2);
+                menuBuilder.AddOption($"ID {userId}", $"{discordId} (Niveau de permission = ${permissionLevel})", $"{discordId}");
+            }
+
+            ComponentBuilder? menuComponent = new ComponentBuilder().WithSelectMenu(menuBuilder);
+
+            await command.RespondAsync("Quel utilisateur faut-il éditer ?", components: menuComponent.Build());
+        }
     }
 
     public async Task HandleBanqueCommand(SocketSlashCommand command)
