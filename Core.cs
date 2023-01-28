@@ -30,6 +30,7 @@ public class Program
         public static readonly ConcurrentQueue<Paycheck> PaycheckQueue = new();
         public static Timer? DailyUpdaterTimerUniqueReference = null;
         public static Timer? DailyPaycheckTimerUniqueReference = null;
+        public static SnoutUser? PendingEditUser;
     }
     
 
@@ -179,6 +180,10 @@ public class Program
                 .AddOption(new SlashCommandOptionBuilder()
                     .WithName("delete")
                     .WithDescription("Supprimer un utilisateur de la base de données")
+                    .WithType(ApplicationCommandOptionType.SubCommand))
+                .AddOption(new SlashCommandOptionBuilder()
+                    .WithName("edit")
+                    .WithDescription("(Admin) Modifier les permissions d'un utilisateur")
                     .WithType(ApplicationCommandOptionType.SubCommand)),
             
             new SlashCommandBuilder()
@@ -474,6 +479,52 @@ public class Program
                 await modal.RespondAsync(embed: notif.BuildEmbed());
             }
 
+        }
+
+        // MODAL : EDITER UN UTILISATEUR
+        //////////////////////////////////////////////////////////////////////////////
+        
+        if (modal.Data.CustomId == "edit_user_modal")
+        {
+            if (GlobalElements.ModulePaycheckEnabled)
+            {
+                SnoutUser paycheckUser = new(discordId: modal.User.Username + "#" + modal.User.Discriminator);
+                Paycheck paycheck = new(paycheckUser, "action_MODAL_SUBMITTED", date: DateTime.UtcNow.ToString("dd-MM-yyyy HH:mm:ss"));
+                GlobalElements.PaycheckQueue.Enqueue(paycheck);
+            }
+            
+            List<SocketMessageComponentData> components = modal.Data.Components.ToList();
+            var givenPermissionLevel = components.First(x => x.CustomId == "new_permission_textbox").Value;
+
+            switch (givenPermissionLevel)
+            {
+                case "1" : 
+                    await GlobalElements.PendingEditUser.SetPermissionLevel(PermissionLevel.User);
+                    GlobalElements.PendingEditUser = null;
+                    CustomNotification notifOk1 = new(NotificationType.Success, "Permissions", "Le niveau de permission de l'utilisateur a été modifié avec succès");
+                    await modal.RespondAsync(embed: notifOk1.BuildEmbed());
+                    break;
+                    
+                case "2" :
+                    await GlobalElements.PendingEditUser.SetPermissionLevel(PermissionLevel.Admin);
+                    GlobalElements.PendingEditUser = null;
+                    CustomNotification notifOk2 = new(NotificationType.Success, "Permissions", "Le niveau de permission de l'utilisateur a été modifié avec succès");
+                    await modal.RespondAsync(embed: notifOk2.BuildEmbed());
+                    break;
+                
+                case "3" : 
+                    await GlobalElements.PendingEditUser.SetPermissionLevel(PermissionLevel.SuperAdmin);
+                    GlobalElements.PendingEditUser = null;
+                    CustomNotification notifOk3 = new(NotificationType.Success, "Permissions", "Le niveau de permission de l'utilisateur a été modifié avec succès");
+                    await modal.RespondAsync(embed: notifOk3.BuildEmbed());
+                    break;
+                
+                default:
+                    GlobalElements.PendingEditUser = null;
+                    CustomNotification notif = new(NotificationType.Error, "Permissions", "Mauvais format : l'entrée ne correspond pas à un niveau de permission valide");
+                    await modal.RespondAsync(embed: notif.BuildEmbed());
+                    break;
+            }
         }
 
         // MODAL : AJOUT D'UN COMPTE BANCAIRE
@@ -944,21 +995,38 @@ public class Program
 
         var selectedUserData = string.Join(", ", menu.Data.Values);
 
-        SnoutUser userToDelete = new(selectedUserData);
-
-        Console.WriteLine("DATA : Utilisateur supprimé / Discord ID = " + selectedUserData);
-
-        if (await userToDelete.DeleteUserAsync())
+        if (menu.Data.CustomId == "del_user_menu")
         {
-            CustomNotification notifOk = new(NotificationType.Success, "Base de données", "L'utilisateur à été supprimé");
-            await menu.RespondAsync(embed: notifOk.BuildEmbed());
-        }
-        else
-        {
-            CustomNotification notif = new(NotificationType.Error, "Base de données", "Erreur lors de la suppression de l'utilisateur");
-            await menu.RespondAsync(embed: notif.BuildEmbed());
+            SnoutUser userToDelete = new(selectedUserData);
+
+            Console.WriteLine("DATA : Utilisateur supprimé / Discord ID = " + selectedUserData);
+
+            if (await userToDelete.DeleteUserAsync())
+            {
+                CustomNotification notifOk = new(NotificationType.Success, "Base de données", "L'utilisateur à été supprimé");
+                await menu.RespondAsync(embed: notifOk.BuildEmbed());
+            }
+            else
+            {
+                CustomNotification notif = new(NotificationType.Error, "Base de données", "Erreur lors de la suppression de l'utilisateur");
+                await menu.RespondAsync(embed: notif.BuildEmbed());
+            }
         }
 
+        if (menu.Data.CustomId == "edit_user_menu")
+        {
+            SnoutUser userToEdit = new(selectedUserData);
+            
+            var modal = new ModalBuilder();
+
+            modal.WithTitle("Edition d'un utilisateur")
+                .WithCustomId("edit_user_modal")
+                .AddTextInput("Nouvelles permissions", "new_permission_textbox", placeholder: "1, 2 ou 3 (utilisateur, admin, superadmin)",
+                    required: true, maxLength: 1);
+
+            GlobalElements.PendingEditUser = userToEdit;
+            await menu.RespondWithModalAsync(modal.Build());
+        }
     }
 
     /////////// VARIOUS CORE FUNC /////////////
