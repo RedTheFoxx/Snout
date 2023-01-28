@@ -11,12 +11,12 @@ namespace Snout.Deps;
 class SnoutHandler
 
 {
-    // TODO : Refactoriser les cmd handlers pour la v1.2.3
     
     public async Task HandleModuleCommand(SocketSlashCommand command, DiscordSocketClient client, List<IMessageChannel> liveChannels, System.Timers.Timer timer)
     {
-        // TODO : Refactor Module Command
-
+        SnoutUser cmdUser = new(command.User.Username + "#" + command.User.Discriminator);
+        await cmdUser.GetUserIdAsync();
+        
         if (command.Data.Options.First().Name == "fetcher")
         {
             if (client.GetChannel(command.Channel.Id) is IMessageChannel chnl)
@@ -98,83 +98,98 @@ class SnoutHandler
             
             }
         }
-
+            
     }
 
     public async Task HandleUrlCommand(SocketSlashCommand command)
     {
-        if (command.Data.Options.First().Name == "ajouter")
-        {
-            var modal = new ModalBuilder();
+        SnoutUser cmdUser = new(command.User.Username + "#" + command.User.Discriminator);
+        await cmdUser.GetUserIdAsync();
 
-            modal.WithTitle("Configuration de l'auto-fetcher")
-                .WithCustomId("new_url_modal")
-                .AddTextInput("Ajouter l'URL", "new_url_textbox", placeholder: "https://www.battlemetrics.com/servers/hll/[SERVER_ID]", required: true);
+            if (command.Data.Options.First().Name == "ajouter")
+            {
+                var modal = new ModalBuilder();
 
-            await command.RespondWithModalAsync(modal.Build());
-        }
+                modal.WithTitle("Configuration de l'auto-fetcher")
+                    .WithCustomId("new_url_modal")
+                    .AddTextInput("Ajouter l'URL", "new_url_textbox", placeholder: "https://www.battlemetrics.com/servers/hll/[SERVER_ID]", required: true);
+
+                await command.RespondWithModalAsync(modal.Build());
+            }
+            
     }
     
     public async Task HandleTCommand(SocketSlashCommand command, string deepl)
     {
-        if (command.Data.Options.First().Name == "traduire")
-        {
-            var modal = new ModalBuilder();
+        SnoutUser cmdUser = new(command.User.Username + "#" + command.User.Discriminator);
+        await cmdUser.GetUserIdAsync();
         
-            modal.WithTitle("Traduire un texte")
-                .WithCustomId("translate_modal")
-                .AddTextInput("Texte à traduire", "translate_textbox", TextInputStyle.Paragraph, placeholder: "Texte à traduire", required: true, maxLength: 2999)
-                .AddTextInput("Langue cible", "translate_language_to_textbox", placeholder: "BG,CS,DA,DE,EL,EN-GB,EN-US,ES,ET,FI,FR,HU,ID,IT,JA,LT,LV,NL,PL,PT-BR,PT-PT,RO,RU,SK,SL,SV,TR,UK,ZH", required: true);
-
-            await command.RespondWithModalAsync(modal.Build());
-        }
+            if (command.Data.Options.First().Name == "traduire")
+            {
+                var modal = new ModalBuilder();
         
-        if (command.Data.Options.First().Name == "aide")
-        {
-            if (deepl is "null" or "")
-            {
-                
-                var embed = new EmbedBuilder();
-                embed.WithTitle("Traducteur de texte (/t)")
-                    .WithAuthor("Snout", "https://cdn-icons-png.flaticon.com/512/5828/5828450.png")
-                    .WithDescription("Ce service gratuit est fourni par DeepL. La limitation gratuite est de 3000 caractères par requête et de 500.000 caractères par mois.")
-                    .AddField("➡️ Comment l'utiliser ?", "La langue source est automatiquement détectée. La langue cible est à spécifier en deux lettres (ex: FR pour le français).")
-                    .AddField("🗃 Langues cibles disponibles", "BG,CS,DA,DE,EL,EN-GB,EN-US,ES,ET,FI,FR,HU,ID,IT,JA,LT,LV,NL,PL,PT-BR,PT-PT,RO,RU,SK,SL,SV,TR,UK,ZH")
-                    .AddField("📝 Caractères utilisés ce mois-ci", "*Affichage impossible - Aucun token DeepL n'a été renseigné*")
-                    .WithColor(Color.Blue)
-                    .WithFooter(GlobalElements.GlobalSnoutVersion + " & DeepL API v2.0")
-                    .WithTimestamp(DateTimeOffset.UtcNow);
+                modal.WithTitle("Traduire un texte")
+                    .WithCustomId("translate_modal")
+                    .AddTextInput("Texte à traduire", "translate_textbox", TextInputStyle.Paragraph, placeholder: "Texte à traduire", required: true, maxLength: 2999)
+                    .AddTextInput("Langue cible", "translate_language_to_textbox", placeholder: "BG,CS,DA,DE,EL,EN-GB,EN-US,ES,ET,FI,FR,HU,ID,IT,JA,LT,LV,NL,PL,PT-BR,PT-PT,RO,RU,SK,SL,SV,TR,UK,ZH", required: true);
 
-                await command.RespondAsync(ephemeral: true, embed: embed.Build());
+                await command.RespondWithModalAsync(modal.Build());
             }
-            else
+
+            if (command.Data.Options.First().Name == "aide")
             {
-                SnoutTranslator translator = new(deepl, "api-free.deepl.com", GlobalElements.GlobalSnoutVersion,
-                    "application/x-www-form-urlencoded");
-                int remainingCharacters = await translator.GetRemainingCharactersAsync();
+                if (deepl is "null" or "")
+                {
 
-                var embed = new EmbedBuilder();
-                embed.WithTitle("Traducteur de texte (/t)")
-                    .WithAuthor("Snout", "https://cdn-icons-png.flaticon.com/512/5828/5828450.png")
-                    .WithDescription(
-                        "Ce service gratuit est fourni par DeepL. La limitation gratuite est de 3000 caractères par requête et de 500.000 caractères par mois.")
-                    .AddField("➡️ Comment l'utiliser ?",
-                        "La langue source est automatiquement détectée. La langue cible est à spécifier en deux lettres (ex: FR pour le français).")
-                    .AddField("🗃 Langues cibles disponibles",
-                        "BG,CS,DA,DE,EL,EN-GB,EN-US,ES,ET,FI,FR,HU,ID,IT,JA,LT,LV,NL,PL,PT-BR,PT-PT,RO,RU,SK,SL,SV,TR,UK,ZH")
-                    .AddField("📝 Caractères utilisés ce mois-ci", remainingCharacters + " / 500.000")
-                    .WithColor(Color.Blue)
-                    .WithFooter(GlobalElements.GlobalSnoutVersion + " & DeepL API v2.0")
-                    .WithTimestamp(DateTimeOffset.UtcNow);
+                    var embed = new EmbedBuilder();
+                    embed.WithTitle("Traducteur de texte (/t)")
+                        .WithAuthor("Snout", "https://cdn-icons-png.flaticon.com/512/5828/5828450.png")
+                        .WithDescription(
+                            "Ce service gratuit est fourni par DeepL. La limitation gratuite est de 3000 caractères par requête et de 500.000 caractères par mois.")
+                        .AddField("➡️ Comment l'utiliser ?",
+                            "La langue source est automatiquement détectée. La langue cible est à spécifier en deux lettres (ex: FR pour le français).")
+                        .AddField("🗃 Langues cibles disponibles",
+                            "BG,CS,DA,DE,EL,EN-GB,EN-US,ES,ET,FI,FR,HU,ID,IT,JA,LT,LV,NL,PL,PT-BR,PT-PT,RO,RU,SK,SL,SV,TR,UK,ZH")
+                        .AddField("📝 Caractères utilisés ce mois-ci",
+                            "*Affichage impossible - Aucun token DeepL n'a été renseigné*")
+                        .WithColor(Color.Blue)
+                        .WithFooter(GlobalElements.GlobalSnoutVersion + " & DeepL API v2.0")
+                        .WithTimestamp(DateTimeOffset.UtcNow);
 
-                await command.RespondAsync(ephemeral: true, embed: embed.Build());
+                    await command.RespondAsync(ephemeral: true, embed: embed.Build());
+                }
+                else
+                {
+                    SnoutTranslator translator = new(deepl, "api-free.deepl.com", GlobalElements.GlobalSnoutVersion,
+                        "application/x-www-form-urlencoded");
+                    int remainingCharacters = await translator.GetRemainingCharactersAsync();
 
+                    var embed = new EmbedBuilder();
+                    embed.WithTitle("Traducteur de texte (/t)")
+                        .WithAuthor("Snout", "https://cdn-icons-png.flaticon.com/512/5828/5828450.png")
+                        .WithDescription(
+                            "Ce service gratuit est fourni par DeepL. La limitation gratuite est de 3000 caractères par requête et de 500.000 caractères par mois.")
+                        .AddField("➡️ Comment l'utiliser ?",
+                            "La langue source est automatiquement détectée. La langue cible est à spécifier en deux lettres (ex: FR pour le français).")
+                        .AddField("🗃 Langues cibles disponibles",
+                            "BG,CS,DA,DE,EL,EN-GB,EN-US,ES,ET,FI,FR,HU,ID,IT,JA,LT,LV,NL,PL,PT-BR,PT-PT,RO,RU,SK,SL,SV,TR,UK,ZH")
+                        .AddField("📝 Caractères utilisés ce mois-ci", remainingCharacters + " / 500.000")
+                        .WithColor(Color.Blue)
+                        .WithFooter(GlobalElements.GlobalSnoutVersion + " & DeepL API v2.0")
+                        .WithTimestamp(DateTimeOffset.UtcNow);
+
+                    await command.RespondAsync(ephemeral: true, embed: embed.Build());
+
+                }
             }
-        }
+
     }
     
     public async Task HandleUtilisateursCommand(SocketSlashCommand command)
     {
+        SnoutUser cmdUser = new(command.User.Username + "#" + command.User.Discriminator);
+        await cmdUser.GetUserIdAsync();
+
         if (command.Data.Options.First().Name == "enregistrer")
         {
             var modal = new ModalBuilder();
@@ -185,7 +200,7 @@ class SnoutHandler
 
             await command.RespondWithModalAsync(modal.Build());
         }
-        
+
         if (command.Data.Options.First().Name == "delete")
         {
             await using var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;");
@@ -256,6 +271,9 @@ class SnoutHandler
 
     public async Task HandleBanqueCommand(SocketSlashCommand command)
     {
+        SnoutUser cmdUser = new(command.User.Username + "#" + command.User.Discriminator);
+        await cmdUser.GetUserIdAsync();
+        
         if (command.Data.Options.First().Name == "nouveau")
         {
             var modal = new ModalBuilder();
@@ -372,6 +390,9 @@ class SnoutHandler
 
     public async Task HandlePingCommand(SocketSlashCommand command)
     {
+        SnoutUser cmdUser = new(command.User.Username + "#" + command.User.Discriminator);
+        await cmdUser.GetUserIdAsync();
+        
         string url = "gateway.discord.gg";
         Ping pingSender = new();
         PingReply reply = pingSender.Send(url);
