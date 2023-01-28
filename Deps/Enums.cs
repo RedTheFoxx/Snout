@@ -25,3 +25,11 @@ public enum AccountType
     Locked,
     Unknown
 }
+
+// Les users simples n'ont accès qu'aux commandes en FR, les admins ont accès aux commandes en FR et en EN, et les superadmins ont accès à toutes les commandes.
+public enum PermissionLevel
+{
+    User,
+    Admin,
+    SuperAdmin
+}
