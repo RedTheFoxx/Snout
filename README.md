@@ -17,7 +17,7 @@ _> Les commandes en anglais sont réservées aux admins et superadmins. La comma
 - **/module paycheck** : active/désactive le système de rémunération basé sur des évènements Discord *(gère aussi la mise à jour quotidienne des comptes)*
 - **/module fetcher** : active/désactive l'auto-fetcher dans le canal ciblé par la commande. Il est recommandé de dédier un canal pour cette action, sur votre serveur.
 
-🛠️ **Gestion des utilisateurs**
+🧑 **Gestion des utilisateurs**
 - **/utilisateurs ajouter** : inscrit un utilisateur dans la base de données de Snout, utilisée dans les modules
 - **/utilisateurs delete** : retire un utilisateur de la base de données de Snout
 - **/utilisateurs edit** : modifie le niveau de droits d'un utilisateur (user, admin, superadmin)
