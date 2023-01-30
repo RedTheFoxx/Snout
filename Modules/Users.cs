@@ -5,7 +5,7 @@ namespace Snout.Modules;
 
 public class SnoutUser
 {
-    public int? UserId { get; private set; }
+    public long? UserId { get; private set; }
     public string? DiscordId { get; private set; }
 
     private PermissionLevel PermissionLevel { get; set; }
@@ -160,13 +160,11 @@ public class SnoutUser
         var command = new SQLiteCommand("SELECT PermissionLevel FROM Users WHERE UserId = @userId", connection);
         command.Parameters.AddWithValue("@userId", UserId);
         
-        var result = await command.ExecuteScalarAsync();
-        
-        long? count = (long?)result;
+        var result = (int?)await command.ExecuteScalarAsync();
 
-        if (count.HasValue)
+        if (result.HasValue)
         {
-            PermissionLevel = count.Value switch
+            PermissionLevel = result.Value switch
             {
                 1 => PermissionLevel.User,
                 2 => PermissionLevel.Admin,
@@ -182,10 +180,8 @@ public class SnoutUser
         return PermissionLevel;
     }
 
-    public async Task<Int32> GetUserIdAsync()
+    public async Task<long?> GetUserIdAsync() // Retourne l'ID de l'utilisateur en fonction de son DiscordID
     {
-        // Trouve l'userID en fonction du DiscordID renseigné et retourne le.
-
         await using var connection = new SQLiteConnection("Data Source=dynamic_data.db;Version=3;");
         await connection.OpenAsync();
 
@@ -193,20 +189,10 @@ public class SnoutUser
         command.Parameters.AddWithValue("@discordId", DiscordId);
 
         var result = await command.ExecuteScalarAsync();
-
-        long? count = (long?)result;
-
-        if (count.HasValue)
-        {
-            // count est un long non-null
-            return (int)count.Value;
-        }
-        else
-        {
-            // count est null
-            return 0;
-        }
+        UserId = (long?)result;
+        return (long?)result;
     }
+
 
     public async Task<bool> GetDiscordIdAsync()
     {
