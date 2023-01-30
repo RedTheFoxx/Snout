@@ -25,7 +25,7 @@ public class Program
 
     public static class GlobalElements
     {
-        public const string GlobalSnoutVersion = "Snout v1.2.3";
+        public const string GlobalSnoutVersion = "Snout v1.2.4";
         public static bool ModulePaycheckEnabled;
         public static readonly ConcurrentQueue<Paycheck> PaycheckQueue = new();
         public static Timer? DailyUpdaterTimerUniqueReference = null;
