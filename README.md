@@ -11,7 +11,7 @@ Un compte courant *("checkings")* est __unique__ et reçoit les paiements issus 
 Un compte d'épargne *("savings")* ne sert qu'au dépôt afin de sécuriser ses gains. Un utilisateur peut en avoir une infinité. Il est recommandé d'associer des taux d'intérêts plus forts sur ces derniers, tout en limitant les frais de service.
 
 ## ℹ️ Commandes
-_(Commands in english are considered higher risk than the others and must be monitored by admins)_
+_> Les commandes en anglais sont réservées aux admins et superadmins. La commande /utilisateurs edit est réservée aux superadmins_
 
 💶 **Administration des plugins**
 - **/module paycheck** : active/désactive le système de rémunération basé sur des évènements Discord *(gère aussi la mise à jour quotidienne des comptes)*
@@ -20,6 +20,7 @@ _(Commands in english are considered higher risk than the others and must be mon
 🛠️ **Gestion des utilisateurs**
 - **/utilisateurs ajouter** : inscrit un utilisateur dans la base de données de Snout, utilisée dans les modules
 - **/utilisateurs delete** : retire un utilisateur de la base de données de Snout
+- **/utilisateurs edit** : modifie le niveau de droits d'un utilisateur (user, admin, superadmin)
 
 🏦 **Gestion bancaire**
 - **/banque nouveau** : créer un nouveau compte bancaire courant ou d'épargne et l'assigne à un utilisateur (l'utilisateur doit être enregistré dans Snout)
@@ -42,6 +43,8 @@ _(Commands in english are considered higher risk than the others and must be mon
 
 ## 🔑 Authentification & Droits
 
+Tous les utilisateurs sont des "users" par défaut et n'ont accès qu'aux commandes en français.
+
 | Parameter | Type     | Description                |
 | :-------- | :------- | :------------------------- |
 | `Tokens/[token.txt]` | `file w/ string` | **Requis**. Token de bot Discord  |
@@ -49,14 +52,14 @@ _(Commands in english are considered higher risk than the others and must be mon
 
 ## 🗂️ Déploiement
 
-Snout requiert l'utilisation d'une base de données type SQLITE (*version 3*) dont le fichier de génération doit être placé dans le
+1. Snout requiert l'utilisation d'une base de données type SQLITE (*version 3*) dont le fichier de génération doit être placé dans le
 dossier. Elle sera ensuite générée automatiquement :
 ```bash
   ./SQL/[GenerateDB.sql]
 ```
 Sauvegardez vos données avant de mettre à jour le bot car la base de données peut évoluer en structure.
 
-Le runtime .NET 7.0 doit être installé sur la machine hôte.
+2. Le runtime .NET 7.0 doit être installé sur la machine hôte.
 
 Une fois compilé, le bot est exécuté comme un programme Win64 :
 ```bash
@@ -66,6 +69,7 @@ Une fois compilé, le bot est exécuté comme un programme Win64 :
   
   dotnet snout.dll 
 ```
+3. Aucun SuperAdmin n'est déterminé par défaut. Vous devez vous assigner ce niveau de droit (3) directement en base de donnée, _table Users_.
 
 ## 🚧 Roadmap
 
