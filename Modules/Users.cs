@@ -160,7 +160,7 @@ public class SnoutUser
         var command = new SQLiteCommand("SELECT PermissionLevel FROM Users WHERE UserId = @userId", connection);
         command.Parameters.AddWithValue("@userId", UserId);
         
-        var result = (int?)await command.ExecuteScalarAsync();
+        var result = (long?)await command.ExecuteScalarAsync();
 
         if (result.HasValue)
         {
