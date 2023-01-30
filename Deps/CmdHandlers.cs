@@ -318,7 +318,7 @@ class SnoutHandler
                     var userId = reader.GetInt32(0);
                     var discordId = reader.GetString(1);
                     var permissionLevel = reader.GetInt32(2);
-                    menuBuilder.AddOption($"ID {userId}", $"{discordId} (Niveau de permission = ${permissionLevel})", $"{discordId}");
+                    menuBuilder.AddOption($"ID {userId}", $"{discordId}", $"{discordId} (Niv. permission actuel = {permissionLevel})");
                 }
 
                 ComponentBuilder? menuComponent = new ComponentBuilder().WithSelectMenu(menuBuilder);
