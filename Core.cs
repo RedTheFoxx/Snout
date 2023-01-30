@@ -131,14 +131,14 @@ public class Program
 
         // SUPPR. DE TOUTES LES GLOBAL COMMANDS :
 
-        // await _client.Rest.DeleteAllGlobalCommandsAsync();
-        // Console.WriteLine("CORE : Global commands purgées");
+        await _client.Rest.DeleteAllGlobalCommandsAsync();
+        Console.WriteLine("CORE : Global commands purgées");
 
         // REINSCRIPTION DE TOUTES LES GLOBAL COMMANDS :
 
         var commands = new List<SlashCommandBuilder> // Constructeur de commandes
         {
-            /*new SlashCommandBuilder()
+            new SlashCommandBuilder()
                 .WithName("module")
                 .WithDescription("Modules de Snout Bot")
                     .AddOption(new SlashCommandOptionBuilder()
@@ -220,7 +220,7 @@ public class Program
                 .AddOption(new SlashCommandOptionBuilder()
                     .WithName("virement")
                     .WithDescription("Transférer de l'argent d'un compte bancaire à un autre (interne ou externe)")
-                    .WithType(ApplicationCommandOptionType.SubCommand))*/
+                    .WithType(ApplicationCommandOptionType.SubCommand))
         };
 
         foreach (SlashCommandBuilder? command in commands)
