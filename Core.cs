@@ -1015,6 +1015,7 @@ public class Program
 
         if (menu.Data.CustomId == "edit_user_menu")
         {
+            
             SnoutUser userToEdit = new(selectedUserData);
             
             var modal = new ModalBuilder();
@@ -1025,6 +1026,8 @@ public class Program
                     required: true, maxLength: 1);
 
             GlobalElements.PendingEditUser = userToEdit;
+            await GlobalElements.PendingEditUser.GetUserIdAsync();
+            
             await menu.RespondWithModalAsync(modal.Build());
         }
     }
