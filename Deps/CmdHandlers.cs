@@ -14,9 +14,9 @@ class SnoutHandler
     
     public async Task HandleModuleCommand(SocketSlashCommand command, DiscordSocketClient client, List<IMessageChannel> liveChannels, System.Timers.Timer timer)
     {
-        SnoutUser cmdUser = new(command.User.Username + "#" + command.User.Discriminator);
+        SnoutUser cmdUser = new(discordId: command.User.Username + "#" + command.User.Discriminator);
         await cmdUser.GetUserIdAsync();
-
+        
         if (command.Data.Options.First().Name == "fetcher")
         {
             if (cmdUser.GetPermissionLevel().Result == PermissionLevel.SuperAdmin)
@@ -30,7 +30,6 @@ class SnoutHandler
                         await chnl.SendMessageAsync(embed: notif.BuildEmbed());
                         Console.WriteLine("AUTO-FETCHER : Canal ajouté / ID = " + chnl.Id);
                     }
-            
                 }
 
                 if (timer.Enabled == false)
