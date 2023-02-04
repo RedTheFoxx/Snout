@@ -540,4 +540,28 @@ class SnoutHandler
             await command.RespondAsync(embed: notif.BuildEmbed());
         }
     }
+
+    public async Task HandleYoutubeCommand(SocketSlashCommand command)
+    {
+        SnoutUser cmdUser = new(command.User.Username + "#" + command.User.Discriminator);
+        await cmdUser.GetUserIdAsync();
+
+        if (command.Data.Options.First().Name == "jouer")
+        {
+            if (cmdUser.GetPermissionLevel().Result is PermissionLevel.User or PermissionLevel.Admin
+                or PermissionLevel.SuperAdmin)
+            {
+                // Instancier un player si le bot n'est pas déjà en train de diffuser et lancer la lecture, joindre le channel vocal
+            }
+        }
+
+        if (command.Data.Options.First().Name == "stop")
+        {
+            if (cmdUser.GetPermissionLevel().Result is PermissionLevel.User or PermissionLevel.Admin
+                or PermissionLevel.SuperAdmin)
+            {
+                // Arrêter un player si le bot est en train de diffuser, quitter le canal, disposer de l'instance
+            }
+        }
+    }
 }
