@@ -31,6 +31,7 @@ public class Program
         public static Timer? DailyUpdaterTimerUniqueReference = null;
         public static Timer? DailyPaycheckTimerUniqueReference = null;
         public static SnoutUser? PendingEditUser;
+        public static bool IsPlayingAudio = false;
     }
     
 
@@ -131,8 +132,8 @@ public class Program
 
         // SUPPR. DE TOUTES LES GLOBAL COMMANDS :
 
-        await _client.Rest.DeleteAllGlobalCommandsAsync();
-        Console.WriteLine("CORE : Global commands purgées");
+        // await _client.Rest.DeleteAllGlobalCommandsAsync();
+        // Console.WriteLine("CORE : Global commands purgées");
 
         // REINSCRIPTION DE TOUTES LES GLOBAL COMMANDS :
 
@@ -220,6 +221,18 @@ public class Program
                 .AddOption(new SlashCommandOptionBuilder()
                     .WithName("virement")
                     .WithDescription("Transférer de l'argent d'un compte bancaire à un autre (interne ou externe)")
+                    .WithType(ApplicationCommandOptionType.SubCommand)),
+            
+            new SlashCommandBuilder()
+                .WithName("youtube")
+                .WithDescription("Gérer le lecteur YouTube")
+                .AddOption(new SlashCommandOptionBuilder()
+                    .WithName("jouer")
+                    .WithDescription("Ecouter l'audio d'une vidéo YouTube dans le canal spécifié")
+                    .WithType(ApplicationCommandOptionType.SubCommand))
+                .AddOption(new SlashCommandOptionBuilder()
+                    .WithName("stop")
+                    .WithDescription("Stopper la lecture du contenu audio en cours")
                     .WithType(ApplicationCommandOptionType.SubCommand))
         };
 
@@ -370,8 +383,13 @@ public class Program
                 SnoutHandler tHandlerReference = new();
                 await tHandlerReference.HandleTCommand(command, _deepl);
                 break;
+            
+            case "youtube":
+                SnoutHandler youtubeHandlerReference = new();
+                await youtubeHandlerReference.HandleYoutubeCommand(command);
+                break;
         }
-    } // Sélecteur de commandes envoyées au bot
+    }
     
     private async Task ModalHandler(SocketModal modal)
     {
