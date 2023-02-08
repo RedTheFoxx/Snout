@@ -1,6 +1,5 @@
 ﻿using System.Data.Common;
 using System.Data.SQLite;
-using System.Diagnostics;
 using System.Net.NetworkInformation;
 using Discord;
 using Discord.WebSocket;
@@ -16,55 +15,7 @@ class SnoutHandler
     {
         SnoutUser cmdUser = new(discordId: command.User.Username + "#" + command.User.Discriminator);
         await cmdUser.GetUserIdAsync();
-        
-        if (command.Data.Options.First().Name == "fetcher")
-        {
-            if (cmdUser.GetPermissionLevel().Result == PermissionLevel.SuperAdmin)
-            {
-                if (client.GetChannel(command.Channel.Id) is IMessageChannel chnl)
-                {
-                    if (liveChannels.Contains(chnl) == false)
-                    {
-                        liveChannels.Add(chnl);
-                        CustomNotification notif = new(NotificationType.Success, "AUTO-FETCHER", "Nouveau canal de diffusion ajouté");
-                        await chnl.SendMessageAsync(embed: notif.BuildEmbed());
-                        Console.WriteLine("AUTO-FETCHER : Canal ajouté / ID = " + chnl.Id);
-                    }
-                }
 
-                if (timer.Enabled == false)
-                {
-                    timer.Start();
-                    CustomNotification notif = new(NotificationType.Success, "AUTO-FETCHER", "Auto-fetcher activé");
-                    await command.RespondAsync(embed: notif.BuildEmbed());
-                    Console.WriteLine("AUTO-FETCHER : ON / Timer = " + timer.Interval + " ms");
-                }
-                else
-                {
-                    var chnl2 = client.GetChannel(command.Channel.Id) as IMessageChannel;
-
-                    timer.Stop();
-
-                    CustomNotification notifFetcher = new(NotificationType.Success, "AUTO-FETCHER", "Auto-fetcher désactivé");
-                    Debug.Assert(chnl2 != null, nameof(chnl2) + " != null");
-                    await chnl2.SendMessageAsync(embed: notifFetcher.BuildEmbed());
-                    Console.WriteLine("AUTO-FETCHER : OFF");
-
-                    liveChannels.Clear();
-
-                    CustomNotification notifCanaux = new(NotificationType.Info, "AUTO-FETCHER", "Liste des canaux de diffusion purgée");
-                    await command.RespondAsync(embed: notifCanaux.BuildEmbed());
-                    Console.WriteLine("AUTO-FETCHER : Canaux purgés !");
-            
-                }
-            }
-            else
-            {
-                CustomNotification notif = new(NotificationType.Error, "PERMISSION", "Vous n'avez pas l'autorisation d'utiliser cette commande");
-                await command.RespondAsync(embed: notif.BuildEmbed());
-            }
-        }
-        
         if (command.Data.Options.First().Name == "paycheck")
         {
             if (cmdUser.GetPermissionLevel().Result == PermissionLevel.SuperAdmin)
@@ -551,7 +502,8 @@ class SnoutHandler
             if (cmdUser.GetPermissionLevel().Result is PermissionLevel.User or PermissionLevel.Admin
                 or PermissionLevel.SuperAdmin)
             {
-                // Instancier un player si le bot n'est pas déjà en train de diffuser et lancer la lecture, joindre le channel vocal
+                CustomNotification notif = new(NotificationType.Info, "YOUTUBE", "Debug - jouer");
+                await command.RespondAsync(embed: notif.BuildEmbed());
             }
         }
 
@@ -560,8 +512,8 @@ class SnoutHandler
             if (cmdUser.GetPermissionLevel().Result is PermissionLevel.User or PermissionLevel.Admin
                 or PermissionLevel.SuperAdmin)
             {
-                // Arrêter un player si le bot est en train de diffuser, quitter le canal, disposer de l'instance
-            }
+                CustomNotification notif = new(NotificationType.Info, "YOUTUBE", "Debug - stop");
+                await command.RespondAsync(embed: notif.BuildEmbed());            }
         }
     }
 }

@@ -16,7 +16,6 @@ namespace Snout;
 public class Program
 {
     private DiscordSocketClient _client;
-    private HllSniffer? _liveSniffer;
     private List<IMessageChannel> _liveChannels;
     private readonly List<string> _listUrl = new();
     private string _deepl;
@@ -25,7 +24,7 @@ public class Program
 
     public static class GlobalElements
     {
-        public const string GlobalSnoutVersion = "Snout v1.2.4";
+        public const string GlobalSnoutVersion = "Snout v1.3";
         public static bool ModulePaycheckEnabled;
         public static readonly ConcurrentQueue<Paycheck> PaycheckQueue = new();
         public static Timer? DailyUpdaterTimerUniqueReference = null;
@@ -53,7 +52,6 @@ public class Program
         _timerFetcher.Interval = 300000; // Fetcher speed (updated every 5 minutes = 300000ms)
         _timerFetcher.AutoReset = true;
 
-        _liveSniffer = new();
         _liveChannels = new();
 
         GlobalElements.ModulePaycheckEnabled = false;
@@ -77,11 +75,7 @@ public class Program
         _client.ReactionRemoved += Events.ReactionRemoved;
         _client.UserIsTyping += Events.UserIsTyping; 
         _client.UserVoiceStateUpdated += Events.UserVoiceStateUpdated; 
-
-        // Fetcher timer event
         
-        _timerFetcher.Elapsed += Timer_Elapsed;
-
         // Check if file "token.txt" exist at the root of the project
 
         if (!File.Exists("Tokens\\token.txt"))
@@ -132,8 +126,8 @@ public class Program
 
         // SUPPR. DE TOUTES LES GLOBAL COMMANDS :
 
-        // await _client.Rest.DeleteAllGlobalCommandsAsync();
-        // Console.WriteLine("CORE : Global commands purgées");
+        await _client.Rest.DeleteAllGlobalCommandsAsync();
+        Console.WriteLine("CORE : Global commands purgées");
 
         // REINSCRIPTION DE TOUTES LES GLOBAL COMMANDS :
 
@@ -142,11 +136,7 @@ public class Program
             new SlashCommandBuilder()
                 .WithName("module")
                 .WithDescription("Modules de Snout Bot")
-                    .AddOption(new SlashCommandOptionBuilder()
-                        .WithName("fetcher")
-                        .WithDescription("Activer/désactiver le module fetcher")
-                        .WithType(ApplicationCommandOptionType.SubCommand))
-                    .AddOption(new SlashCommandOptionBuilder()
+                .AddOption(new SlashCommandOptionBuilder()
                         .WithName("paycheck")
                         .WithDescription("Activer/désactiver le module paycheck")
                         .WithType(ApplicationCommandOptionType.SubCommand)),
@@ -306,40 +296,6 @@ public class Program
             Console.ReadLine();
         }
         
-    }
-
-    private async void Timer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
-    {
-
-        Embed embed = _liveSniffer.Pull(_listUrl);
-
-        foreach (IMessageChannel channel in _liveChannels)
-        {
-
-            var lastMessages = channel.GetMessagesAsync(1);
-            var cursor = lastMessages.GetAsyncEnumerator();
-            if (await cursor.MoveNextAsync())
-            {
-                var currentCollection = cursor.Current;
-                IMessage? lastMessage = currentCollection.First();
-                if (lastMessage != null)
-
-                {
-                    await channel.DeleteMessageAsync(lastMessage);
-                    Console.WriteLine("AUTO-FETCHER : Dernier message supprimé / ID = " + lastMessage.Id);
-                }
-            }
-            else
-            {
-                Console.WriteLine("AUTO-FETCHER : Itérateur en fin de collection / Rien à supprimer");
-            }
-
-            await channel.SendMessageAsync(null, false, embed);
-            Console.WriteLine("AUTO-FETCHER / DIFFUSION : Embed envoyé dans " + (channel.Name));
-
-            await Task.Delay(5000); // 5 secondes entre chaque diffusion d'embed
-        }
-
     }
 
     private async Task SlashCommandHandler(SocketSlashCommand command)
