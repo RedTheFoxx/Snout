@@ -1,5 +1,5 @@
 # 🦊 SnoutBot - Outils et virtual banking
-## Dernière version. Le projet change de voie : https://github.com/RedTheFoxx/Pysnout
+
 Snout est un ensemble de fonctionnalités utilitaires et de divertissement destinés à un usage local, sur des serveurs à petite population. Conçu grâce .NET 7.0, framework réputé bien plus rapide que ses prédecesseurs, et sur la base du nouveau système de slash-commands introduit par l'API Discord, il est intégralement asynchrone dans son exécution. Sans exploiter de serveur SQL, il est léger et fait usage d'un fichier de base de données SQLite.
 
 Divisé en modules interactifs et désactivables, il s'étend à chaque mise à jour.
