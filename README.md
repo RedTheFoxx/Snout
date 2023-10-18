@@ -73,7 +73,7 @@ Une fois compilé, le bot est exécuté comme un programme Win64 :
 
 ## 🚧 Roadmap
 
-- **1.3** : _TBA_
+- CLOSED
 
 ## 🦊 Développement
 
